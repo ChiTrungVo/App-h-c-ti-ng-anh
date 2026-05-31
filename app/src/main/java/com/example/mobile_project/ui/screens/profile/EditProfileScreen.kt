@@ -108,7 +108,7 @@ fun EditProfileScreen(onSave: () -> Unit) {
                 PrimaryButton("Lưu thay đổi", onClick = onSave)
             }
         }
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(132.dp))
     }
 }
 

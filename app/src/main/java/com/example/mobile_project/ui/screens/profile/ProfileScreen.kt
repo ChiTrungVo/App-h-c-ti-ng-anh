@@ -101,7 +101,7 @@ fun ProfileScreen(
         SecondaryButton("Cài đặt nhắc học", onClick = onNotifications)
         Spacer(Modifier.height(12.dp))
         SecondaryButton("Đăng xuất", onClick = onLogout)
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(132.dp))
     }
 }
 

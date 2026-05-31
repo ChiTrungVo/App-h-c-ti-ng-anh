@@ -81,5 +81,8 @@ fun VocabularySetDetailScreen(
                 WordCard(word = word, onClick = { onEditWord(word.wordId) })
             }
         }
+        item {
+            Spacer(Modifier.height(132.dp))
+        }
     }
 }

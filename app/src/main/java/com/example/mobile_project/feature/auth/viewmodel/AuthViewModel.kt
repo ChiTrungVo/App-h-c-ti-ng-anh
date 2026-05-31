@@ -1,6 +1,7 @@
 package com.example.mobile_project.feature.auth.viewmodel
 
 import androidx.activity.ComponentActivity
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mobile_project.feature.auth.data.AppwriteAuthRepository
@@ -150,6 +151,69 @@ class AuthViewModel(
         _uiState.update { it.copy(errorMessage = null, infoMessage = null) }
     }
 
+    fun resendVerificationEmail() {
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(isLoading = true, errorMessage = null, infoMessage = null)
+            }
+            runCatching { repository.sendEmailVerification() }
+                .onSuccess {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            infoMessage = "Đã gửi lại email xác minh. Vui lòng kiểm tra hộp thư."
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    _uiState.update {
+                        it.copy(isLoading = false, errorMessage = error.toUserMessage())
+                    }
+                }
+        }
+    }
+
+    fun completeEmailVerification(uri: Uri) {
+        val userId = uri.getQueryParameter("userId")
+        val secret = uri.getQueryParameter("secret")
+        if (userId.isNullOrBlank() || secret.isNullOrBlank()) {
+            _uiState.update {
+                it.copy(errorMessage = "Liên kết xác minh email không hợp lệ.")
+            }
+            return
+        }
+
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    isLoading = true,
+                    errorMessage = null,
+                    infoMessage = "Đang xác minh email..."
+                )
+            }
+            runCatching { repository.completeEmailVerification(userId, secret) }
+                .onSuccess { user ->
+                    _uiState.update {
+                        it.copy(
+                            user = user,
+                            isLoading = false,
+                            errorMessage = null,
+                            infoMessage = "Email đã được xác minh."
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = error.toUserMessage(),
+                            infoMessage = null
+                        )
+                    }
+                }
+        }
+    }
+
     private fun validateEmailPassword(email: String, password: String): String? {
         return when {
             email.isBlank() -> "Vui lòng nhập email."
@@ -181,6 +245,8 @@ private fun Throwable.toUserMessage(): String {
                 "Appwrite chưa đăng ký đúng Android platform cho gói ứng dụng này."
             rawMessage.contains("invalid_client", ignoreCase = true) ->
                 "Google OAuth client chưa hợp lệ. Kiểm tra Client ID/Client Secret trong Appwrite."
+            rawMessage.contains("verification", ignoreCase = true) || rawMessage.contains("redirect", ignoreCase = true) ->
+                "Không thể gửi email xác minh. Kiểm tra URL chuyển hướng và cấu hình email trong Appwrite."
             rawMessage.isNotBlank() -> rawMessage
             else -> "Không thể kết nối Appwrite."
         }

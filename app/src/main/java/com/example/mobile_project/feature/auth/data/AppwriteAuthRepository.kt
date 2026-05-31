@@ -14,6 +14,10 @@ import java.util.Locale
 import java.util.TimeZone
 
 class AppwriteAuthRepository {
+    private companion object {
+        const val EmailVerificationRedirectUrl = "minlish://verify-email"
+    }
+
     private val account get() = AppwriteClientProvider.account
     private val databases get() = AppwriteClientProvider.databases
     private val databaseId get() = AppwriteClientProvider.databaseId
@@ -37,16 +41,20 @@ class AppwriteAuthRepository {
     }
 
     suspend fun register(displayName: String, email: String, password: String): MinLishAuthUser {
-        val accountUser = account.create(
+        account.create(
             userId = ID.unique(),
             email = email.trim(),
             password = password,
             name = displayName.trim()
-        ).toMinLishUser()
+        )
 
         account.createEmailPasswordSession(email.trim(), password)
-        syncProfile(accountUser.copy(displayName = displayName.trim()))
-        return accountUser.copy(displayName = displayName.trim())
+        val sessionUser = account.get().toMinLishUser().copy(displayName = displayName.trim())
+        syncProfile(sessionUser)
+        if (!sessionUser.isEmailVerified) {
+            sendEmailVerification()
+        }
+        return sessionUser
     }
 
     suspend fun loginWithGoogle(activity: ComponentActivity) {
@@ -66,6 +74,17 @@ class AppwriteAuthRepository {
 
     suspend fun syncCurrentUserProfile(): MinLishAuthUser? {
         val user = currentUser() ?: return null
+        syncProfile(user)
+        return user
+    }
+
+    suspend fun sendEmailVerification() {
+        account.createVerification(EmailVerificationRedirectUrl)
+    }
+
+    suspend fun completeEmailVerification(userId: String, secret: String): MinLishAuthUser {
+        account.updateVerification(userId, secret)
+        val user = account.get().toMinLishUser()
         syncProfile(user)
         return user
     }
@@ -104,6 +123,7 @@ private fun User<Map<String, Any>>.toMinLishUser(): MinLishAuthUser {
     return MinLishAuthUser(
         id = id,
         displayName = name.ifBlank { email.substringBefore("@") },
-        email = email
+        email = email,
+        isEmailVerified = emailVerification
     )
 }

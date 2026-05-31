@@ -53,5 +53,6 @@ fun SessionResultScreen(
         PrimaryButton("Tiếp tục", onClick = onContinue)
         Spacer(Modifier.height(12.dp))
         SecondaryButton("Ôn lại", onClick = onReview)
+        Spacer(Modifier.height(132.dp))
     }
 }

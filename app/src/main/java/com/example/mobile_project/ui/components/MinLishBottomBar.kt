@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -43,30 +44,34 @@ fun MinLishBottomBar(
     onItemClick: (BottomNavItem) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Surface(
+    Box(
         modifier = modifier
             .fillMaxWidth()
             .navigationBarsPadding()
             .padding(horizontal = 20.dp, vertical = 10.dp)
-            .height(78.dp),
-        shape = RoundedCornerShape(39.dp),
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
-        shadowElevation = 12.dp,
-        tonalElevation = 4.dp
+            .height(78.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .border(1.5.dp, MinLishPrimaryContainer.copy(alpha = 0.72f), RoundedCornerShape(39.dp))
-                .padding(horizontal = 10.dp, vertical = 7.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            shape = RoundedCornerShape(39.dp),
+            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+            shadowElevation = 12.dp,
+            tonalElevation = 4.dp
         ) {
-            BottomNavItem.items.forEach { item ->
-                MinLishNavigationItem(
-                    item = item,
-                    selected = currentRoute == item.route,
-                    onClick = { onItemClick(item) }
-                )
+            Row(
+                modifier = Modifier
+                    .border(1.5.dp, MinLishPrimaryContainer.copy(alpha = 0.72f), RoundedCornerShape(39.dp))
+                    .padding(horizontal = 10.dp, vertical = 7.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                BottomNavItem.items.forEach { item ->
+                    MinLishNavigationItem(
+                        item = item,
+                        selected = currentRoute == item.route,
+                        onClick = { onItemClick(item) }
+                    )
+                }
             }
         }
     }

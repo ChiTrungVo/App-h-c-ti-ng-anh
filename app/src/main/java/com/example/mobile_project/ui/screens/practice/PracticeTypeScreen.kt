@@ -87,6 +87,7 @@ fun PracticeTypeScreen(
             PracticeTypeCard(item.first, item.second, item.third, onClick = if (index == 0) onQuiz else ({}))
             Spacer(Modifier.height(12.dp))
         }
+        Spacer(Modifier.height(120.dp))
     }
 }
 

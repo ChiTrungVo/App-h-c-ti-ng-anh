@@ -94,6 +94,7 @@ fun ProgressDashboardScreen(
         ProgressEntryCard("Hồ sơ", "Xem thông tin cá nhân và mục tiêu học tập.", R.drawable.ic_profile, onProfileClick)
         Spacer(Modifier.height(12.dp))
         ProgressEntryCard("Cài đặt nhắc học", "Giữ chuỗi ngày bằng lịch nhắc nhẹ nhàng.", R.drawable.ic_bell, onNotificationsClick)
+        Spacer(Modifier.height(132.dp))
     }
 }
 

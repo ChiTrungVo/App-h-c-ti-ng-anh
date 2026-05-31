@@ -1,16 +1,17 @@
 package com.example.mobile_project.ui.navigation
 
+import android.net.Uri
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.activity.ComponentActivity
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -28,6 +29,7 @@ import com.example.mobile_project.ui.screens.auth.ForgotPasswordScreen
 import com.example.mobile_project.ui.screens.auth.LoginScreen
 import com.example.mobile_project.ui.screens.auth.RegisterScreen
 import com.example.mobile_project.ui.screens.auth.SplashScreen
+import com.example.mobile_project.ui.screens.auth.VerifyEmailScreen
 import com.example.mobile_project.ui.screens.home.HomeScreen
 import com.example.mobile_project.ui.screens.learning.DailyLearningPlanScreen
 import com.example.mobile_project.ui.screens.learning.FlashcardSessionScreen
@@ -50,6 +52,7 @@ object AppRoutes {
     const val Login = "login"
     const val Register = "register"
     const val ForgotPassword = "forgot_password"
+    const val VerifyEmail = "verify_email"
     const val Home = "home"
     const val Vocabulary = "vocabulary"
     const val VocabularyDetail = "vocabulary_detail"
@@ -73,7 +76,10 @@ object AppRoutes {
 }
 
 @Composable
-fun AppNavGraph() {
+fun AppNavGraph(
+    emailVerificationDeepLink: Uri? = null,
+    onEmailVerificationDeepLinkConsumed: () -> Unit = {}
+) {
     val navController = rememberNavController()
     val authViewModel: AuthViewModel = viewModel()
     val authState by authViewModel.uiState.collectAsState()
@@ -93,17 +99,35 @@ fun AppNavGraph() {
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
+    LaunchedEffect(emailVerificationDeepLink) {
+        emailVerificationDeepLink?.let { uri ->
+            authViewModel.completeEmailVerification(uri)
+            onEmailVerificationDeepLinkConsumed()
+            navController.navigate(AppRoutes.VerifyEmail) {
+                launchSingleTop = true
+            }
+        }
+    }
+
     LaunchedEffect(authState.user, authState.isCheckingSession, currentRoute) {
         if (authState.isCheckingSession || currentRoute == null || currentRoute == AppRoutes.Splash) return@LaunchedEffect
 
-        if (authState.user == null && currentRoute !in authRoutes) {
+        val user = authState.user
+        if (user == null && currentRoute !in authRoutes) {
             navController.navigate(AppRoutes.Login) {
                 popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
                 launchSingleTop = true
             }
         }
 
-        if (authState.user != null && currentRoute in authRoutes) {
+        if (user != null && !user.isEmailVerified && currentRoute !in emailVerificationAllowedRoutes) {
+            navController.navigate(AppRoutes.VerifyEmail) {
+                popUpTo(navController.graph.findStartDestination().id) { inclusive = false }
+                launchSingleTop = true
+            }
+        }
+
+        if (user != null && user.isEmailVerified && currentRoute in authRoutes + AppRoutes.VerifyEmail) {
             navController.navigate(AppRoutes.Home) {
                 popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
                 launchSingleTop = true
@@ -122,7 +146,12 @@ fun AppNavGraph() {
                 LaunchedEffect(authState.isCheckingSession, authState.user) {
                     if (authState.isCheckingSession) return@LaunchedEffect
 
-                    val destination = if (authState.user == null) AppRoutes.Login else AppRoutes.Home
+                    val user = authState.user
+                    val destination = when {
+                        user == null -> AppRoutes.Login
+                        !user.isEmailVerified -> AppRoutes.VerifyEmail
+                        else -> AppRoutes.Home
+                    }
                     navController.navigate(destination) {
                         popUpTo(AppRoutes.Splash) { inclusive = true }
                         launchSingleTop = true
@@ -151,6 +180,21 @@ fun AppNavGraph() {
                 ForgotPasswordScreen(
                     onSubmit = { navController.navigate(AppRoutes.Login) },
                     onBackToLogin = { navController.navigate(AppRoutes.Login) }
+                )
+            }
+            composable(AppRoutes.VerifyEmail) {
+                VerifyEmailScreen(
+                    authState = authState,
+                    onResendEmail = authViewModel::resendVerificationEmail,
+                    onRefresh = authViewModel::refreshSession,
+                    onLogout = {
+                        authViewModel.logout {
+                            navController.navigate(AppRoutes.Login) {
+                                popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
+                                launchSingleTop = true
+                            }
+                        }
+                    }
                 )
             }
             composable(AppRoutes.Home) {
@@ -293,7 +337,13 @@ fun AppNavGraph() {
 private val authRoutes = setOf(
     AppRoutes.Login,
     AppRoutes.Register,
-    AppRoutes.ForgotPassword
+    AppRoutes.ForgotPassword,
+    AppRoutes.VerifyEmail
+)
+
+private val emailVerificationAllowedRoutes = setOf(
+    AppRoutes.VerifyEmail,
+    AppRoutes.LogoutDialog
 )
 
 private fun String?.toBottomRootRoute(): String? = when (this) {

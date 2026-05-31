@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.mobile_project.R
 import com.example.mobile_project.data.sample.SampleData
+import com.example.mobile_project.ui.components.CelebrationSprinkles
 import com.example.mobile_project.ui.components.MimiMood
 import com.example.mobile_project.ui.components.PrimaryButton
 import com.example.mobile_project.ui.components.SecondaryButton
@@ -35,7 +36,8 @@ fun SessionResultScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(Modifier.height(36.dp))
-        WhaleMascot(size = 128.dp, mood = MimiMood.Celebrate)
+        CelebrationSprinkles()
+        WhaleMascot(size = 128.dp, mood = MimiMood.Celebrate, animated = true)
         Spacer(Modifier.height(16.dp))
         Text("Hoàn thành buổi học", style = MaterialTheme.typography.headlineLarge)
         Text("Bạn đã giữ nhịp học rất tốt hôm nay.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)

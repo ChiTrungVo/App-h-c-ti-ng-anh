@@ -21,12 +21,14 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -92,6 +94,14 @@ private fun RowScope.MinLishNavigationItem(
         targetValue = if (selected) 30.dp else 0.dp,
         label = "bottomNavUnderlineWidth"
     )
+    val iconScale by animateFloatAsState(
+        targetValue = if (selected) 1.12f else 1f,
+        label = "bottomNavIconScale"
+    )
+    val iconLift by animateFloatAsState(
+        targetValue = if (selected) -3f else 0f,
+        label = "bottomNavIconLift"
+    )
 
     Surface(
         onClick = onClick,
@@ -119,7 +129,13 @@ private fun RowScope.MinLishNavigationItem(
                 OceanNavIcon(
                     item = item,
                     tint = contentColor,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier
+                        .size(24.dp)
+                        .graphicsLayer {
+                            scaleX = iconScale
+                            scaleY = iconScale
+                            translationY = iconLift
+                        }
                 )
                 Text(
                     text = item.label,

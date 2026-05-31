@@ -1,5 +1,11 @@
 package com.example.mobile_project.ui.screens.auth
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -20,8 +26,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -32,14 +40,34 @@ import com.example.mobile_project.R
 fun SplashScreen(
     errorMessage: String? = null
 ) {
+    val transition = rememberInfiniteTransition(label = "splashMotion")
+    val floatOffset by transition.animateFloat(
+        initialValue = -6f,
+        targetValue = 6f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1800, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "splashFloat"
+    )
+    val waveOffset by transition.animateFloat(
+        initialValue = -10f,
+        targetValue = 10f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 2400, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "splashWave"
+    )
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        Bubble(Modifier.align(Alignment.TopStart).padding(start = 24.dp, top = 24.dp).size(126.dp), 0.28f)
-        Bubble(Modifier.align(Alignment.TopEnd).padding(top = 98.dp, end = 24.dp).size(74.dp), 0.22f)
-        Bubble(Modifier.align(Alignment.BottomStart).padding(start = 24.dp, bottom = 116.dp).size(86.dp), 0.2f)
+        Bubble(Modifier.align(Alignment.TopStart).padding(start = 24.dp, top = 24.dp).size(126.dp), 0.28f, floatOffset)
+        Bubble(Modifier.align(Alignment.TopEnd).padding(top = 98.dp, end = 24.dp).size(74.dp), 0.22f, -floatOffset)
+        Bubble(Modifier.align(Alignment.BottomStart).padding(start = 24.dp, bottom = 116.dp).size(86.dp), 0.2f, floatOffset * 0.7f)
         Image(
             painter = painterResource(R.drawable.ic_wave),
             contentDescription = null,
@@ -48,6 +76,10 @@ fun SplashScreen(
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
                 .height(86.dp)
+                .graphicsLayer {
+                    translationX = waveOffset
+                    scaleX = 1.08f
+                }
         )
         Column(
             modifier = Modifier
@@ -60,7 +92,11 @@ fun SplashScreen(
                 shape = RoundedCornerShape(54.dp),
                 color = MaterialTheme.colorScheme.surface.copy(alpha = 0.96f),
                 shadowElevation = 18.dp,
-                tonalElevation = 6.dp
+                tonalElevation = 6.dp,
+                modifier = Modifier.graphicsLayer {
+                    translationY = floatOffset
+                    rotationZ = floatOffset * 0.18f
+                }
             ) {
                 Image(
                     painter = painterResource(R.drawable.minlish_app_icon),
@@ -96,11 +132,16 @@ fun SplashScreen(
 }
 
 @Composable
-private fun Bubble(modifier: Modifier, alpha: Float) {
+private fun Bubble(modifier: Modifier, alpha: Float, drift: Float = 0f) {
     Box(
-        modifier = modifier.background(
-            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = alpha),
-            shape = CircleShape
-        )
+        modifier = modifier
+            .graphicsLayer {
+                translationX = drift
+                translationY = -drift * 0.45f
+            }
+            .background(
+                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = alpha),
+                shape = CircleShape
+            )
     )
 }

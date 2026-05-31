@@ -36,7 +36,9 @@ import androidx.compose.ui.unit.dp
 import com.example.mobile_project.R
 import com.example.mobile_project.data.sample.SampleData
 import com.example.mobile_project.ui.components.MinLishTopBar
+import com.example.mobile_project.ui.components.MimiMood
 import com.example.mobile_project.ui.components.PrimaryButton
+import com.example.mobile_project.ui.components.WhaleMascot
 import com.example.mobile_project.ui.theme.MinLishPrimaryContainer
 import com.example.mobile_project.ui.theme.MinLishSurface
 import com.example.mobile_project.ui.theme.MinLishTertiaryContainer
@@ -99,12 +101,13 @@ private fun DailyGoalBento(onStartLearning: () -> Unit) {
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
         Box {
-            Box(
+            WhaleMascot(
+                mood = MimiMood.Default,
+                animated = true,
+                size = 76.dp,
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(top = 10.dp, end = 10.dp)
-                    .size(74.dp)
-                    .background(MinLishPrimaryContainer.copy(alpha = 0.3f), CircleShape)
+                    .padding(top = 8.dp, end = 10.dp)
             )
             Column(Modifier.padding(18.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {

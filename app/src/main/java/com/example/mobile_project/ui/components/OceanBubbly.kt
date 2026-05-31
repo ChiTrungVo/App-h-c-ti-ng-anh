@@ -16,6 +16,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -24,10 +30,12 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
@@ -42,16 +50,43 @@ fun OceanBubblyBackground(
     contentPadding: PaddingValues = PaddingValues(20.dp),
     content: @Composable BoxScope.() -> Unit
 ) {
+    val transition = rememberInfiniteTransition(label = "oceanBackground")
+    val drift by transition.animateFloat(
+        initialValue = -7f,
+        targetValue = 7f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 4200, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "bubbleDrift"
+    )
+
     Box(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .padding(contentPadding)
     ) {
-        Bubble(Modifier.align(Alignment.TopStart).offset(x = (-38).dp, y = 14.dp).size(118.dp), 0.26f)
-        Bubble(Modifier.align(Alignment.TopEnd).offset(x = 34.dp, y = 126.dp).size(66.dp), 0.22f)
-        Bubble(Modifier.align(Alignment.CenterStart).offset(x = (-46).dp).size(84.dp), 0.18f)
-        Bubble(Modifier.align(Alignment.BottomEnd).offset(x = 42.dp, y = (-72).dp).size(132.dp), 0.2f)
+        Bubble(
+            Modifier.align(Alignment.TopStart).offset(x = (-38).dp, y = 14.dp).size(118.dp),
+            0.26f,
+            drift
+        )
+        Bubble(
+            Modifier.align(Alignment.TopEnd).offset(x = 34.dp, y = 126.dp).size(66.dp),
+            0.22f,
+            -drift * 0.8f
+        )
+        Bubble(
+            Modifier.align(Alignment.CenterStart).offset(x = (-46).dp).size(84.dp),
+            0.18f,
+            drift * 0.55f
+        )
+        Bubble(
+            Modifier.align(Alignment.BottomEnd).offset(x = 42.dp, y = (-72).dp).size(132.dp),
+            0.2f,
+            -drift
+        )
         content()
     }
 }
@@ -89,7 +124,7 @@ fun MascotBadge(
             .size(size)
             .border(4.dp, MinLishSurface, CircleShape)
     ) {
-        WhaleMascot(size = size, mood = mood)
+        WhaleMascot(size = size, mood = mood, animated = true)
     }
 }
 
@@ -140,12 +175,17 @@ fun OceanTextField(
 }
 
 @Composable
-private fun Bubble(modifier: Modifier, alpha: Float) {
+private fun Bubble(modifier: Modifier, alpha: Float, drift: Float = 0f) {
     Box(
-        modifier = modifier.background(
-            color = MinLishPrimaryContainer.copy(alpha = alpha),
-            shape = CircleShape
-        )
+        modifier = modifier
+            .graphicsLayer {
+                translationX = drift
+                translationY = -drift * 0.45f
+            }
+            .background(
+                color = MinLishPrimaryContainer.copy(alpha = alpha),
+                shape = CircleShape
+            )
     )
 }
 

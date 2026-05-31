@@ -34,6 +34,7 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.mobile_project.ui.navigation.BottomNavItem
 import com.example.mobile_project.ui.theme.MinLishPrimaryContainer
@@ -154,5 +155,14 @@ private fun OceanNavIcon(
         contentDescription = item.label,
         modifier = modifier,
         colorFilter = ColorFilter.tint(tint)
+    )
+}
+
+@Preview
+@Composable
+fun MinLishBottomBarPreview() {
+    MinLishBottomBar(
+        currentRoute = "home",
+        onItemClick = {}
     )
 }

@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.mobile_project.ui.theme.MinLishPrimaryContainer
 
@@ -79,4 +80,15 @@ fun StatCard(
             )
         }
     }
+}
+
+
+@Preview
+@Composable
+fun StatCardPreview() {
+    StatCard(
+        title = "Từ vựng đã học",
+        value = "120",
+        iconRes = com.example.mobile_project.R.drawable.ic_vocabulary
+    )
 }

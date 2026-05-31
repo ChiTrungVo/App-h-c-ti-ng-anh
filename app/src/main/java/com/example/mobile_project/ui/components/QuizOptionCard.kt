@@ -1,6 +1,7 @@
 package com.example.mobile_project.ui.components
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -10,6 +11,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.mobile_project.ui.theme.MinLishErrorContainer
 import com.example.mobile_project.ui.theme.MinLishPrimaryContainer
@@ -45,4 +47,15 @@ enum class QuizOptionState {
     Selected,
     Correct,
     Incorrect
+}
+
+@Preview
+@Composable
+fun QuizOptionCardPreview() {
+    Column {
+        QuizOptionCard(text = "Option 1", state = QuizOptionState.Default, onClick = {})
+        QuizOptionCard(text = "Option 2", state = QuizOptionState.Selected, onClick = {})
+        QuizOptionCard(text = "Option 3", state = QuizOptionState.Correct, onClick = {})
+        QuizOptionCard(text = "Option 4", state = QuizOptionState.Incorrect, onClick = {})
+    }
 }

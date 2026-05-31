@@ -10,6 +10,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.mobile_project.ui.theme.MinLishPrimaryContainer
 
@@ -36,4 +37,14 @@ fun SecondaryButton(
     ) {
         Text(text = text, style = MaterialTheme.typography.labelLarge)
     }
+}
+
+@Preview
+@Composable
+fun SecondaryButtonPreview() {
+    SecondaryButton(
+        text = "Hello",
+        onClick = { /* TODO */ },
+        enabled = true
+    )
 }

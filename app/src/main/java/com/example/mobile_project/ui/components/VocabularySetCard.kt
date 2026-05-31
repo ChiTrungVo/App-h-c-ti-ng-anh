@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.mobile_project.data.model.VocabularySet
 import com.example.mobile_project.ui.theme.MinLishPrimaryContainer
@@ -75,4 +76,34 @@ fun VocabularySetCard(
             }
         }
     }
+}
+
+//data class VocabularySet(
+//    val setId: String,
+//    val userId: String,
+//    val title: String,
+//    val description: String,
+//    val tags: List<String>,
+//    val wordCount: Int,
+//    val isPublic: Boolean,
+//    val progress: Float,
+//    val status: String
+//)
+@Preview
+@Composable
+fun VocabularySetCardPreview() {
+    VocabularySetCard(
+        vocabularySet = VocabularySet(
+            setId = "1",
+            userId = "1",
+            title = "Bộ từ vựng tiếng Anh cơ bản",
+            description = "Bộ từ vựng này bao gồm những từ cơ bản nhất để bạn bắt đầu học tiếng Anh.",
+            tags = listOf("Cơ bản", "Tiếng Anh", "Học tập"),
+            wordCount = 50,
+            isPublic = true,
+            progress = 0.6f,
+            status = "Đang học"
+        ),
+        onClick = {}
+    )
 }

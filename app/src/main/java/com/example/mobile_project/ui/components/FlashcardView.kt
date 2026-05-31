@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.mobile_project.data.model.VocabularyWord
 import com.example.mobile_project.ui.theme.MinLishPrimaryContainer
@@ -51,4 +52,37 @@ fun FlashcardView(
             }
         }
     }
+}
+//data class VocabularyWord(
+//    val wordId: String,
+//    val setId: String,
+//    val userId: String,
+//    val word: String,
+//    val pronunciation: String,
+//    val meaning: String,
+//    val definition: String,
+//    val example: String,
+//    val collocations: List<String>,
+//    val note: String,
+//    val imageUrl: String?
+//)
+@Preview
+@Composable
+fun FlashcardViewPreview() {
+    FlashcardView(
+        word = VocabularyWord(
+            wordId = "1",
+            setId = "1",
+            userId = "user123",
+            word = "Hello",
+            pronunciation = "həˈloʊ",
+            meaning = "Xin chào",
+            definition = "A greeting or expression of goodwill.",
+            example = "She said hello to everyone in the room.",
+            collocations = listOf("say hello", "greet with hello"),
+            note = "Commonly used as a greeting.",
+            imageUrl = null
+        ),
+        showBack = false
+    )
 }

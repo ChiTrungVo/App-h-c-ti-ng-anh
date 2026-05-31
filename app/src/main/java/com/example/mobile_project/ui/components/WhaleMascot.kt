@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.mobile_project.R
@@ -29,4 +30,10 @@ fun WhaleMascot(
         contentDescription = "Linh vật cá voi MinLish",
         modifier = modifier.size(size)
     )
+}
+
+@Preview
+@Composable
+fun WhaleMascotPreview() {
+    WhaleMascot(mood = MimiMood.Welcome)
 }

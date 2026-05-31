@@ -22,6 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.mobile_project.R
 import com.example.mobile_project.ui.theme.MinLishPrimaryContainer
@@ -70,4 +71,14 @@ fun MinLishTopBar(
             }
         }
     }
+}
+
+
+@Preview
+@Composable
+fun MinLishTopBarPreview() {
+    MinLishTopBar(
+        title = "MinLish",
+        onProfileClick = { /* Xử lý khi nhấn vào ảnh hồ sơ */ }
+    )
 }

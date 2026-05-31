@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.mobile_project.ui.theme.MinLishPrimaryContainer
@@ -146,4 +147,12 @@ private fun Bubble(modifier: Modifier, alpha: Float) {
             shape = CircleShape
         )
     )
+}
+
+@Preview
+@Composable
+fun OceanBubblyBackgroundPreview() {
+    OceanBubblyBackground {
+        Text("Hello, MinLish!", style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onBackground)
+    }
 }

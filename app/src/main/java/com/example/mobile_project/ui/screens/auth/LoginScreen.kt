@@ -22,6 +22,10 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -30,6 +34,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.mobile_project.R
+import com.example.mobile_project.feature.auth.viewmodel.AuthUiState
 import com.example.mobile_project.ui.components.MascotBadge
 import com.example.mobile_project.ui.components.MimiMood
 import com.example.mobile_project.ui.components.OceanBubblyBackground
@@ -40,10 +45,15 @@ import com.example.mobile_project.ui.theme.MinLishPrimaryContainer
 
 @Composable
 fun LoginScreen(
-    onLogin: () -> Unit,
+    authState: AuthUiState,
+    onLogin: (String, String) -> Unit,
+    onGoogleLogin: () -> Unit,
     onRegister: () -> Unit,
     onForgotPassword: () -> Unit
 ) {
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+
     OceanBubblyBackground {
         Column(
             modifier = Modifier
@@ -80,22 +90,20 @@ fun LoginScreen(
                     )
                     Spacer(Modifier.height(18.dp))
                     OceanTextField(
-                        value = "minhanh@example",
-                        onValueChange = {},
+                        value = email,
+                        onValueChange = { email = it },
                         label = "Email",
                         iconRes = R.drawable.ic_profile,
-                        isError = true,
-                        supportingText = "Email không hợp lệ. Vui lòng kiểm tra lại.",
+                        enabled = !authState.isLoading,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
                     )
                     Spacer(Modifier.height(12.dp))
                     OceanTextField(
-                        value = "123",
-                        onValueChange = {},
+                        value = password,
+                        onValueChange = { password = it },
                         label = "Mật khẩu",
                         iconRes = R.drawable.ic_close_circle,
-                        isError = true,
-                        supportingText = "Mật khẩu cần ít nhất 6 ký tự.",
+                        enabled = !authState.isLoading,
                         visualTransformation = PasswordVisualTransformation()
                     )
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
@@ -109,7 +117,27 @@ fun LoginScreen(
                         )
                     }
                     Spacer(Modifier.height(18.dp))
-                    PrimaryButton("Đăng nhập", onClick = onLogin)
+                    authState.errorMessage?.let { message ->
+                        Text(
+                            message,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Spacer(Modifier.height(12.dp))
+                    }
+                    authState.infoMessage?.let { message ->
+                        Text(
+                            message,
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Spacer(Modifier.height(12.dp))
+                    }
+                    PrimaryButton(
+                        if (authState.isLoading) "Đang đăng nhập..." else "Đăng nhập",
+                        onClick = { onLogin(email, password) },
+                        enabled = !authState.isLoading
+                    )
                     Spacer(Modifier.height(18.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         HorizontalDivider(Modifier.weight(1f), color = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f))
@@ -123,7 +151,8 @@ fun LoginScreen(
                     }
                     Spacer(Modifier.height(18.dp))
                     OutlinedButton(
-                        onClick = {},
+                        onClick = onGoogleLogin,
+                        enabled = !authState.isLoading,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(52.dp),

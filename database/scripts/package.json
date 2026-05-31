@@ -4,7 +4,8 @@
   "description": "Script để tạo database schema trên Appwrite",
   "type": "module",
   "scripts": {
-    "setup": "node setup-database.js"
+    "setup": "node setup-database.js",
+    "migrate": "node migrate.js"
   },
   "dependencies": {
     "node-appwrite": "^13.0.0",

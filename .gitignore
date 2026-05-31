@@ -24,6 +24,7 @@ yarn-error.log*
 
 # Android / Gradle
 .gradle/
+.gradle-agent/
 local.properties
 *.apk
 *.aab

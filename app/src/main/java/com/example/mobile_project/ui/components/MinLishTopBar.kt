@@ -18,7 +18,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.mobile_project.R
@@ -36,21 +38,15 @@ fun MinLishTopBar(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Surface(
-                shape = RoundedCornerShape(16.dp),
-                color = MaterialTheme.colorScheme.surface,
-                shadowElevation = 8.dp,
-                tonalElevation = 3.dp,
+            Image(
+                painter = painterResource(R.drawable.minlish_app_icon),
+                contentDescription = "Logo MinLish",
+                contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .size(48.dp)
+                    .clip(RoundedCornerShape(16.dp))
                     .border(1.dp, MinLishPrimaryContainer.copy(alpha = 0.7f), RoundedCornerShape(16.dp))
-            ) {
-                Image(
-                    painter = painterResource(R.drawable.minlish_app_icon),
-                    contentDescription = "Logo MinLish",
-                    modifier = Modifier.size(48.dp)
-                )
-            }
+            )
             Spacer(Modifier.width(12.dp))
             Text(title, style = MaterialTheme.typography.titleLarge)
         }

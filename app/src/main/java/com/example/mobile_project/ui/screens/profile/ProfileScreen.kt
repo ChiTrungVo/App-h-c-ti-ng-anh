@@ -27,7 +27,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.mobile_project.R
-import com.example.mobile_project.data.sample.SampleData
+import com.example.mobile_project.feature.auth.data.MinLishAuthUser
 import com.example.mobile_project.ui.components.MascotBadge
 import com.example.mobile_project.ui.components.OceanCard
 import com.example.mobile_project.ui.components.PrimaryButton
@@ -36,11 +36,13 @@ import com.example.mobile_project.ui.theme.MinLishPrimaryContainer
 
 @Composable
 fun ProfileScreen(
+    authUser: MinLishAuthUser?,
     onEditProfile: () -> Unit,
     onNotifications: () -> Unit,
     onLogout: () -> Unit
 ) {
-    val user = SampleData.user
+    val displayName = authUser?.displayName ?: "Người học MinLish"
+    val email = authUser?.email ?: "Chưa đăng nhập"
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -52,8 +54,8 @@ fun ProfileScreen(
         Spacer(Modifier.height(28.dp))
         MascotBadge(size = 116.dp)
         Spacer(Modifier.height(14.dp))
-        Text(user.displayName, style = MaterialTheme.typography.headlineLarge, textAlign = TextAlign.Center)
-        Text(user.email, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(displayName, style = MaterialTheme.typography.headlineLarge, textAlign = TextAlign.Center)
+        Text(email, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(18.dp))
         Surface(
             shape = MaterialTheme.shapes.large,
@@ -73,16 +75,16 @@ fun ProfileScreen(
         OceanCard(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(18.dp)) {
                 Text("Thông tin cá nhân", style = MaterialTheme.typography.titleLarge)
-                ProfileRow(R.drawable.ic_profile, "Ngôn ngữ mẹ đẻ", user.nativeLanguage)
-                ProfileRow(R.drawable.ic_learning, "Ngôn ngữ học", user.targetLanguage)
-                ProfileRow(R.drawable.ic_progress, "Trình độ", user.proficiencyLevel)
+                ProfileRow(R.drawable.ic_profile, "Ngôn ngữ mẹ đẻ", "Tiếng Việt")
+                ProfileRow(R.drawable.ic_learning, "Ngôn ngữ học", "Tiếng Anh")
+                ProfileRow(R.drawable.ic_progress, "Trình độ", "Beginner")
             }
         }
         Spacer(Modifier.height(12.dp))
         OceanCard(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(18.dp)) {
                 Text("Mục tiêu học tập", style = MaterialTheme.typography.titleLarge)
-                ProfileRow(R.drawable.ic_clock, "Mục tiêu hằng ngày", "${user.dailyTargetMinutes} phút")
+                ProfileRow(R.drawable.ic_clock, "Mục tiêu hằng ngày", "15 phút")
                 ProfileRow(R.drawable.ic_check_circle, "Cam kết", "Duy trì học từ vựng mỗi ngày")
             }
         }

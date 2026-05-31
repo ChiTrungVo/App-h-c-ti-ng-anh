@@ -70,7 +70,7 @@ object SampleData {
             definition = "An act of travelling from one place to another.",
             example = "The journey across the coast was peaceful.",
             collocations = listOf("long journey", "safe journey"),
-            note = "Hay dùng trong văn kể chuyện.",
+            note = "Thường dùng trong văn kể chuyện.",
             imageUrl = null
         ),
         VocabularyWord(

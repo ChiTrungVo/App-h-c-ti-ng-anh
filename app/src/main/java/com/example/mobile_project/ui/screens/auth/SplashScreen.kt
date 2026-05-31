@@ -25,11 +25,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.mobile_project.R
-import com.example.mobile_project.ui.components.MimiMood
-import com.example.mobile_project.ui.components.WhaleMascot
 
 @Composable
-fun SplashScreen() {
+fun SplashScreen(
+    errorMessage: String? = null
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -55,10 +55,12 @@ fun SplashScreen() {
                 shadowElevation = 18.dp,
                 tonalElevation = 6.dp
             ) {
-                WhaleMascot(
-                    size = 128.dp,
-                    mood = MimiMood.Welcome,
-                    modifier = Modifier.padding(10.dp)
+                Image(
+                    painter = painterResource(R.drawable.minlish_app_icon),
+                    contentDescription = "Mimi loading",
+                    modifier = Modifier
+                        .padding(10.dp)
+                        .size(128.dp)
                 )
             }
             Spacer(Modifier.height(18.dp))
@@ -68,17 +70,19 @@ fun SplashScreen() {
             CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.height(12.dp))
             Text("Đang kiểm tra đăng nhập...", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Spacer(Modifier.height(18.dp))
-            Card(
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(18.dp)
-            ) {
-                Text(
-                    text = "Không thể kết nối. Thử lại",
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.error
-                )
+            errorMessage?.let { message ->
+                Spacer(Modifier.height(18.dp))
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(18.dp)
+                ) {
+                    Text(
+                        text = message,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
             }
         }
     }

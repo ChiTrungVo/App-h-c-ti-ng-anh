@@ -55,7 +55,6 @@ fun MinLishBottomBar(
         Row(
             modifier = Modifier
                 .border(1.5.dp, MinLishPrimaryContainer.copy(alpha = 0.72f), RoundedCornerShape(38.dp))
-                .background(MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.22f), RoundedCornerShape(38.dp))
                 .padding(horizontal = 10.dp, vertical = 9.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically

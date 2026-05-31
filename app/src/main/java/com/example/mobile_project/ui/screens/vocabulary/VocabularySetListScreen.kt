@@ -1,0 +1,93 @@
+package com.example.mobile_project.ui.screens.vocabulary
+
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
+import com.example.mobile_project.R
+import com.example.mobile_project.data.sample.SampleData
+import com.example.mobile_project.ui.components.EmptyStateView
+import com.example.mobile_project.ui.components.PrimaryButton
+import com.example.mobile_project.ui.components.VocabularySetCard
+
+@Composable
+fun VocabularySetListScreen(
+    onSetClick: () -> Unit,
+    onAddClick: () -> Unit
+) {
+    Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize().padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            item {
+                Spacer(Modifier.height(16.dp))
+                Text("Từ vựng", style = MaterialTheme.typography.headlineLarge)
+                Text("Quản lý bộ từ và tiến độ học", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(Modifier.height(16.dp))
+                OutlinedTextField(
+                    value = "ocean",
+                    onValueChange = {},
+                    label = { Text("Tìm bộ từ") },
+                    leadingIcon = {
+                        Image(
+                            painter = painterResource(R.drawable.ic_search),
+                            contentDescription = null,
+                            modifier = Modifier.size(22.dp),
+                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary)
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(12.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf("Tất cả", "IELTS", "Giao tiếp", "Công việc", "Đã học gần đây").forEach {
+                        AssistChip(onClick = {}, label = { Text(it) })
+                    }
+                }
+                Spacer(Modifier.height(12.dp))
+                PrimaryButton("Tạo bộ từ", onClick = onAddClick)
+                Spacer(Modifier.height(12.dp))
+                Text("Đang tải bộ từ. Nếu có lỗi, màn hình sẽ hiển thị trạng thái lỗi tại đây.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            items(SampleData.vocabulary_sets) { set ->
+                VocabularySetCard(vocabularySet = set, onClick = onSetClick)
+            }
+            item {
+                Spacer(Modifier.height(16.dp))
+                EmptyStateView("Chưa có bộ từ mới", "Tạo một bộ từ riêng để học theo mục tiêu của bạn.")
+                Spacer(Modifier.height(96.dp))
+            }
+        }
+        FloatingActionButton(
+            onClick = onAddClick,
+            modifier = Modifier.align(Alignment.BottomEnd).padding(24.dp),
+            shape = CircleShape,
+            containerColor = MaterialTheme.colorScheme.primary
+        ) {
+            Image(painter = painterResource(R.drawable.ic_add), contentDescription = "Thêm bộ từ", modifier = Modifier.size(28.dp), colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onPrimary))
+        }
+    }
+}

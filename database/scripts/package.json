@@ -1,0 +1,13 @@
+{
+  "name": "appwrite-database-setup",
+  "version": "1.0.0",
+  "description": "Script để tạo database schema trên Appwrite",
+  "type": "module",
+  "scripts": {
+    "setup": "node setup-database.js"
+  },
+  "dependencies": {
+    "node-appwrite": "^13.0.0",
+    "dotenv": "^16.4.5"
+  }
+}

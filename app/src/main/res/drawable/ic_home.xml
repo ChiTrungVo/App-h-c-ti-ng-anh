@@ -1,0 +1,12 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
+    <!-- Mái nhà với gradient -->
+    <path android:fillColor="#0288D1" android:pathData="M12,3L21,11V21H15V15C15,13.9 14.1,13 13,13H11C9.9,13 9,13.9 9,15V21H3V11L12,3Z"/>
+    <!-- Highlight mái nhà -->
+    <path android:fillColor="#4FC3F7" android:pathData="M12,3L21,11L20,11.8L12,4.5L4,11.8L3,11L12,3Z"/>
+    <!-- Cửa sổ trái -->
+    <path android:fillColor="#006688" android:pathData="M5,13H7V16H5V13Z"/>
+    <!-- Cửa sổ phải -->
+    <path android:fillColor="#006688" android:pathData="M17,13H19V16H17V13Z"/>
+    <!-- Highlight cửa sổ -->
+    <path android:fillColor="#4FC3F7" android:pathData="M5.5,13.5H6V14.5H5.5V13.5ZM17.5,13.5H18V14.5H17.5V13.5Z"/>
+</vector>

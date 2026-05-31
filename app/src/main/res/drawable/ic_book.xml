@@ -1,0 +1,12 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
+    <!-- Bìa sách chính -->
+    <path android:fillColor="#0288D1" android:pathData="M4,5C4,3.9 4.9,3 6,3H18C18.6,3 19,3.4 19,4V18C19,18.6 18.6,19 18,19H7C5.3,19 4,17.7 4,16V5Z"/>
+    <!-- Gáy sách -->
+    <path android:fillColor="#006688" android:pathData="M4,16C4,17.7 5.3,19 7,19H18V21H7C5.3,21 4,19.7 4,18V16Z"/>
+    <!-- Highlight bìa -->
+    <path android:fillColor="#4FC3F7" android:pathData="M6,3H7V19H6C5.3,19 4.7,18.6 4.3,18C4.1,17.4 4,16.7 4,16V5C4,3.9 4.9,3 6,3Z"/>
+    <!-- Dòng chữ -->
+    <path android:fillColor="#FFFFFF" android:pathData="M8,6H16V7.5H8V6ZM8,9H15V10.5H8V9ZM8,12H16V13.5H8V12Z"/>
+    <!-- Bookmark -->
+    <path android:fillColor="#FFD54F" android:pathData="M15,3H17V10L16,9L15,10V3Z"/>
+</vector>

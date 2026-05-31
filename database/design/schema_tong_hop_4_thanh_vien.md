@@ -1,7 +1,5 @@
 # Database Schema Tổng Hợp - 4 Thành Viên
 
-Tài liệu này gộp 4 file thiết kế database của 4 thành viên thành một schema thống nhất cho MinLish trên Appwrite. Mục tiêu là tránh trùng collection, thống nhất tên field/khóa liên kết, và giúp cả nhóm tạo collection thật theo cùng một nguồn tài liệu.
-
 ---
 
 ## 1. Nguyên tắc thống nhất

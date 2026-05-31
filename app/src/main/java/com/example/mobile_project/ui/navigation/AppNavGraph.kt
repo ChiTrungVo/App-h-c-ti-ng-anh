@@ -25,9 +25,12 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.mobile_project.ui.components.MinLishBottomBar
 import com.example.mobile_project.feature.auth.viewmodel.AuthViewModel
+import com.example.mobile_project.feature.profile.viewmodel.NotificationSettingsViewModel
+import com.example.mobile_project.feature.profile.viewmodel.ProfileViewModel
 import com.example.mobile_project.ui.screens.auth.ForgotPasswordScreen
 import com.example.mobile_project.ui.screens.auth.LoginScreen
 import com.example.mobile_project.ui.screens.auth.RegisterScreen
+import com.example.mobile_project.ui.screens.auth.ResetPasswordScreen
 import com.example.mobile_project.ui.screens.auth.SplashScreen
 import com.example.mobile_project.ui.screens.auth.VerifyEmailScreen
 import com.example.mobile_project.ui.screens.home.HomeScreen
@@ -37,6 +40,7 @@ import com.example.mobile_project.ui.screens.learning.SessionResultScreen
 import com.example.mobile_project.ui.screens.practice.PracticeTypeScreen
 import com.example.mobile_project.ui.screens.practice.QuizResultScreen
 import com.example.mobile_project.ui.screens.practice.QuizScreen
+import com.example.mobile_project.ui.screens.profile.AccountSecurityScreen
 import com.example.mobile_project.ui.screens.profile.EditProfileScreen
 import com.example.mobile_project.ui.screens.profile.LogoutDialogScreen
 import com.example.mobile_project.ui.screens.profile.NotificationSettingsScreen
@@ -52,6 +56,7 @@ object AppRoutes {
     const val Login = "login"
     const val Register = "register"
     const val ForgotPassword = "forgot_password"
+    const val ResetPassword = "reset_password"
     const val VerifyEmail = "verify_email"
     const val Home = "home"
     const val Vocabulary = "vocabulary"
@@ -68,21 +73,28 @@ object AppRoutes {
     const val Profile = "profile"
     const val EditProfile = "edit_profile"
     const val Notifications = "notifications"
+    const val AccountSecurity = "account_security"
     const val LogoutDialog = "logout_dialog"
 
     fun vocabularyDetail(setId: String) = "$VocabularyDetail/$setId"
     fun editVocabularySet(setId: String = "new") = "$EditVocabularySet/$setId"
     fun editWord(setId: String, wordId: String = "new") = "$EditWord/$setId/$wordId"
+    fun resetPassword(userId: String, secret: String) =
+        "$ResetPassword?userId=${Uri.encode(userId)}&secret=${Uri.encode(secret)}"
 }
 
 @Composable
 fun AppNavGraph(
-    emailVerificationDeepLink: Uri? = null,
-    onEmailVerificationDeepLinkConsumed: () -> Unit = {}
+    incomingDeepLink: Uri? = null,
+    onIncomingDeepLinkConsumed: () -> Unit = {}
 ) {
     val navController = rememberNavController()
     val authViewModel: AuthViewModel = viewModel()
+    val profileViewModel: ProfileViewModel = viewModel()
+    val notificationSettingsViewModel: NotificationSettingsViewModel = viewModel()
     val authState by authViewModel.uiState.collectAsState()
+    val profileState by profileViewModel.uiState.collectAsState()
+    val notificationSettingsState by notificationSettingsViewModel.uiState.collectAsState()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
     val currentRootRoute = currentRoute.toBottomRootRoute()
@@ -99,13 +111,31 @@ fun AppNavGraph(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    LaunchedEffect(emailVerificationDeepLink) {
-        emailVerificationDeepLink?.let { uri ->
-            authViewModel.completeEmailVerification(uri)
-            onEmailVerificationDeepLinkConsumed()
-            navController.navigate(AppRoutes.VerifyEmail) {
-                launchSingleTop = true
+    LaunchedEffect(authState.user?.id, authState.user?.isEmailVerified) {
+        if (authState.user?.isEmailVerified == true) {
+            profileViewModel.loadProfile(force = true)
+            notificationSettingsViewModel.loadSettings(force = true)
+        }
+    }
+
+    LaunchedEffect(incomingDeepLink) {
+        incomingDeepLink?.let { uri ->
+            when (uri.host) {
+                "verify-email" -> {
+                    authViewModel.completeEmailVerification(uri)
+                    navController.navigate(AppRoutes.VerifyEmail) {
+                        launchSingleTop = true
+                    }
+                }
+                "reset-password" -> {
+                    val userId = uri.getQueryParameter("userId").orEmpty()
+                    val secret = uri.getQueryParameter("secret").orEmpty()
+                    navController.navigate(AppRoutes.resetPassword(userId, secret)) {
+                        launchSingleTop = true
+                    }
+                }
             }
+            onIncomingDeepLinkConsumed()
         }
     }
 
@@ -178,7 +208,36 @@ fun AppNavGraph(
             }
             composable(AppRoutes.ForgotPassword) {
                 ForgotPasswordScreen(
-                    onSubmit = { navController.navigate(AppRoutes.Login) },
+                    authState = authState,
+                    onSubmit = authViewModel::sendPasswordRecovery,
+                    onBackToLogin = { navController.navigate(AppRoutes.Login) }
+                )
+            }
+            composable(
+                route = "${AppRoutes.ResetPassword}?userId={userId}&secret={secret}",
+                arguments = listOf(
+                    navArgument("userId") {
+                        type = NavType.StringType
+                        defaultValue = ""
+                    },
+                    navArgument("secret") {
+                        type = NavType.StringType
+                        defaultValue = ""
+                    }
+                )
+            ) { entry ->
+                val userId = entry.arguments?.getString("userId").orEmpty()
+                val secret = entry.arguments?.getString("secret").orEmpty()
+                ResetPasswordScreen(
+                    authState = authState,
+                    onSubmit = { password, confirmPassword ->
+                        authViewModel.completePasswordRecovery(
+                            userId = userId,
+                            secret = secret,
+                            password = password,
+                            confirmPassword = confirmPassword
+                        )
+                    },
                     onBackToLogin = { navController.navigate(AppRoutes.Login) }
                 )
             }
@@ -292,10 +351,15 @@ fun AppNavGraph(
                 )
             }
             composable(AppRoutes.Profile) {
+                LaunchedEffect(Unit) {
+                    profileViewModel.loadProfile()
+                }
                 ProfileScreen(
                     authUser = authState.user,
+                    profileState = profileState,
                     onEditProfile = { navController.navigate(AppRoutes.EditProfile) },
                     onNotifications = { navController.navigate(AppRoutes.Notifications) },
+                    onAccountSecurity = { navController.navigate(AppRoutes.AccountSecurity) },
                     onLogout = { navController.navigate(AppRoutes.LogoutDialog) }
                 )
             }
@@ -315,10 +379,45 @@ fun AppNavGraph(
                 )
             }
             composable(AppRoutes.EditProfile) {
-                EditProfileScreen(onSave = { navController.popBackStack() })
+                LaunchedEffect(Unit) {
+                    profileViewModel.loadProfile()
+                }
+                EditProfileScreen(
+                    state = profileState,
+                    onFormChange = profileViewModel::updateForm,
+                    onUploadAvatar = { uri -> profileViewModel.uploadAvatar(context, uri) },
+                    onSave = { profileViewModel.saveProfile { navController.popBackStack() } }
+                )
             }
             composable(AppRoutes.Notifications) {
-                NotificationSettingsScreen(onSave = { navController.popBackStack() })
+                LaunchedEffect(Unit) {
+                    notificationSettingsViewModel.loadSettings()
+                }
+                NotificationSettingsScreen(
+                    state = notificationSettingsState,
+                    onFormChange = notificationSettingsViewModel::updateForm,
+                    onSave = { notificationSettingsViewModel.saveSettings { navController.popBackStack() } }
+                )
+            }
+            composable(AppRoutes.AccountSecurity) {
+                LaunchedEffect(Unit) {
+                    profileViewModel.loadProfile()
+                }
+                AccountSecurityScreen(
+                    state = profileState,
+                    onFormChange = profileViewModel::updateSecurityForm,
+                    onUpdateEmail = { profileViewModel.updateEmail() },
+                    onUpdatePassword = { profileViewModel.updatePassword() },
+                    onSoftDelete = {
+                        profileViewModel.softDeleteAccount {
+                            authViewModel.refreshSession()
+                            navController.navigate(AppRoutes.Login) {
+                                popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
+                                launchSingleTop = true
+                            }
+                        }
+                    }
+                )
             }
         }
 
@@ -344,6 +443,8 @@ private val authRoutes = setOf(
     AppRoutes.Login,
     AppRoutes.Register,
     AppRoutes.ForgotPassword,
+    AppRoutes.ResetPassword,
+    "${AppRoutes.ResetPassword}?userId={userId}&secret={secret}",
     AppRoutes.VerifyEmail
 )
 
@@ -374,6 +475,7 @@ private fun String?.toBottomRootRoute(): String? = when (this) {
     AppRoutes.Progress,
     AppRoutes.EditProfile,
     AppRoutes.Notifications,
+    AppRoutes.AccountSecurity,
     AppRoutes.LogoutDialog -> AppRoutes.Profile
 
     else -> null

@@ -14,18 +14,18 @@ import com.example.mobile_project.ui.navigation.AppNavGraph
 import com.example.mobile_project.ui.theme.Mobile_projectTheme
 
 class MainActivity : ComponentActivity() {
-    private var verificationDeepLink by mutableStateOf<Uri?>(null)
+    private var incomingDeepLink by mutableStateOf<Uri?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         AppwriteClientProvider.init(this)
-        verificationDeepLink = intent?.data?.takeIf { it.isEmailVerificationLink() }
+        incomingDeepLink = intent?.data?.takeIf { it.isMinLishDeepLink() }
         enableEdgeToEdge()
         setContent {
             Mobile_projectTheme {
                 AppNavGraph(
-                    emailVerificationDeepLink = verificationDeepLink,
-                    onEmailVerificationDeepLinkConsumed = { verificationDeepLink = null }
+                    incomingDeepLink = incomingDeepLink,
+                    onIncomingDeepLinkConsumed = { incomingDeepLink = null }
                 )
             }
         }
@@ -34,10 +34,10 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        verificationDeepLink = intent.data?.takeIf { it.isEmailVerificationLink() }
+        incomingDeepLink = intent.data?.takeIf { it.isMinLishDeepLink() }
     }
 
-    private fun Uri.isEmailVerificationLink(): Boolean {
-        return host == "verify-email" && (scheme == "https" || scheme == "minlish")
+    private fun Uri.isMinLishDeepLink(): Boolean {
+        return host in setOf("verify-email", "reset-password") && (scheme == "https" || scheme == "minlish")
     }
 }

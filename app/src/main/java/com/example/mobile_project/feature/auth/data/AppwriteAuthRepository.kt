@@ -2,28 +2,20 @@ package com.example.mobile_project.feature.auth.data
 
 import androidx.activity.ComponentActivity
 import com.example.mobile_project.core.appwrite.AppwriteClientProvider
+import com.example.mobile_project.feature.profile.data.AppwriteProfileRepository
 import io.appwrite.ID
-import io.appwrite.Permission
-import io.appwrite.Role
 import io.appwrite.enums.OAuthProvider
 import io.appwrite.exceptions.AppwriteException
 import io.appwrite.models.User
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
-import java.util.TimeZone
 
 class AppwriteAuthRepository {
     private companion object {
         const val EmailVerificationRedirectUrl = "https://minlish-email-verify.sgp.appwrite.run"
+        const val PasswordRecoveryRedirectUrl = "https://minlish-password-recovery.sgp.appwrite.run"
     }
 
     private val account get() = AppwriteClientProvider.account
-    private val databases get() = AppwriteClientProvider.databases
-    private val databaseId get() = AppwriteClientProvider.databaseId
-    private val isoFormatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).apply {
-        timeZone = TimeZone.getTimeZone("UTC")
-    }
+    private val profileRepository = AppwriteProfileRepository()
 
     suspend fun currentUser(): MinLishAuthUser? {
         return try {
@@ -36,7 +28,7 @@ class AppwriteAuthRepository {
     suspend fun login(email: String, password: String): MinLishAuthUser {
         account.createEmailPasswordSession(email.trim(), password)
         val user = account.get().toMinLishUser()
-        syncProfile(user)
+        profileRepository.ensureUserProfile(user)
         return user
     }
 
@@ -50,7 +42,7 @@ class AppwriteAuthRepository {
 
         account.createEmailPasswordSession(email.trim(), password)
         val sessionUser = account.get().toMinLishUser().copy(displayName = displayName.trim())
-        syncProfile(sessionUser)
+        profileRepository.ensureUserProfile(sessionUser)
         if (!sessionUser.isEmailVerified) {
             sendEmailVerification()
         }
@@ -74,7 +66,7 @@ class AppwriteAuthRepository {
 
     suspend fun syncCurrentUserProfile(): MinLishAuthUser? {
         val user = currentUser() ?: return null
-        syncProfile(user)
+        profileRepository.ensureUserProfile(user)
         return user
     }
 
@@ -85,37 +77,32 @@ class AppwriteAuthRepository {
     suspend fun completeEmailVerification(userId: String, secret: String): MinLishAuthUser? {
         account.updateVerification(userId, secret)
         val user = currentUser() ?: return null
-        syncProfile(user)
+        profileRepository.ensureUserProfile(user)
         return user
     }
 
-    private suspend fun syncProfile(user: MinLishAuthUser) {
-        val now = isoFormatter.format(Date())
-        val permissions = listOf(
-            Permission.read(Role.user(user.id)),
-            Permission.update(Role.user(user.id)),
-            Permission.delete(Role.user(user.id))
-        )
+    suspend fun sendPasswordRecovery(email: String) {
+        account.createRecovery(email.trim(), PasswordRecoveryRedirectUrl)
+    }
 
-        databases.upsertDocument(
-            databaseId = databaseId,
-            collectionId = "user_profiles",
-            documentId = user.id,
-            data = mapOf(
-                "userId" to user.id,
-                "displayName" to user.displayName.ifBlank { user.email.substringBefore("@") },
-                "email" to user.email,
-                "nativeLanguage" to "vi",
-                "targetLanguage" to "en",
-                "proficiencyLevel" to "beginner",
-                "dailyTargetMinutes" to 15,
-                "status" to "active",
-                "lastLoginAt" to now,
-                "createdAt" to now,
-                "updatedAt" to now
-            ),
-            permissions = permissions
-        )
+    suspend fun completePasswordRecovery(userId: String, secret: String, password: String) {
+        account.updateRecovery(userId, secret, password)
+    }
+
+    suspend fun updateDisplayName(name: String): MinLishAuthUser {
+        return account.updateName(name.trim()).toMinLishUser()
+    }
+
+    suspend fun updateEmail(email: String, currentPassword: String): MinLishAuthUser {
+        return account.updateEmail(email.trim(), currentPassword).toMinLishUser()
+    }
+
+    suspend fun updatePassword(newPassword: String, currentPassword: String) {
+        account.updatePassword(newPassword, currentPassword)
+    }
+
+    suspend fun softDeleteAccount() {
+        profileRepository.softDeleteAccount()
     }
 }
 

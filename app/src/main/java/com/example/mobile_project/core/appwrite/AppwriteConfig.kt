@@ -1,9 +1,11 @@
 package com.example.mobile_project.core.appwrite
 
-object AppwriteConfig {
-    const val ENDPOINT = "https://fra.cloud.appwrite.io/v1"
-    const val PROJECT_ID = "6a1bf72800122a3946e8"
+import com.example.mobile_project.BuildConfig
 
-    const val DATABASE_ID = "vocabulary_app_db"
+object AppwriteConfig {
+    val ENDPOINT: String = BuildConfig.APPWRITE_ENDPOINT
+    val PROJECT_ID: String = BuildConfig.APPWRITE_PROJECT_ID
+
+    val DATABASE_ID: String = BuildConfig.APPWRITE_DATABASE_ID
 
 }

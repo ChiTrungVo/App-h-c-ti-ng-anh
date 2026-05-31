@@ -102,7 +102,7 @@ fun LoginScreen(
                         value = password,
                         onValueChange = { password = it },
                         label = "Mật khẩu",
-                        iconRes = R.drawable.ic_close_circle,
+                        iconRes = R.drawable.ic_lock,
                         enabled = !authState.isLoading,
                         visualTransformation = PasswordVisualTransformation()
                     )
@@ -158,7 +158,13 @@ fun LoginScreen(
                             .height(52.dp),
                         shape = MaterialTheme.shapes.extraLarge,
                         border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.7f)),
-                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp, pressedElevation = 1.dp)
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            contentColor = MaterialTheme.colorScheme.onSurface,
+                            disabledContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.72f),
+                            disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                        ),
+                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp, pressedElevation = 0.dp)
                     ) {
                         Image(
                             painter = painterResource(R.drawable.ic_google),

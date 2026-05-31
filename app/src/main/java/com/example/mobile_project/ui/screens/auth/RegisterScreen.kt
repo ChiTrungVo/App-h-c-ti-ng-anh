@@ -86,7 +86,7 @@ fun RegisterScreen(
                         value = password,
                         onValueChange = { password = it },
                         label = "Mật khẩu",
-                        iconRes = R.drawable.ic_close_circle,
+                        iconRes = R.drawable.ic_lock,
                         enabled = !authState.isLoading,
                         visualTransformation = PasswordVisualTransformation()
                     )
@@ -95,7 +95,7 @@ fun RegisterScreen(
                         value = confirmPassword,
                         onValueChange = { confirmPassword = it },
                         label = "Nhập lại mật khẩu",
-                        iconRes = R.drawable.ic_close_circle,
+                        iconRes = R.drawable.ic_lock,
                         enabled = !authState.isLoading,
                         visualTransformation = PasswordVisualTransformation()
                     )

@@ -70,7 +70,16 @@ class AuthViewModel(
             runCatching { repository.login(email, password) }
                 .onSuccess { user ->
                     _uiState.update {
-                        it.copy(user = user, isLoading = false, errorMessage = null)
+                        it.copy(
+                            user = user,
+                            isLoading = false,
+                            errorMessage = null,
+                            infoMessage = if (user.isEmailVerified) {
+                                null
+                            } else {
+                                "Email chưa được xác minh. Vui lòng kiểm tra hộp thư hoặc gửi lại email xác minh."
+                            }
+                        )
                     }
                 }
                 .onFailure { error ->
@@ -93,7 +102,16 @@ class AuthViewModel(
             runCatching { repository.register(displayName, email, password) }
                 .onSuccess { user ->
                     _uiState.update {
-                        it.copy(user = user, isLoading = false, errorMessage = null)
+                        it.copy(
+                            user = user,
+                            isLoading = false,
+                            errorMessage = null,
+                            infoMessage = if (user.isEmailVerified) {
+                                null
+                            } else {
+                                "Tài khoản đã được tạo. MinLish đã gửi email xác minh cho bạn."
+                            }
+                        )
                     }
                 }
                 .onFailure { error ->
@@ -174,6 +192,13 @@ class AuthViewModel(
     }
 
     fun completeEmailVerification(uri: Uri) {
+        val shouldRefresh = uri.getQueryParameter("refresh") == "1" ||
+            uri.getQueryParameter("verified") == "1"
+        if (shouldRefresh) {
+            refreshSession()
+            return
+        }
+
         val userId = uri.getQueryParameter("userId")
         val secret = uri.getQueryParameter("secret")
         if (userId.isNullOrBlank() || secret.isNullOrBlank()) {
@@ -194,12 +219,21 @@ class AuthViewModel(
             runCatching { repository.completeEmailVerification(userId, secret) }
                 .onSuccess { user ->
                     _uiState.update {
-                        it.copy(
-                            user = user,
-                            isLoading = false,
-                            errorMessage = null,
-                            infoMessage = "Email đã được xác minh."
-                        )
+                        if (user == null) {
+                            it.copy(
+                                user = null,
+                                isLoading = false,
+                                errorMessage = null,
+                                infoMessage = "Email đã được xác minh. Vui lòng đăng nhập lại để tiếp tục."
+                            )
+                        } else {
+                            it.copy(
+                                user = user,
+                                isLoading = false,
+                                errorMessage = null,
+                                infoMessage = "Email đã được xác minh."
+                            )
+                        }
                     }
                 }
                 .onFailure { error ->
@@ -210,7 +244,7 @@ class AuthViewModel(
                             infoMessage = null
                         )
                     }
-                }
+            }
         }
     }
 
@@ -241,10 +275,20 @@ private fun Throwable.toUserMessage(): String {
     val rawMessage = message.orEmpty()
     return when (this) {
         is AppwriteException -> when {
+            rawMessage.contains("User cancelled login", ignoreCase = true) ||
+                rawMessage.contains("cancelled", ignoreCase = true) ||
+                rawMessage.contains("canceled", ignoreCase = true) ->
+                "Bạn đã huỷ đăng nhập Google."
             rawMessage.contains("Invalid Origin", ignoreCase = true) ->
                 "Appwrite chưa đăng ký đúng Android platform cho gói ứng dụng này."
             rawMessage.contains("invalid_client", ignoreCase = true) ->
                 "Google OAuth client chưa hợp lệ. Kiểm tra Client ID/Client Secret trong Appwrite."
+            rawMessage.contains("Invalid `url` param", ignoreCase = true) ||
+                rawMessage.contains("Invalid URI", ignoreCase = true) ->
+                "URL xác minh email chưa được đăng ký trong Appwrite Platform."
+            rawMessage.contains("already exists", ignoreCase = true) ||
+                rawMessage.contains("user_already_exists", ignoreCase = true) ->
+                "Email này đã được đăng ký. Vui lòng đăng nhập hoặc dùng email khác."
             rawMessage.contains("verification", ignoreCase = true) || rawMessage.contains("redirect", ignoreCase = true) ->
                 "Không thể gửi email xác minh. Kiểm tra URL chuyển hướng và cấu hình email trong Appwrite."
             rawMessage.isNotBlank() -> rawMessage

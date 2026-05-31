@@ -15,7 +15,7 @@ import java.util.TimeZone
 
 class AppwriteAuthRepository {
     private companion object {
-        const val EmailVerificationRedirectUrl = "minlish://verify-email"
+        const val EmailVerificationRedirectUrl = "https://minlish-email-verify.sgp.appwrite.run"
     }
 
     private val account get() = AppwriteClientProvider.account
@@ -82,9 +82,9 @@ class AppwriteAuthRepository {
         account.createVerification(EmailVerificationRedirectUrl)
     }
 
-    suspend fun completeEmailVerification(userId: String, secret: String): MinLishAuthUser {
+    suspend fun completeEmailVerification(userId: String, secret: String): MinLishAuthUser? {
         account.updateVerification(userId, secret)
-        val user = account.get().toMinLishUser()
+        val user = currentUser() ?: return null
         syncProfile(user)
         return user
     }

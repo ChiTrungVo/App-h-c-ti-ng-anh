@@ -28,9 +28,11 @@ fun VerifyEmailScreen(
     authState: AuthUiState,
     onResendEmail: () -> Unit,
     onRefresh: () -> Unit,
+    onBackToLogin: () -> Unit,
     onLogout: () -> Unit
 ) {
     val email = authState.user?.email.orEmpty()
+    val hasSession = authState.user != null
 
     OceanBubblyBackground {
         Column(
@@ -94,23 +96,31 @@ fun VerifyEmailScreen(
                     }
 
                     Spacer(Modifier.height(24.dp))
-                    PrimaryButton(
-                        text = if (authState.isLoading) "Đang kiểm tra..." else "Tôi đã xác minh",
-                        onClick = onRefresh,
-                        enabled = !authState.isLoading
-                    )
-                    Spacer(Modifier.height(12.dp))
-                    SecondaryButton(
-                        text = "Gửi lại email xác minh",
-                        onClick = onResendEmail,
-                        enabled = !authState.isLoading
-                    )
-                    Spacer(Modifier.height(12.dp))
-                    SecondaryButton(
-                        text = "Đăng xuất",
-                        onClick = onLogout,
-                        enabled = !authState.isLoading
-                    )
+                    if (hasSession) {
+                        PrimaryButton(
+                            text = if (authState.isLoading) "Đang kiểm tra..." else "Tôi đã xác minh",
+                            onClick = onRefresh,
+                            enabled = !authState.isLoading
+                        )
+                        Spacer(Modifier.height(12.dp))
+                        SecondaryButton(
+                            text = "Gửi lại email xác minh",
+                            onClick = onResendEmail,
+                            enabled = !authState.isLoading
+                        )
+                        Spacer(Modifier.height(12.dp))
+                        SecondaryButton(
+                            text = "Đăng xuất",
+                            onClick = onLogout,
+                            enabled = !authState.isLoading
+                        )
+                    } else {
+                        PrimaryButton(
+                            text = "Đăng nhập",
+                            onClick = onBackToLogin,
+                            enabled = !authState.isLoading
+                        )
+                    }
                 }
             }
             Spacer(Modifier.height(32.dp))

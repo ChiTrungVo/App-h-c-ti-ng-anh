@@ -38,6 +38,6 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun Uri.isEmailVerificationLink(): Boolean {
-        return scheme == "minlish" && host == "verify-email"
+        return host == "verify-email" && (scheme == "https" || scheme == "minlish")
     }
 }

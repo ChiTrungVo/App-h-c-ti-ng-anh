@@ -187,6 +187,12 @@ fun AppNavGraph(
                     authState = authState,
                     onResendEmail = authViewModel::resendVerificationEmail,
                     onRefresh = authViewModel::refreshSession,
+                    onBackToLogin = {
+                        navController.navigate(AppRoutes.Login) {
+                            popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    },
                     onLogout = {
                         authViewModel.logout {
                             navController.navigate(AppRoutes.Login) {

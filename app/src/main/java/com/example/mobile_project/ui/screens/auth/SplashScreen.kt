@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -21,6 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -34,18 +36,23 @@ fun SplashScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(24.dp)
     ) {
-        Bubble(Modifier.align(Alignment.TopStart).size(126.dp), 0.28f)
-        Bubble(Modifier.align(Alignment.TopEnd).padding(top = 74.dp).size(74.dp), 0.22f)
-        Bubble(Modifier.align(Alignment.BottomStart).padding(bottom = 92.dp).size(86.dp), 0.2f)
+        Bubble(Modifier.align(Alignment.TopStart).padding(start = 24.dp, top = 24.dp).size(126.dp), 0.28f)
+        Bubble(Modifier.align(Alignment.TopEnd).padding(top = 98.dp, end = 24.dp).size(74.dp), 0.22f)
+        Bubble(Modifier.align(Alignment.BottomStart).padding(start = 24.dp, bottom = 116.dp).size(86.dp), 0.2f)
         Image(
             painter = painterResource(R.drawable.ic_wave),
             contentDescription = null,
-            modifier = Modifier.align(Alignment.BottomCenter).size(width = 220.dp, height = 72.dp)
+            contentScale = ContentScale.FillBounds,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .height(86.dp)
         )
         Column(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {

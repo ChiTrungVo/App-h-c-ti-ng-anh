@@ -1,6 +1,7 @@
 package com.example.mobile_project.ui.screens.practice
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -25,9 +26,15 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.mobile_project.R
+import com.example.mobile_project.ui.components.PrimaryButton
+import com.example.mobile_project.ui.theme.MinLishPrimaryContainer
+import com.example.mobile_project.ui.theme.MinLishSurface
 
 @Composable
-fun PracticeTypeScreen(onQuiz: () -> Unit) {
+fun PracticeTypeScreen(
+    onFlashcard: () -> Unit,
+    onQuiz: () -> Unit
+) {
     val types = listOf(
         Triple("Trắc nghiệm", "Chọn nghĩa đúng của từ.", R.drawable.ic_quiz),
         Triple("Điền từ", "Hoàn thiện câu ví dụ.", R.drawable.ic_edit),
@@ -39,6 +46,43 @@ fun PracticeTypeScreen(onQuiz: () -> Unit) {
         Text("Luyện tập", style = MaterialTheme.typography.headlineLarge)
         Text("Chọn dạng bài phù hợp với mục tiêu hôm nay.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(20.dp))
+        Card(
+            onClick = onFlashcard,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(28.dp),
+            colors = CardDefaults.cardColors(containerColor = MinLishSurface),
+            border = BorderStroke(1.5.dp, MinLishPrimaryContainer.copy(alpha = 0.72f)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+        ) {
+            Row(
+                Modifier.padding(18.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.ic_flashcard),
+                    contentDescription = null,
+                    modifier = Modifier.size(46.dp),
+                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary)
+                )
+                Column(Modifier.weight(1f)) {
+                    Text("Học từ mới", style = MaterialTheme.typography.titleLarge)
+                    Text(
+                        "Ôn flashcard theo nhịp ghi nhớ và quay lại các từ cần luyện.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            PrimaryButton(
+                text = "Vào flashcard",
+                onClick = onFlashcard,
+                modifier = Modifier.padding(start = 18.dp, end = 18.dp, bottom = 18.dp)
+            )
+        }
+        Spacer(Modifier.height(20.dp))
+        Text("Các dạng luyện tập", style = MaterialTheme.typography.titleLarge)
+        Spacer(Modifier.height(12.dp))
         types.forEachIndexed { index, item ->
             PracticeTypeCard(item.first, item.second, item.third, onClick = if (index == 0) onQuiz else ({}))
             Spacer(Modifier.height(12.dp))

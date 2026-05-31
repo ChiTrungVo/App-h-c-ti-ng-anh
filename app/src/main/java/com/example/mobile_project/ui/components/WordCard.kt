@@ -21,15 +21,10 @@ import com.example.mobile_project.ui.theme.MinLishPrimaryContainer
 @Composable
 fun WordCard(
     word: VocabularyWord,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null
 ) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.5.dp, MinLishPrimaryContainer.copy(alpha = 0.58f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)
-    ) {
+    val content: @Composable () -> Unit = {
         Column(Modifier.padding(18.dp)) {
             Row {
                 Text(word.word, style = MaterialTheme.typography.titleMedium)
@@ -38,6 +33,29 @@ fun WordCard(
             }
             Text(word.meaning, style = MaterialTheme.typography.bodyLarge)
             Text(word.example, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+
+    if (onClick != null) {
+        Card(
+            onClick = onClick,
+            modifier = modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(28.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            border = BorderStroke(1.5.dp, MinLishPrimaryContainer.copy(alpha = 0.58f)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)
+        ) {
+            content()
+        }
+    } else {
+        Card(
+            modifier = modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(28.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            border = BorderStroke(1.5.dp, MinLishPrimaryContainer.copy(alpha = 0.58f)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)
+        ) {
+            content()
         }
     }
 }

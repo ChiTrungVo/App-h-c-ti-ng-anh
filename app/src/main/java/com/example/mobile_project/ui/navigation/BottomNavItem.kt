@@ -10,10 +10,10 @@ sealed class BottomNavItem(
 ) {
     data object Home : BottomNavItem("home", "Trang chủ", R.drawable.ic_home)
     data object Vocabulary : BottomNavItem("vocabulary", "Từ vựng", R.drawable.ic_vocabulary)
-    data object Learning : BottomNavItem("learning", "Học", R.drawable.ic_learning)
-    data object Progress : BottomNavItem("progress", "Tiến độ", R.drawable.ic_progress)
+    data object Practice : BottomNavItem("practice", "Ôn luyện", R.drawable.ic_learning)
+    data object Profile : BottomNavItem("profile", "Cá nhân", R.drawable.ic_profile)
 
     companion object {
-        val items = listOf(Home, Vocabulary, Learning, Progress)
+        val items = listOf(Home, Vocabulary, Practice, Profile)
     }
 }

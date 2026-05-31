@@ -23,6 +23,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.mobile_project.R
 import com.example.mobile_project.ui.components.MascotBadge
+import com.example.mobile_project.ui.components.MimiMood
 import com.example.mobile_project.ui.components.OceanBubblyBackground
 import com.example.mobile_project.ui.components.OceanCard
 import com.example.mobile_project.ui.components.OceanTextField
@@ -42,7 +43,7 @@ fun RegisterScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(Modifier.height(28.dp))
-            MascotBadge(size = 124.dp)
+            MascotBadge(size = 124.dp, mood = MimiMood.Welcome)
             Spacer(Modifier.height(14.dp))
             Text("Đăng ký", style = MaterialTheme.typography.displayLarge, color = MaterialTheme.colorScheme.primary)
             Text(

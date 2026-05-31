@@ -1,16 +1,4 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
-    <!-- Mặt đồng hồ chính -->
-    <path android:fillColor="#4FC3F7" android:pathData="M12,3C7,3 3,7 3,12C3,17 7,21 12,21C17,21 21,17 21,12C21,7 17,3 12,3Z"/>
-    <!-- Viền đồng hồ -->
-    <path android:fillColor="#0288D1" android:pathData="M12,3C7,3 3,7 3,12C3,17 7,21 12,21C17,21 21,17 21,12C21,7 17,3 12,3ZM12,4.5C16.1,4.5 19.5,7.9 19.5,12C19.5,16.1 16.1,19.5 12,19.5C7.9,19.5 4.5,16.1 4.5,12C4.5,7.9 7.9,4.5 12,4.5Z" android:fillType="evenOdd"/>
-    <!-- Highlight mặt đồng hồ -->
-    <path android:fillColor="#FFFFFF" android:pathData="M12,3C7,3 3,7 3,12C3,13.5 3.4,14.9 4.1,16.1C5.5,10 8.5,5 12,3Z" android:fillAlpha="0.4"/>
-    <!-- Kim giờ -->
-    <path android:fillColor="#006688" android:pathData="M11.5,7H12.5V12.5L11.5,12.5V7Z"/>
-    <!-- Kim phút -->
-    <path android:fillColor="#006688" android:pathData="M12,12L16.5,15.5L15.8,16.3L12,13V12Z"/>
-    <!-- Tâm đồng hồ -->
-    <path android:fillColor="#0288D1" android:pathData="M12,11C12.6,11 13,11.4 13,12C13,12.6 12.6,13 12,13C11.4,13 11,12.6 11,12C11,11.4 11.4,11 12,11Z"/>
-    <!-- Các vạch giờ -->
-    <path android:fillColor="#B3E5FC" android:pathData="M12,5V6M12,18V19M5,12H6M18,12H19" android:strokeWidth="1" android:strokeColor="#B3E5FC"/>
+    <path android:fillColor="#0288D1" android:pathData="M11.99,2C6.47,2 2,6.48 2,12C2,17.52 6.47,22 11.99,22C17.52,22 22,17.52 22,12C22,6.48 17.52,2 11.99,2ZM12,20C7.58,20 4,16.42 4,12C4,7.58 7.58,4 12,4C16.42,4 20,7.58 20,12C20,16.42 16.42,20 12,20Z"/>
+    <path android:fillColor="#0288D1" android:pathData="M12.5,7H11V13L16.25,16.15L17,14.92L12.5,12.25V7Z"/>
 </vector>

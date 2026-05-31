@@ -1,12 +1,3 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
-    <!-- Shield chính -->
-    <path android:fillColor="#0288D1" android:pathData="M12,3L20,7V13C20,17.5 16.6,20.8 12,22C7.4,20.8 4,17.5 4,13V7L12,3Z"/>
-    <!-- Highlight shield -->
-    <path android:fillColor="#4FC3F7" android:pathData="M12,3L20,7V13C20,14.5 19.5,15.9 18.7,17.1L12,5L5.3,17.1C4.5,15.9 4,14.5 4,13V7L12,3Z" android:fillAlpha="0.3"/>
-    <!-- Border shield -->
-    <path android:fillColor="#006688" android:pathData="M12,3L20,7V13C20,17.5 16.6,20.8 12,22C7.4,20.8 4,17.5 4,13V7L12,3ZM12,4.8L5.5,8V13C5.5,16.7 8.3,19.5 12,20.5C15.7,19.5 18.5,16.7 18.5,13V8L12,4.8Z" android:fillType="evenOdd"/>
-    <!-- Checkmark -->
-    <path android:fillColor="#FFFFFF" android:pathData="M10.7,14.6L7.9,11.8L9.3,10.4L10.7,11.8L14.9,7.6L16.3,9L10.7,14.6Z"/>
-    <!-- Checkmark shadow -->
-    <path android:fillColor="#4CAF50" android:pathData="M10.7,14.6L7.9,11.8L9.3,10.4L10.7,11.8L14.9,7.6L16.3,9L10.7,14.6Z" android:fillAlpha="0.5"/>
+    <path android:fillColor="#0288D1" android:pathData="M9,16.2L4.8,12L3.4,13.4L9,19L21,7L19.6,5.6L9,16.2Z"/>
 </vector>

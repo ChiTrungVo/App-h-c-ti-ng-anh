@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.mobile_project.ui.components.MascotBadge
+import com.example.mobile_project.ui.components.MimiMood
 import com.example.mobile_project.ui.components.OceanBubblyBackground
 import com.example.mobile_project.ui.components.OceanCard
 import com.example.mobile_project.ui.components.PrimaryButton
@@ -38,7 +39,7 @@ fun LogoutDialogScreen(
                     modifier = Modifier.padding(28.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    MascotBadge(size = 148.dp)
+                    MascotBadge(size = 148.dp, mood = MimiMood.Sad)
                     Spacer(Modifier.height(18.dp))
                     Text("Đăng xuất?", style = MaterialTheme.typography.headlineLarge, textAlign = TextAlign.Center)
                     Spacer(Modifier.height(8.dp))

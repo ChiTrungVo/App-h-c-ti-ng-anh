@@ -20,23 +20,40 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.mobile_project.R
-import com.example.mobile_project.data.sample.SampleData
+import com.example.mobile_project.data.sample.VocabularyDemoStore
 import com.example.mobile_project.ui.components.EmptyStateView
 import com.example.mobile_project.ui.components.PrimaryButton
 import com.example.mobile_project.ui.components.VocabularySetCard
 
 @Composable
 fun VocabularySetListScreen(
-    onSetClick: () -> Unit,
+    onSetClick: (String) -> Unit,
     onAddClick: () -> Unit
 ) {
+    var searchQuery by remember { mutableStateOf("") }
+    var selectedTag by remember { mutableStateOf("Tất cả") }
+    val allSets = VocabularyDemoStore.vocabularySets
+    val tags = listOf("Tất cả") + allSets.flatMap { it.tags }.distinct().sorted()
+    val filteredSets = allSets.filter { set ->
+        val matchesSearch = searchQuery.isBlank() ||
+            set.title.contains(searchQuery, ignoreCase = true) ||
+            set.description.contains(searchQuery, ignoreCase = true) ||
+            set.tags.any { it.contains(searchQuery, ignoreCase = true) }
+        val matchesTag = selectedTag == "Tất cả" || selectedTag in set.tags
+        matchesSearch && matchesTag
+    }
+
     Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         LazyColumn(
             modifier = Modifier.fillMaxSize().padding(20.dp),
@@ -48,8 +65,8 @@ fun VocabularySetListScreen(
                 Text("Quản lý bộ từ và tiến độ học", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Spacer(Modifier.height(16.dp))
                 OutlinedTextField(
-                    value = "ocean",
-                    onValueChange = {},
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
                     label = { Text("Tìm bộ từ") },
                     leadingIcon = {
                         Image(
@@ -63,22 +80,31 @@ fun VocabularySetListScreen(
                 )
                 Spacer(Modifier.height(12.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf("Tất cả", "IELTS", "Giao tiếp", "Công việc", "Đã học gần đây").forEach {
-                        AssistChip(onClick = {}, label = { Text(it) })
+                    tags.forEach { tag ->
+                        AssistChip(
+                            onClick = { selectedTag = tag },
+                            label = { Text(tag) }
+                        )
                     }
                 }
                 Spacer(Modifier.height(12.dp))
                 PrimaryButton("Tạo bộ từ", onClick = onAddClick)
                 Spacer(Modifier.height(12.dp))
-                Text("Đang tải bộ từ. Nếu có lỗi, màn hình sẽ hiển thị trạng thái lỗi tại đây.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Bộ từ được lưu theo collection vocabulary_sets; mỗi từ bên trong trỏ về setId của bộ này.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            items(SampleData.vocabulary_sets) { set ->
-                VocabularySetCard(vocabularySet = set, onClick = onSetClick)
+            items(filteredSets, key = { it.setId }) { set ->
+                VocabularySetCard(vocabularySet = set, onClick = { onSetClick(set.setId) })
             }
-            item {
-                Spacer(Modifier.height(16.dp))
-                EmptyStateView("Chưa có bộ từ mới", "Tạo một bộ từ riêng để học theo mục tiêu của bạn.")
-                Spacer(Modifier.height(96.dp))
+            if (filteredSets.isEmpty()) {
+                item {
+                    Spacer(Modifier.height(16.dp))
+                    EmptyStateView("Chưa có bộ từ phù hợp", "Tạo bộ từ theo chủ đề IELTS, TOEIC, Business hoặc Travel.")
+                    Spacer(Modifier.height(96.dp))
+                }
+            } else {
+                item {
+                    Spacer(Modifier.height(96.dp))
+                }
             }
         }
         FloatingActionButton(

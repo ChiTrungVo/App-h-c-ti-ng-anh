@@ -18,14 +18,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.mobile_project.R
 import com.example.mobile_project.data.sample.SampleData
+import com.example.mobile_project.ui.components.MimiMood
 import com.example.mobile_project.ui.components.PrimaryButton
 import com.example.mobile_project.ui.components.StatCard
+import com.example.mobile_project.ui.components.WhaleMascot
 
 @Composable
 fun QuizResultScreen(onReviewWrong: () -> Unit) {
     val attempt = SampleData.quiz_attempts
+    val resultMood = if (attempt.scorePercent >= 80) MimiMood.Celebrate else MimiMood.NeedCare
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).verticalScroll(rememberScrollState()).padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Spacer(Modifier.height(36.dp))
+        WhaleMascot(size = 122.dp, mood = resultMood)
+        Spacer(Modifier.height(12.dp))
         Text("Kết quả quiz", style = MaterialTheme.typography.headlineLarge)
         Spacer(Modifier.height(8.dp))
         Text("${attempt.scorePercent}%", style = MaterialTheme.typography.displayLarge, color = MaterialTheme.colorScheme.primary)

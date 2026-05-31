@@ -76,7 +76,8 @@ fun OceanCard(
 @Composable
 fun MascotBadge(
     modifier: Modifier = Modifier,
-    size: Dp = 120.dp
+    size: Dp = 120.dp,
+    mood: MimiMood = MimiMood.Default
 ) {
     Surface(
         shape = CircleShape,
@@ -87,7 +88,7 @@ fun MascotBadge(
             .size(size)
             .border(4.dp, MinLishSurface, CircleShape)
     ) {
-        WhaleMascot(size = size)
+        WhaleMascot(size = size, mood = mood)
     }
 }
 

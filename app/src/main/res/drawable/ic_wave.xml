@@ -1,10 +1,3 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="160dp" android:height="48dp" android:viewportWidth="160" android:viewportHeight="48">
-    <!-- Sóng phía sau (tối hơn) -->
-    <path android:fillColor="#4FC3F7" android:pathData="M0,32C18,22 33,22 50,32C68,43 85,43 104,32C123,22 141,22 160,32V48H0V32Z" android:fillAlpha="0.6"/>
-    <!-- Sóng chính -->
-    <path android:fillColor="#7ED7F4" android:pathData="M0,28C18,18 33,18 50,28C68,39 85,39 104,28C123,18 141,18 160,28V48H0V28Z"/>
-    <!-- Sóng phía trước (sáng hơn) -->
-    <path android:fillColor="#B3E5FC" android:pathData="M0,36C18,26 33,26 50,36C68,47 85,47 104,36C123,26 141,26 160,36V48H0V36Z" android:fillAlpha="0.5"/>
-    <!-- Highlight sóng -->
-    <path android:fillColor="#FFFFFF" android:pathData="M0,28C18,18 33,18 50,28C55,31 60,33 65,33C70,33 75,31 80,28C85,25 90,22 95,22C100,22 105,25 110,28C123,18 141,18 160,28V30C141,20 123,20 104,30C85,41 68,41 50,30C33,20 18,20 0,30V28Z" android:fillAlpha="0.3"/>
+    <path android:fillColor="#4FC3F7" android:pathData="M0,24C20,14 40,14 60,24C80,34 100,34 120,24C140,14 150,14 160,24V48H0V24Z"/>
 </vector>

@@ -10,14 +10,22 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.mobile_project.R
 
+enum class MimiMood(@param:DrawableRes val assetRes: Int) {
+    Default(R.drawable.mimi_whale),
+    Welcome(R.drawable.mimi_chao_mung),
+    NeedCare(R.drawable.mimi_an_ui),
+    Celebrate(R.drawable.mimi_chuc_mung),
+    Sad(R.drawable.mini_buon)
+}
+
 @Composable
 fun WhaleMascot(
     modifier: Modifier = Modifier,
     size: Dp = 96.dp,
-    @DrawableRes asset: Int = R.drawable.mimi_whale
+    mood: MimiMood = MimiMood.Default
 ) {
     Image(
-        painter = painterResource(asset),
+        painter = painterResource(mood.assetRes),
         contentDescription = "Linh vật cá voi MinLish",
         modifier = modifier.size(size)
     )

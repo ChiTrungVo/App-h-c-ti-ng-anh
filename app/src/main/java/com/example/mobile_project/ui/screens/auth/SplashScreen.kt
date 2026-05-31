@@ -25,6 +25,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.mobile_project.R
+import com.example.mobile_project.ui.components.MimiMood
 import com.example.mobile_project.ui.components.WhaleMascot
 
 @Composable
@@ -56,6 +57,7 @@ fun SplashScreen() {
             ) {
                 WhaleMascot(
                     size = 128.dp,
+                    mood = MimiMood.Welcome,
                     modifier = Modifier.padding(10.dp)
                 )
             }

@@ -7,10 +7,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.mobile_project.ui.components.MinLishBottomBar
 import com.example.mobile_project.ui.screens.auth.ForgotPasswordScreen
 import com.example.mobile_project.ui.screens.auth.LoginScreen
@@ -54,6 +56,10 @@ object AppRoutes {
     const val EditProfile = "edit_profile"
     const val Notifications = "notifications"
     const val LogoutDialog = "logout_dialog"
+
+    fun vocabularyDetail(setId: String) = "$VocabularyDetail/$setId"
+    fun editVocabularySet(setId: String = "new") = "$EditVocabularySet/$setId"
+    fun editWord(setId: String, wordId: String = "new") = "$EditWord/$setId/$wordId"
 }
 
 @Composable
@@ -61,13 +67,13 @@ fun AppNavGraph() {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
-    val bottomRoutes = BottomNavItem.items.map { it.route }.toSet()
+    val currentRootRoute = currentRoute.toBottomRootRoute()
 
     Scaffold(
         bottomBar = {
-            if (currentRoute in bottomRoutes) {
+            if (currentRootRoute != null) {
                 MinLishBottomBar(
-                    currentRoute = currentRoute,
+                    currentRoute = currentRootRoute,
                     onItemClick = { item ->
                         navController.navigate(item.route) {
                             popUpTo(navController.graph.findStartDestination().id) {
@@ -118,30 +124,56 @@ fun AppNavGraph() {
                 HomeScreen(
                     onStartLearning = { navController.navigate(AppRoutes.Learning) },
                     onProfileClick = { navController.navigate(AppRoutes.Profile) },
-                    onAddSet = { navController.navigate(AppRoutes.EditVocabularySet) },
-                    onQuiz = { navController.navigate(AppRoutes.Quiz) },
+                    onAddSet = { navController.navigate(AppRoutes.editVocabularySet()) },
+                    onQuiz = { navController.navigate(AppRoutes.Practice) },
                     onProgress = { navController.navigate(AppRoutes.Progress) }
                 )
             }
             composable(AppRoutes.Vocabulary) {
                 VocabularySetListScreen(
-                    onSetClick = { navController.navigate(AppRoutes.VocabularyDetail) },
-                    onAddClick = { navController.navigate(AppRoutes.EditVocabularySet) }
+                    onSetClick = { setId -> navController.navigate(AppRoutes.vocabularyDetail(setId)) },
+                    onAddClick = { navController.navigate(AppRoutes.editVocabularySet()) }
                 )
             }
-            composable(AppRoutes.VocabularyDetail) {
+            composable(
+                route = "${AppRoutes.VocabularyDetail}/{setId}",
+                arguments = listOf(navArgument("setId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val setId = backStackEntry.arguments?.getString("setId").orEmpty()
                 VocabularySetDetailScreen(
-                    onAddWord = { navController.navigate(AppRoutes.EditWord) },
-                    onEditSet = { navController.navigate(AppRoutes.EditVocabularySet) },
+                    setId = setId,
+                    onAddWord = { navController.navigate(AppRoutes.editWord(setId)) },
+                    onEditWord = { wordId -> navController.navigate(AppRoutes.editWord(setId, wordId)) },
+                    onEditSet = { navController.navigate(AppRoutes.editVocabularySet(setId)) },
                     onStartLearning = { navController.navigate(AppRoutes.Flashcard) },
                     onQuiz = { navController.navigate(AppRoutes.Quiz) }
                 )
             }
-            composable(AppRoutes.EditVocabularySet) {
-                EditVocabularySetScreen(onSave = { navController.popBackStack() })
+            composable(
+                route = "${AppRoutes.EditVocabularySet}/{setId}",
+                arguments = listOf(navArgument("setId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                EditVocabularySetScreen(
+                    setId = backStackEntry.arguments?.getString("setId"),
+                    onSave = { savedSetId ->
+                        navController.navigate(AppRoutes.vocabularyDetail(savedSetId)) {
+                            popUpTo(AppRoutes.Vocabulary)
+                        }
+                    }
+                )
             }
-            composable(AppRoutes.EditWord) {
-                EditWordScreen(onSave = { navController.popBackStack() })
+            composable(
+                route = "${AppRoutes.EditWord}/{setId}/{wordId}",
+                arguments = listOf(
+                    navArgument("setId") { type = NavType.StringType },
+                    navArgument("wordId") { type = NavType.StringType }
+                )
+            ) { backStackEntry ->
+                EditWordScreen(
+                    setId = backStackEntry.arguments?.getString("setId").orEmpty(),
+                    wordId = backStackEntry.arguments?.getString("wordId"),
+                    onSave = { navController.popBackStack() }
+                )
             }
             composable(AppRoutes.Learning) {
                 DailyLearningPlanScreen(
@@ -159,7 +191,10 @@ fun AppNavGraph() {
                 )
             }
             composable(AppRoutes.Practice) {
-                PracticeTypeScreen(onQuiz = { navController.navigate(AppRoutes.Quiz) })
+                PracticeTypeScreen(
+                    onFlashcard = { navController.navigate(AppRoutes.Flashcard) },
+                    onQuiz = { navController.navigate(AppRoutes.Quiz) }
+                )
             }
             composable(AppRoutes.Quiz) {
                 QuizScreen(onResult = { navController.navigate(AppRoutes.QuizResult) })
@@ -198,4 +233,31 @@ fun AppNavGraph() {
             }
         }
     }
+}
+
+private fun String?.toBottomRootRoute(): String? = when (this) {
+    AppRoutes.Home,
+    AppRoutes.Learning -> AppRoutes.Home
+
+    AppRoutes.Vocabulary,
+    AppRoutes.VocabularyDetail,
+    AppRoutes.EditVocabularySet,
+    AppRoutes.EditWord,
+    "${AppRoutes.VocabularyDetail}/{setId}",
+    "${AppRoutes.EditVocabularySet}/{setId}",
+    "${AppRoutes.EditWord}/{setId}/{wordId}" -> AppRoutes.Vocabulary
+
+    AppRoutes.Practice,
+    AppRoutes.Flashcard,
+    AppRoutes.SessionResult,
+    AppRoutes.Quiz,
+    AppRoutes.QuizResult -> AppRoutes.Practice
+
+    AppRoutes.Profile,
+    AppRoutes.Progress,
+    AppRoutes.EditProfile,
+    AppRoutes.Notifications,
+    AppRoutes.LogoutDialog -> AppRoutes.Profile
+
+    else -> null
 }

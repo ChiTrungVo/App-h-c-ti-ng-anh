@@ -13,34 +13,75 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.mobile_project.data.sample.SampleData
+import com.example.mobile_project.data.sample.VocabularyDemoStore
 import com.example.mobile_project.ui.components.PrimaryButton
 
 @Composable
-fun EditWordScreen(onSave: () -> Unit) {
-    val word = SampleData.vocabularies.first()
+fun EditWordScreen(
+    setId: String,
+    wordId: String?,
+    onSave: () -> Unit
+) {
+    val existingWord = VocabularyDemoStore.getWord(wordId)
+    var word by rememberSaveable(wordId, setId) { mutableStateOf(existingWord?.word.orEmpty()) }
+    var pronunciation by rememberSaveable(wordId, setId) { mutableStateOf(existingWord?.pronunciation.orEmpty()) }
+    var meaning by rememberSaveable(wordId, setId) { mutableStateOf(existingWord?.meaning.orEmpty()) }
+    var definition by rememberSaveable(wordId, setId) { mutableStateOf(existingWord?.definition.orEmpty()) }
+    var example by rememberSaveable(wordId, setId) { mutableStateOf(existingWord?.example.orEmpty()) }
+    var collocations by rememberSaveable(wordId, setId) { mutableStateOf(existingWord?.collocations?.joinToString(", ").orEmpty()) }
+    var note by rememberSaveable(wordId, setId) { mutableStateOf(existingWord?.note.orEmpty()) }
+    var imageUrl by rememberSaveable(wordId, setId) { mutableStateOf(existingWord?.imageUrl.orEmpty()) }
+    val isEditing = existingWord != null
+
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).verticalScroll(rememberScrollState()).padding(20.dp)) {
         Spacer(Modifier.height(28.dp))
-        Text("Thêm hoặc sửa từ", style = MaterialTheme.typography.headlineLarge)
+        Text(if (isEditing) "Sửa từ vựng" else "Thêm từ vựng", style = MaterialTheme.typography.headlineLarge)
+        Text("Từ này sẽ lưu vào vocabularies và trỏ về bộ từ bằng setId.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(20.dp))
-        OutlinedTextField(word.word, {}, label = { Text("Từ vựng") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(word, { word = it }, label = { Text("Từ vựng") }, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(12.dp))
-        OutlinedTextField(word.pronunciation, {}, label = { Text("Phiên âm IPA") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(pronunciation, { pronunciation = it }, label = { Text("Phiên âm IPA") }, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(12.dp))
-        OutlinedTextField(word.meaning, {}, label = { Text("Nghĩa tiếng Việt") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(meaning, { meaning = it }, label = { Text("Nghĩa tiếng Việt") }, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(12.dp))
-        OutlinedTextField(word.definition, {}, label = { Text("Định nghĩa") }, minLines = 2, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(definition, { definition = it }, label = { Text("Định nghĩa") }, minLines = 2, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(12.dp))
-        OutlinedTextField(word.example, {}, label = { Text("Ví dụ") }, minLines = 2, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(example, { example = it }, label = { Text("Ví dụ") }, minLines = 2, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(12.dp))
-        OutlinedTextField(word.collocations.joinToString(", "), {}, label = { Text("Cụm từ đi kèm") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(collocations, { collocations = it }, label = { Text("Cụm từ đi kèm") }, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(12.dp))
-        OutlinedTextField(word.note, {}, label = { Text("Ghi chú") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(note, { note = it }, label = { Text("Ghi chú") }, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(12.dp))
-        OutlinedTextField(word.imageUrl.orEmpty(), {}, label = { Text("URL hình ảnh") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(imageUrl, { imageUrl = it }, label = { Text("URL hình ảnh") }, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(20.dp))
-        PrimaryButton("Lưu từ", onClick = onSave)
+        PrimaryButton(
+            "Lưu từ",
+            onClick = {
+                VocabularyDemoStore.saveWord(
+                    wordId = existingWord?.wordId,
+                    setId = setId,
+                    word = word,
+                    pronunciation = pronunciation,
+                    meaning = meaning,
+                    definition = definition,
+                    example = example,
+                    collocations = parseList(collocations),
+                    note = note,
+                    imageUrl = imageUrl
+                )
+                onSave()
+            }
+        )
     }
 }
+
+private fun parseList(value: String): List<String> = value
+    .split(",")
+    .map { it.trim() }
+    .filter { it.isNotBlank() }

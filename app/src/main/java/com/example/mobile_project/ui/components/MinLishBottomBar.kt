@@ -8,8 +8,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -35,36 +37,41 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.mobile_project.ui.navigation.BottomNavItem
 import com.example.mobile_project.ui.theme.MinLishPrimaryContainer
-import com.example.mobile_project.ui.theme.MinLishSurface
 
 @Composable
 fun MinLishBottomBar(
     currentRoute: String?,
-    onItemClick: (BottomNavItem) -> Unit
+    onItemClick: (BottomNavItem) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    Surface(
-        modifier = Modifier
+    Box(
+        modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 12.dp)
-            .height(82.dp),
-        shape = RoundedCornerShape(38.dp),
-        color = MinLishSurface.copy(alpha = 0.96f),
-        tonalElevation = 8.dp,
-        shadowElevation = 16.dp
+            .navigationBarsPadding()
+            .padding(horizontal = 20.dp, vertical = 10.dp)
+            .height(78.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .border(1.5.dp, MinLishPrimaryContainer.copy(alpha = 0.72f), RoundedCornerShape(38.dp))
-                .padding(horizontal = 10.dp, vertical = 9.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            shape = RoundedCornerShape(39.dp),
+            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+            shadowElevation = 12.dp,
+            tonalElevation = 4.dp
         ) {
-            BottomNavItem.items.forEach { item ->
-                MinLishNavigationItem(
-                    item = item,
-                    selected = currentRoute == item.route,
-                    onClick = { onItemClick(item) }
-                )
+            Row(
+                modifier = Modifier
+                    .border(1.5.dp, MinLishPrimaryContainer.copy(alpha = 0.72f), RoundedCornerShape(39.dp))
+                    .padding(horizontal = 10.dp, vertical = 7.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                BottomNavItem.items.forEach { item ->
+                    MinLishNavigationItem(
+                        item = item,
+                        selected = currentRoute == item.route,
+                        onClick = { onItemClick(item) }
+                    )
+                }
             }
         }
     }

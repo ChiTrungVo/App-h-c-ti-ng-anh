@@ -64,6 +64,7 @@ fun DailyLearningPlanScreen(
         LearningEntryCard("Luyện tập", "Khung giao diện cho trắc nghiệm, điền từ, nghe và ghép cặp.", R.drawable.ic_practice, onQuiz)
         Spacer(Modifier.height(24.dp))
         PrimaryButton("Bắt đầu học", onClick = onFlashcard)
+        Spacer(Modifier.height(132.dp))
     }
 }
 

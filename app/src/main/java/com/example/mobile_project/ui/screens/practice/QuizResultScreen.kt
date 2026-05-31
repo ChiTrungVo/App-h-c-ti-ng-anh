@@ -47,5 +47,6 @@ fun QuizResultScreen(onReviewWrong: () -> Unit) {
         }
         Spacer(Modifier.height(24.dp))
         PrimaryButton("Xem lại câu sai", onClick = onReviewWrong)
+        Spacer(Modifier.height(132.dp))
     }
 }

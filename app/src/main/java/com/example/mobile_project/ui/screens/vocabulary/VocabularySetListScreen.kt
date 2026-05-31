@@ -99,17 +99,19 @@ fun VocabularySetListScreen(
                 item {
                     Spacer(Modifier.height(16.dp))
                     EmptyStateView("Chưa có bộ từ phù hợp", "Tạo bộ từ theo chủ đề IELTS, TOEIC, Business hoặc Travel.")
-                    Spacer(Modifier.height(96.dp))
+                    Spacer(Modifier.height(132.dp))
                 }
             } else {
                 item {
-                    Spacer(Modifier.height(96.dp))
+                    Spacer(Modifier.height(132.dp))
                 }
             }
         }
         FloatingActionButton(
             onClick = onAddClick,
-            modifier = Modifier.align(Alignment.BottomEnd).padding(24.dp),
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(start = 24.dp, top = 24.dp, end = 24.dp, bottom = 118.dp),
             shape = CircleShape,
             containerColor = MaterialTheme.colorScheme.primary
         ) {

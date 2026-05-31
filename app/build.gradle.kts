@@ -19,6 +19,11 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "APPWRITE_ENDPOINT", "\"https://sgp.cloud.appwrite.io/v1\"")
+        buildConfigField("String", "APPWRITE_PROJECT_ID", "\"6a1ba4f10028b72a8545\"")
+        buildConfigField("String", "APPWRITE_DATABASE_ID", "\"vocabulary_app_db\"")
+        buildConfigField("String", "APPWRITE_MEDIA_BUCKET_ID", "\"minlish_media\"")
     }
 
     buildTypes {
@@ -36,6 +41,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -50,7 +56,8 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.appwrite.android)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.appwrite)
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)

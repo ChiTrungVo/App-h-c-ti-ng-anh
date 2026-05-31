@@ -108,6 +108,6 @@ fun NotificationSettingsScreen(onSave: () -> Unit) {
                 PrimaryButton("Lưu cài đặt", onClick = onSave)
             }
         }
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(132.dp))
     }
 }

@@ -85,7 +85,7 @@ fun HomeScreen(
             QuickActionCard("Tiến độ", R.drawable.ic_chart, MinLishSurface, onProgress, Modifier.weight(1f))
             QuickActionCard("Flashcard", R.drawable.ic_flashcard, MinLishSurface, onStartLearning, Modifier.weight(1f))
         }
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(132.dp))
     }
 }
 

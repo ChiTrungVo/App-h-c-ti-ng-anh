@@ -25,6 +25,8 @@ import com.example.mobile_project.ui.theme.MinLishPrimaryContainer
 
 @Composable
 fun LogoutDialogScreen(
+    isLoading: Boolean = false,
+    errorMessage: String? = null,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -50,10 +52,20 @@ fun LogoutDialogScreen(
                         textAlign = TextAlign.Center
                     )
                     Spacer(Modifier.height(24.dp))
-                    PrimaryButton("Hủy", onClick = onDismiss)
+                    errorMessage?.let { message ->
+                        Text(
+                            message,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyMedium,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(Modifier.height(12.dp))
+                    }
+                    PrimaryButton("Hủy", onClick = onDismiss, enabled = !isLoading)
                     Spacer(Modifier.height(12.dp))
                     Button(
                         onClick = onConfirm,
+                        enabled = !isLoading,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(52.dp),
@@ -65,7 +77,7 @@ fun LogoutDialogScreen(
                         ),
                         elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp, pressedElevation = 2.dp)
                     ) {
-                        Text("Đăng xuất", style = MaterialTheme.typography.labelLarge)
+                        Text(if (isLoading) "Đang đăng xuất..." else "Đăng xuất", style = MaterialTheme.typography.labelLarge)
                     }
                 }
             }

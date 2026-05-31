@@ -29,6 +29,8 @@ Truy cập Appwrite Console và lấy các thông tin sau:
      - `attributes.write`
      - `indexes.read`
      - `indexes.write`
+     - `buckets.read`
+     - `buckets.write`
 
 ### 2. Cấu hình môi trường
 
@@ -44,6 +46,7 @@ APPWRITE_ENDPOINT=https://cloud.appwrite.io/v1
 APPWRITE_PROJECT_ID=your_project_id_here
 APPWRITE_API_KEY=your_api_key_here
 DATABASE_ID=vocabulary_app_db
+MEDIA_BUCKET_ID=minlish_media
 ```
 
 ### 3. Cài đặt dependencies
@@ -52,15 +55,23 @@ DATABASE_ID=vocabulary_app_db
 npm install
 ```
 
-### 4. Chạy script thiết lập
+### 4. Chạy migration
 
 ```bash
-npm run setup
+npm run migrate
 ```
 
 Script sẽ tạo:
 - 1 database: `vocabulary_app_db`
 - 9 collections với đầy đủ attributes và indexes theo schema
+- 1 collection `schema_migrations` để ghi version đã chạy
+- 1 storage bucket `minlish_media` để lưu ảnh/cách phát âm cho từ vựng
+
+Lệnh cũ vẫn còn dùng được:
+
+```bash
+npm run setup
+```
 
 ## Các collection được tạo
 
@@ -73,6 +84,16 @@ Script sẽ tạo:
 7. **daily_learning_stats** - Thống kê học tập hằng ngày
 8. **quiz_attempts** - Lượt làm quiz
 9. **quiz_answers** - Chi tiết câu trả lời
+
+## Storage
+
+Bucket `minlish_media` lưu media tĩnh của nội dung học:
+
+- ảnh minh họa từ vựng: lưu `fileId` vào `vocabularies.imageFileId`
+- file phát âm/audio: lưu `fileId` vào `vocabularies.audioFileId`
+- URL ngoài vẫn được giữ bằng `imageUrl` / `audioUrl` để tương thích dữ liệu cũ
+
+Mascot/logo hiện tại vẫn để trong `res/drawable` vì đó là asset giao diện của app, không phải dữ liệu học do người dùng hoặc admin nhập.
 
 ## Xử lý lỗi
 

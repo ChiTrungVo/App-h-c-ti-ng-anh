@@ -78,6 +78,7 @@ fun EditWordScreen(
                 onSave()
             }
         )
+        Spacer(Modifier.height(132.dp))
     }
 }
 

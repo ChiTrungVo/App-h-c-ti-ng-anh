@@ -75,6 +75,7 @@ fun EditVocabularySetScreen(
                 onSave(savedSetId)
             }
         )
+        Spacer(Modifier.height(132.dp))
     }
 }
 

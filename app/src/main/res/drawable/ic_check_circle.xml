@@ -1,3 +1,12 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
-    <path android:fillColor="#6DD6A8" android:pathData="M12,3C7,3 3,7 3,12S7,21 12,21S21,17 21,12S17,3 12,3ZM10.6,15.8L7.4,12.6L8.8,11.2L10.6,13L15.6,8L17,9.4L10.6,15.8Z"/>
+    <!-- Vòng tròn chính -->
+    <path android:fillColor="#4CAF50" android:pathData="M12,3C7,3 3,7 3,12C3,17 7,21 12,21C17,21 21,17 21,12C21,7 17,3 12,3Z"/>
+    <!-- Highlight vòng tròn -->
+    <path android:fillColor="#81C784" android:pathData="M12,3C7,3 3,7 3,12C3,13.5 3.4,14.9 4.1,16.1C5.5,10 8.5,5 12,3Z" android:fillAlpha="0.5"/>
+    <!-- Viền -->
+    <path android:fillColor="#2E7D32" android:pathData="M12,3C7,3 3,7 3,12C3,17 7,21 12,21C17,21 21,17 21,12C21,7 17,3 12,3ZM12,4.5C16.1,4.5 19.5,7.9 19.5,12C19.5,16.1 16.1,19.5 12,19.5C7.9,19.5 4.5,16.1 4.5,12C4.5,7.9 7.9,4.5 12,4.5Z" android:fillType="evenOdd"/>
+    <!-- Dấu check -->
+    <path android:fillColor="#FFFFFF" android:pathData="M10.6,15.8L7.4,12.6L8.8,11.2L10.6,13L15.6,8L17,9.4L10.6,15.8Z"/>
+    <!-- Shadow check -->
+    <path android:fillColor="#1B5E20" android:pathData="M10.6,15.8L7.4,12.6L8.8,11.2L10.6,13L15.6,8L17,9.4L10.6,15.8Z" android:fillAlpha="0.2"/>
 </vector>

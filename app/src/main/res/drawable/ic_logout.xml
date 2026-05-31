@@ -1,3 +1,14 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
-    <path android:fillColor="#0288D1" android:pathData="M5,4H13V6H7V18H13V20H5V4ZM15.6,8.4L17,7L22,12L17,17L15.6,15.6L18.2,13H10V11H18.2L15.6,8.4Z"/>
+    <!-- Cửa -->
+    <path android:fillColor="#0288D1" android:pathData="M5,4H13C13.6,4 14,4.4 14,5V19C14,19.6 13.6,20 13,20H5C4.4,20 4,19.6 4,19V5C4,4.4 4.4,4 5,4Z"/>
+    <!-- Highlight cửa -->
+    <path android:fillColor="#4FC3F7" android:pathData="M5,4H7V20H5C4.4,20 4,19.6 4,19V5C4,4.4 4.4,4 5,4Z" android:fillAlpha="0.5"/>
+    <!-- Viền cửa -->
+    <path android:fillColor="#006688" android:pathData="M5,4H13C13.6,4 14,4.4 14,5V19C14,19.6 13.6,20 13,20H5C4.4,20 4,19.6 4,19V5C4,4.4 4.4,4 5,4ZM5,5V19H13V5H5Z" android:fillType="evenOdd"/>
+    <!-- Tay nắm cửa -->
+    <path android:fillColor="#FFD54F" android:pathData="M10,11C10.6,11 11,11.4 11,12C11,12.6 10.6,13 10,13C9.4,13 9,12.6 9,12C9,11.4 9.4,11 10,11Z"/>
+    <!-- Mũi tên ra -->
+    <path android:fillColor="#F44336" android:pathData="M15.6,8.4L17,7L22,12L17,17L15.6,15.6L18.2,13H10V11H18.2L15.6,8.4Z"/>
+    <!-- Shadow mũi tên -->
+    <path android:fillColor="#C62828" android:pathData="M16,8.8L17,7.8L21.5,12L17,16.2L16,15.2L18.5,12.5H10.5V11.5H18.5L16,8.8Z" android:fillAlpha="0.3"/>
 </vector>

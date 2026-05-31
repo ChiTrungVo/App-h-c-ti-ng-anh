@@ -1,3 +1,10 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
-    <path android:fillColor="#0288D1" android:pathData="M11,5H13V11H19V13H13V19H11V13H5V11H11V5Z"/>
+    <!-- Vòng tròn nền -->
+    <path android:fillColor="#4FC3F7" android:pathData="M12,3C7,3 3,7 3,12C3,17 7,21 12,21C17,21 21,17 21,12C21,7 17,3 12,3Z"/>
+    <!-- Viền vòng tròn -->
+    <path android:fillColor="#0288D1" android:pathData="M12,3C7,3 3,7 3,12C3,17 7,21 12,21C17,21 21,17 21,12C21,7 17,3 12,3ZM12,4C16.4,4 20,7.6 20,12C20,16.4 16.4,20 12,20C7.6,20 4,16.4 4,12C4,7.6 7.6,4 12,4Z" android:fillType="evenOdd"/>
+    <!-- Dấu cộng -->
+    <path android:fillColor="#FFFFFF" android:pathData="M11,7H13V11H17V13H13V17H11V13H7V11H11V7Z"/>
+    <!-- Shadow dấu cộng -->
+    <path android:fillColor="#006688" android:pathData="M11.5,7.5H12.5V11H16.5V12H12.5V16.5H11.5V12H7.5V11H11.5V7.5Z" android:fillAlpha="0.3"/>
 </vector>

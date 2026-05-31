@@ -1,5 +1,17 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="96dp" android:height="96dp" android:viewportWidth="96" android:viewportHeight="96">
-    <path android:fillColor="#BDEFFF" android:pathData="M24,18H72C77,18 81,22 81,27V78H28C21,78 16,73 16,66V26C16,22 19,18 24,18Z"/>
-    <path android:fillColor="#FFFFFF" android:pathData="M29,26H70V68H29V26Z"/>
-    <path android:fillColor="#0288D1" android:pathData="M33,35H65V39H33V35ZM33,46H60V50H33V46ZM33,57H54V61H33V57Z"/>
+    <!-- Bìa sổ chính -->
+    <path android:fillColor="#4FC3F7" android:pathData="M24,18H72C77,18 81,22 81,27V78H28C21,78 16,73 16,66V26C16,22 19,18 24,18Z"/>
+    <!-- Gáy sổ với độ sâu -->
+    <path android:fillColor="#0288D1" android:pathData="M16,66C16,73 21,78 28,78H81V75H28C23,75 19,71 19,66V26C19,24 20,22 22,21V66C22,68 19,68 16,66Z"/>
+    <!-- Highlight bìa -->
+    <path android:fillColor="#B3E5FC" android:pathData="M24,18H28V78H28C21,78 16,73 16,66V26C16,22 19,18 24,18Z" android:fillAlpha="0.5"/>
+    <!-- Trang giấy trắng -->
+    <path android:fillColor="#FFFFFF" android:pathData="M29,26H70C71,26 72,27 72,28V66C72,67 71,68 70,68H29C28,68 27,67 27,66V28C27,27 28,26 29,26Z"/>
+    <!-- Viền trang giấy -->
+    <path android:fillColor="#E0E0E0" android:pathData="M29,26H70C71,26 72,27 72,28V66C72,67 71,68 70,68H29C28,68 27,67 27,66V28C27,27 28,26 29,26ZM29,27V67H70V27H29Z" android:fillType="evenOdd"/>
+    <!-- Dòng kẻ -->
+    <path android:fillColor="#B3E5FC" android:pathData="M33,35H65V37H33V35ZM33,43H65V45H33V43ZM33,51H65V53H33V51ZM33,59H60V61H33V59Z"/>
+    <!-- Icon sổ trống (dấu chấm than) -->
+    <path android:fillColor="#0288D1" android:pathData="M48,38C49.1,38 50,38.9 50,40V48C50,49.1 49.1,50 48,50C46.9,50 46,49.1 46,48V40C46,38.9 46.9,38 48,38Z"/>
+    <path android:fillColor="#0288D1" android:pathData="M48,54C49.7,54 51,55.3 51,57C51,58.7 49.7,60 48,60C46.3,60 45,58.7 45,57C45,55.3 46.3,54 48,54Z"/>
 </vector>

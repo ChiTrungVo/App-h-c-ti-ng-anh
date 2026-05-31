@@ -4,11 +4,7 @@ import android.net.Uri
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -23,6 +19,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.mobile_project.core.util.ConnectivityStatus
+import com.example.mobile_project.core.util.NetworkConnectivityObserver
 import com.example.mobile_project.ui.components.MinLishBottomBar
 import com.example.mobile_project.feature.auth.viewmodel.AuthViewModel
 import com.example.mobile_project.feature.profile.viewmodel.NotificationSettingsViewModel
@@ -50,6 +48,7 @@ import com.example.mobile_project.ui.screens.vocabulary.EditVocabularySetScreen
 import com.example.mobile_project.ui.screens.vocabulary.EditWordScreen
 import com.example.mobile_project.ui.screens.vocabulary.VocabularySetDetailScreen
 import com.example.mobile_project.ui.screens.vocabulary.VocabularySetListScreen
+import com.example.mobile_project.ui.screens.common.NoInternetScreen
 
 object AppRoutes {
     const val Splash = "splash"
@@ -88,6 +87,17 @@ fun AppNavGraph(
     incomingDeepLink: Uri? = null,
     onIncomingDeepLinkConsumed: () -> Unit = {}
 ) {
+    val context = LocalContext.current
+    val connectivityObserver = remember { NetworkConnectivityObserver(context) }
+    val connectivityStatus by connectivityObserver.status.collectAsState(initial = ConnectivityStatus.Available)
+
+    if (connectivityStatus == ConnectivityStatus.Unavailable) {
+        NoInternetScreen(onRetry = {
+            // Re-checking is handled by the observer automatically
+        })
+        return
+    }
+
     val navController = rememberNavController()
     val authViewModel: AuthViewModel = viewModel()
     val profileViewModel: ProfileViewModel = viewModel()
@@ -99,7 +109,6 @@ fun AppNavGraph(
     val currentRoute = backStackEntry?.destination?.route
     val currentRootRoute = currentRoute.toBottomRootRoute()
     val lifecycleOwner = LocalLifecycleOwner.current
-    val context = LocalContext.current
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->

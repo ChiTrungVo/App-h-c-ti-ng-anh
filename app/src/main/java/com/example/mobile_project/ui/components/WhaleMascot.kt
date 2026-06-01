@@ -3,8 +3,16 @@ package com.example.mobile_project.ui.components
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.size
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -23,12 +31,40 @@ enum class MimiMood(@param:DrawableRes val assetRes: Int) {
 fun WhaleMascot(
     modifier: Modifier = Modifier,
     size: Dp = 96.dp,
-    mood: MimiMood = MimiMood.Default
+    mood: MimiMood = MimiMood.Default,
+    animated: Boolean = false
 ) {
+    val transition = rememberInfiniteTransition(label = "mimiIdle")
+    val bob by transition.animateFloat(
+        initialValue = -4f,
+        targetValue = 4f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1500, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "mimiBob"
+    )
+    val tilt by transition.animateFloat(
+        initialValue = -1.8f,
+        targetValue = 1.8f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1900, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "mimiTilt"
+    )
+
     Image(
         painter = painterResource(mood.assetRes),
         contentDescription = "Linh vật cá voi MinLish",
-        modifier = modifier.size(size)
+        modifier = modifier
+            .size(size)
+            .graphicsLayer {
+                if (animated) {
+                    translationY = bob
+                    rotationZ = tilt
+                }
+            }
     )
 }
 

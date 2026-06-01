@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.mobile_project.R
 import com.example.mobile_project.data.sample.SampleData
+import com.example.mobile_project.ui.components.CelebrationSprinkles
 import com.example.mobile_project.ui.components.MimiMood
 import com.example.mobile_project.ui.components.PrimaryButton
 import com.example.mobile_project.ui.components.StatCard
@@ -31,7 +32,10 @@ fun QuizResultScreen(onReviewWrong: () -> Unit) {
     val resultMood = if (attempt.scorePercent >= 80) MimiMood.Celebrate else MimiMood.NeedCare
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).verticalScroll(rememberScrollState()).padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Spacer(Modifier.height(36.dp))
-        WhaleMascot(size = 122.dp, mood = resultMood)
+        if (attempt.scorePercent >= 80) {
+            CelebrationSprinkles()
+        }
+        WhaleMascot(size = 122.dp, mood = resultMood, animated = true)
         Spacer(Modifier.height(12.dp))
         Text("Kết quả quiz", style = MaterialTheme.typography.headlineLarge)
         Spacer(Modifier.height(8.dp))

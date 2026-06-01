@@ -42,6 +42,7 @@ export const coreCollections = [
       { type: 'string', key: 'displayName', size: 255, required: true },
       { type: 'string', key: 'email', size: 255, required: true },
       { type: 'string', key: 'avatarUrl', size: 1000, required: false },
+      { type: 'string', key: 'avatarFileId', size: 36, required: false },
       { type: 'string', key: 'phone', size: 20, required: false },
       { type: 'string', key: 'bio', size: 500, required: false },
       { type: 'string', key: 'nativeLanguage', size: 50, required: false, default: 'vi' },

@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mobile_project.feature.auth.data.AppwriteAuthRepository
 import com.example.mobile_project.feature.auth.data.MinLishAuthUser
-import io.appwrite.exceptions.AppwriteException
+import com.example.mobile_project.feature.auth.data.toVietnameseAuthMessage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -51,7 +51,7 @@ class AuthViewModel(
                             user = null,
                             isCheckingSession = false,
                             isLoading = false,
-                            errorMessage = error.toUserMessage()
+                            errorMessage = error.toVietnameseAuthMessage()
                         )
                     }
                 }
@@ -70,12 +70,21 @@ class AuthViewModel(
             runCatching { repository.login(email, password) }
                 .onSuccess { user ->
                     _uiState.update {
-                        it.copy(user = user, isLoading = false, errorMessage = null)
+                        it.copy(
+                            user = user,
+                            isLoading = false,
+                            errorMessage = null,
+                            infoMessage = if (user.isEmailVerified) {
+                                null
+                            } else {
+                                "Email chưa được xác minh. Vui lòng kiểm tra hộp thư hoặc gửi lại email xác minh."
+                            }
+                        )
                     }
                 }
                 .onFailure { error ->
                     _uiState.update {
-                        it.copy(isLoading = false, errorMessage = error.toUserMessage())
+                        it.copy(isLoading = false, errorMessage = error.toVietnameseAuthMessage())
                     }
                 }
         }
@@ -93,12 +102,21 @@ class AuthViewModel(
             runCatching { repository.register(displayName, email, password) }
                 .onSuccess { user ->
                     _uiState.update {
-                        it.copy(user = user, isLoading = false, errorMessage = null)
+                        it.copy(
+                            user = user,
+                            isLoading = false,
+                            errorMessage = null,
+                            infoMessage = if (user.isEmailVerified) {
+                                null
+                            } else {
+                                "Tài khoản đã được tạo. MinLish đã gửi email xác minh cho bạn."
+                            }
+                        )
                     }
                 }
                 .onFailure { error ->
                     _uiState.update {
-                        it.copy(isLoading = false, errorMessage = error.toUserMessage())
+                        it.copy(isLoading = false, errorMessage = error.toVietnameseAuthMessage())
                     }
                 }
         }
@@ -121,7 +139,7 @@ class AuthViewModel(
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            errorMessage = error.toUserMessage(),
+                            errorMessage = error.toVietnameseAuthMessage(),
                             infoMessage = null
                         )
                     }
@@ -141,7 +159,7 @@ class AuthViewModel(
                 }
                 .onFailure { error ->
                     _uiState.update {
-                        it.copy(isLoading = false, errorMessage = error.toUserMessage())
+                        it.copy(isLoading = false, errorMessage = error.toVietnameseAuthMessage())
                     }
                 }
         }
@@ -167,13 +185,94 @@ class AuthViewModel(
                 }
                 .onFailure { error ->
                     _uiState.update {
-                        it.copy(isLoading = false, errorMessage = error.toUserMessage())
+                        it.copy(isLoading = false, errorMessage = error.toVietnameseAuthMessage())
+                    }
+                }
+        }
+    }
+
+    fun sendPasswordRecovery(email: String) {
+        val validationError = validateEmail(email)
+        if (validationError != null) {
+            _uiState.update { it.copy(errorMessage = validationError, infoMessage = null) }
+            return
+        }
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null, infoMessage = null) }
+            runCatching { repository.sendPasswordRecovery(email) }
+                .onSuccess {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            infoMessage = "Đã gửi email đặt lại mật khẩu. Vui lòng kiểm tra hộp thư."
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    _uiState.update {
+                        it.copy(isLoading = false, errorMessage = error.toVietnameseAuthMessage())
+                    }
+                }
+        }
+    }
+
+    fun completePasswordRecovery(
+        userId: String,
+        secret: String,
+        password: String,
+        confirmPassword: String,
+        onSuccess: () -> Unit = {}
+    ) {
+        val validationError = when {
+            userId.isBlank() || secret.isBlank() -> "Liên kết đặt lại mật khẩu không hợp lệ."
+            password.length < 8 -> "Mật khẩu cần ít nhất 8 ký tự."
+            password != confirmPassword -> "Mật khẩu nhập lại chưa khớp."
+            else -> null
+        }
+        if (validationError != null) {
+            _uiState.update { it.copy(errorMessage = validationError, infoMessage = null) }
+            return
+        }
+
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    isLoading = true,
+                    errorMessage = null,
+                    infoMessage = "Đang đặt lại mật khẩu..."
+                )
+            }
+            runCatching { repository.completePasswordRecovery(userId, secret, password) }
+                .onSuccess {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            infoMessage = "Mật khẩu đã được đặt lại. Vui lòng đăng nhập lại."
+                        )
+                    }
+                    onSuccess()
+                }
+                .onFailure { error ->
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = error.toVietnameseAuthMessage(),
+                            infoMessage = null
+                        )
                     }
                 }
         }
     }
 
     fun completeEmailVerification(uri: Uri) {
+        val shouldRefresh = uri.getQueryParameter("refresh") == "1" ||
+            uri.getQueryParameter("verified") == "1"
+        if (shouldRefresh) {
+            refreshSession()
+            return
+        }
+
         val userId = uri.getQueryParameter("userId")
         val secret = uri.getQueryParameter("secret")
         if (userId.isNullOrBlank() || secret.isNullOrBlank()) {
@@ -194,33 +293,53 @@ class AuthViewModel(
             runCatching { repository.completeEmailVerification(userId, secret) }
                 .onSuccess { user ->
                     _uiState.update {
-                        it.copy(
-                            user = user,
-                            isLoading = false,
-                            errorMessage = null,
-                            infoMessage = "Email đã được xác minh."
-                        )
+                        if (user == null) {
+                            it.copy(
+                                user = null,
+                                isLoading = false,
+                                errorMessage = null,
+                                infoMessage = "Email đã được xác minh. Vui lòng đăng nhập lại để tiếp tục."
+                            )
+                        } else {
+                            it.copy(
+                                user = user,
+                                isLoading = false,
+                                errorMessage = null,
+                                infoMessage = "Email đã được xác minh."
+                            )
+                        }
                     }
                 }
                 .onFailure { error ->
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            errorMessage = error.toUserMessage(),
+                            errorMessage = error.toVietnameseAuthMessage(),
                             infoMessage = null
                         )
                     }
-                }
+            }
         }
     }
 
     private fun validateEmailPassword(email: String, password: String): String? {
+        return validateEmail(email)
+            ?: when {
+                password.length < 8 -> "Mật khẩu cần ít nhất 8 ký tự theo yêu cầu Appwrite."
+                else -> null
+        }
+    }
+
+    private fun validateEmail(email: String): String? {
         return when {
             email.isBlank() -> "Vui lòng nhập email."
-            "@" !in email -> "Email không hợp lệ."
-            password.length < 8 -> "Mật khẩu cần ít nhất 8 ký tự theo yêu cầu Appwrite."
+            !EMAIL_REGEX.matches(email.trim()) -> "Email không hợp lệ."
             else -> null
         }
+    }
+
+    private companion object {
+        val EMAIL_REGEX = Regex("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")
     }
 
     private fun validateRegister(
@@ -234,22 +353,5 @@ class AuthViewModel(
             else -> validateEmailPassword(email, password)
                 ?: if (password != confirmPassword) "Mật khẩu nhập lại chưa khớp." else null
         }
-    }
-}
-
-private fun Throwable.toUserMessage(): String {
-    val rawMessage = message.orEmpty()
-    return when (this) {
-        is AppwriteException -> when {
-            rawMessage.contains("Invalid Origin", ignoreCase = true) ->
-                "Appwrite chưa đăng ký đúng Android platform cho gói ứng dụng này."
-            rawMessage.contains("invalid_client", ignoreCase = true) ->
-                "Google OAuth client chưa hợp lệ. Kiểm tra Client ID/Client Secret trong Appwrite."
-            rawMessage.contains("verification", ignoreCase = true) || rawMessage.contains("redirect", ignoreCase = true) ->
-                "Không thể gửi email xác minh. Kiểm tra URL chuyển hướng và cấu hình email trong Appwrite."
-            rawMessage.isNotBlank() -> rawMessage
-            else -> "Không thể kết nối Appwrite."
-        }
-        else -> rawMessage.ifBlank { "Đã có lỗi xảy ra." }
     }
 }

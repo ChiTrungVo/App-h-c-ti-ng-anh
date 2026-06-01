@@ -224,7 +224,8 @@ fun AppNavGraph(
                 ForgotPasswordScreen(
                     authState = authState,
                     onSubmit = authViewModel::sendPasswordRecovery,
-                    onBackToLogin = { navController.navigate(AppRoutes.Login) }
+                    onBackToLogin = { navController.navigate(AppRoutes.Login) },
+                    onClearMessage = authViewModel::clearMessage
                 )
             }
             composable(
@@ -252,7 +253,8 @@ fun AppNavGraph(
                             confirmPassword = confirmPassword
                         )
                     },
-                    onBackToLogin = { navController.navigate(AppRoutes.Login) }
+                    onBackToLogin = { navController.navigate(AppRoutes.Login) },
+                    onClearMessage = authViewModel::clearMessage
                 )
             }
             composable(AppRoutes.VerifyEmail) {

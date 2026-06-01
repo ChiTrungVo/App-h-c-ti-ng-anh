@@ -1,111 +1,241 @@
 package com.example.mobile_project.ui.screens.practice
 
-import androidx.compose.foundation.Image
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.mobile_project.R
-import com.example.mobile_project.ui.components.PrimaryButton
+import com.example.mobile_project.ui.components.MascotBadge
+import com.example.mobile_project.ui.components.MimiMood
+import com.example.mobile_project.ui.components.OceanBubblyBackground
+import com.example.mobile_project.ui.theme.MinLishPrimary
 import com.example.mobile_project.ui.theme.MinLishPrimaryContainer
 import com.example.mobile_project.ui.theme.MinLishSurface
+import com.example.mobile_project.ui.theme.MinLishTextPrimary
+import com.example.mobile_project.ui.theme.MinLishTextSecondary
 
 @Composable
 fun PracticeTypeScreen(
     onFlashcard: () -> Unit,
     onQuiz: () -> Unit
 ) {
-    val types = listOf(
-        Triple("Trắc nghiệm", "Chọn nghĩa đúng của từ.", R.drawable.ic_quiz),
-        Triple("Điền từ", "Hoàn thiện câu ví dụ.", R.drawable.ic_edit),
-        Triple("Nghe và chọn", "Nghe phát âm rồi chọn đáp án.", R.drawable.ic_clock),
-        Triple("Ghép cặp", "Ghép từ với nghĩa tiếng Việt.", R.drawable.ic_check_circle)
+    val practiceTypes = listOf(
+        PracticeTypeItem(
+            title = "Trắc nghiệm",
+            iconRes = R.drawable.ic_quiz,
+            containerColor = Color(0xFFFFECB3),
+            borderColor = Color(0xFFFFE082),
+            shadowColor = Color(0xFFFFC107),
+            iconTint = Color(0xFFFFB300),
+            onClick = onQuiz
+        ),
+        PracticeTypeItem(
+            title = "Điền từ",
+            iconRes = R.drawable.ic_edit,
+            containerColor = Color(0xFFB2EBF2),
+            borderColor = Color(0xFF80DEEA),
+            shadowColor = Color(0xFF00BCD4),
+            iconTint = Color(0xFF00ACC1),
+            onClick = {}
+        ),
+        PracticeTypeItem(
+            title = "Nghe và chọn",
+            iconRes = R.drawable.ic_clock,
+            containerColor = Color(0xFFC8E6C9),
+            borderColor = Color(0xFFA5D6A7),
+            shadowColor = Color(0xFF4CAF50),
+            iconTint = Color(0xFF43A047),
+            onClick = {}
+        ),
+        PracticeTypeItem(
+            title = "Ghép cặp",
+            iconRes = R.drawable.ic_check_circle,
+            containerColor = Color(0xFFF8BBD0),
+            borderColor = Color(0xFFF48FB1),
+            shadowColor = Color(0xFFE91E63),
+            iconTint = Color(0xFFD81B60),
+            onClick = {}
+        )
     )
-    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).verticalScroll(rememberScrollState()).padding(20.dp)) {
-        Spacer(Modifier.height(28.dp))
-        Text("Luyện tập", style = MaterialTheme.typography.headlineLarge)
-        Text("Chọn dạng bài phù hợp với mục tiêu hôm nay.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Spacer(Modifier.height(20.dp))
-        Card(
-            onClick = onFlashcard,
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(28.dp),
-            colors = CardDefaults.cardColors(containerColor = MinLishSurface),
-            border = BorderStroke(1.5.dp, MinLishPrimaryContainer.copy(alpha = 0.72f)),
-            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+
+    OceanBubblyBackground(contentPadding = PaddingValues(horizontal = 20.dp, vertical = 24.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Row(
-                Modifier.padding(18.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                Image(
-                    painter = painterResource(R.drawable.ic_flashcard),
-                    contentDescription = null,
-                    modifier = Modifier.size(46.dp),
-                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary)
-                )
-                Column(Modifier.weight(1f)) {
-                    Text("Học từ mới", style = MaterialTheme.typography.titleLarge)
-                    Text(
-                        "Ôn flashcard theo nhịp ghi nhớ và quay lại các từ cần luyện.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-            PrimaryButton(
-                text = "Vào flashcard",
-                onClick = onFlashcard,
-                modifier = Modifier.padding(start = 18.dp, end = 18.dp, bottom = 18.dp)
-            )
-        }
-        Spacer(Modifier.height(20.dp))
-        Text("Các dạng luyện tập", style = MaterialTheme.typography.titleLarge)
-        Spacer(Modifier.height(12.dp))
-        types.forEachIndexed { index, item ->
-            PracticeTypeCard(item.first, item.second, item.third, onClick = if (index == 0) onQuiz else ({}))
             Spacer(Modifier.height(12.dp))
+            Text(
+                text = "Luyện tập",
+                style = MaterialTheme.typography.displayLarge,
+                color = MinLishPrimary,
+                textAlign = TextAlign.Center
+            )
+            Spacer(Modifier.height(10.dp))
+            Surface(
+                shape = CircleShape,
+                color = MinLishSurface,
+                border = BorderStroke(1.dp, MinLishPrimaryContainer.copy(alpha = 0.7f)),
+                shadowElevation = 2.dp
+            ) {
+                Text(
+                    text = "Chọn một bài tập để bắt đầu nào!",
+                    modifier = Modifier.padding(horizontal = 22.dp, vertical = 10.dp),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MinLishTextSecondary,
+                    textAlign = TextAlign.Center
+                )
+            }
+            Spacer(Modifier.height(28.dp))
+            MascotGuidance()
+            Spacer(Modifier.height(26.dp))
+            practiceTypes.chunked(2).forEach { rowItems ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    rowItems.forEach { item ->
+                        PracticeTypeCard(
+                            item = item,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    if (rowItems.size == 1) {
+                        Spacer(Modifier.weight(1f))
+                    }
+                }
+                Spacer(Modifier.height(16.dp))
+            }
+            Spacer(Modifier.height(104.dp))
         }
-        Spacer(Modifier.height(120.dp))
     }
 }
 
 @Composable
-private fun PracticeTypeCard(title: String, description: String, icon: Int, onClick: () -> Unit) {
-    Card(
-        onClick = onClick,
+private fun MascotGuidance() {
+    Row(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        verticalAlignment = Alignment.Bottom,
+        horizontalArrangement = Arrangement.Center
     ) {
-        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-            Image(painter = painterResource(icon), contentDescription = null, modifier = Modifier.size(38.dp), colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary))
-            Column {
-                Text(title, style = MaterialTheme.typography.titleMedium)
-                Text(description, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        MascotBadge(size = 88.dp, mood = MimiMood.Welcome)
+        Spacer(Modifier.width(12.dp))
+        Surface(
+            modifier = Modifier.weight(1f, fill = false),
+            shape = RoundedCornerShape(
+                topStart = 24.dp,
+                topEnd = 24.dp,
+                bottomEnd = 24.dp,
+                bottomStart = 6.dp
+            ),
+            color = MinLishSurface,
+            border = BorderStroke(2.dp, MinLishPrimaryContainer.copy(alpha = 0.8f)),
+            shadowElevation = 2.dp
+        ) {
+            Text(
+                text = "Cố lên bạn nhé! Chúng ta cùng ôn bài nào.",
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MinLishTextPrimary
+            )
+        }
+    }
+}
+
+@Composable
+private fun PracticeTypeCard(
+    item: PracticeTypeItem,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .aspectRatio(1f)
+            .padding(bottom = 6.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .offset(y = 6.dp)
+                .background(item.shadowColor, RoundedCornerShape(28.dp))
+        )
+        Surface(
+            modifier = Modifier
+                .fillMaxSize()
+                .clickable(onClick = item.onClick),
+            shape = RoundedCornerShape(28.dp),
+            color = item.containerColor,
+            border = BorderStroke(2.dp, item.borderColor)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(14.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Surface(
+                    shape = CircleShape,
+                    color = MinLishSurface,
+                    shadowElevation = 2.dp
+                ) {
+                    Image(
+                        painter = painterResource(item.iconRes),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .padding(12.dp)
+                            .size(36.dp),
+                        colorFilter = ColorFilter.tint(item.iconTint)
+                    )
+                }
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    text = item.title,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MinLishTextPrimary,
+                    textAlign = TextAlign.Center
+                )
             }
         }
     }
 }
+
+private data class PracticeTypeItem(
+    val title: String,
+    @param:DrawableRes val iconRes: Int,
+    val containerColor: Color,
+    val borderColor: Color,
+    val shadowColor: Color,
+    val iconTint: Color,
+    val onClick: () -> Unit
+)

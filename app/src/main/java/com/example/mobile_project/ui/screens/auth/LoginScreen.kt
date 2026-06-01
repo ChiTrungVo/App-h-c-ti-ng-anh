@@ -40,7 +40,10 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.mobile_project.R
+import com.example.mobile_project.core.ui.FormFieldKeys
 import com.example.mobile_project.feature.auth.viewmodel.AuthUiState
+import com.example.mobile_project.ui.components.FeedbackMessageBox
+import com.example.mobile_project.ui.components.FeedbackMessageType
 import com.example.mobile_project.ui.components.MascotBadge
 import com.example.mobile_project.ui.components.MimiMood
 import com.example.mobile_project.ui.components.OceanBubblyBackground
@@ -68,12 +71,9 @@ fun LoginScreen(
     LaunchedEffect(Unit) {
         onClearMessage()
     }
-    val errorMessage = authState.errorMessage
-    val emailError = errorMessage?.takeIf { it.isLoginEmailError() }
-    val passwordError = errorMessage?.takeIf { it.isLoginPasswordError() }
-    val generalError = errorMessage?.takeUnless {
-        it.isLoginEmailError() || it.isLoginPasswordError()
-    }
+    val emailError = authState.fieldErrors[FormFieldKeys.EMAIL]
+    val passwordError = authState.fieldErrors[FormFieldKeys.PASSWORD]
+    val generalError = authState.errorMessage
 
     OceanBubblyBackground {
         Column(
@@ -181,10 +181,9 @@ fun LoginScreen(
                         Spacer(Modifier.height(12.dp))
                     }
                     authState.infoMessage?.let { message ->
-                        Text(
-                            message,
-                            color = MaterialTheme.colorScheme.primary,
-                            style = MaterialTheme.typography.bodyMedium
+                        FeedbackMessageBox(
+                            message = message,
+                            type = FeedbackMessageType.Info
                         )
                         Spacer(Modifier.height(12.dp))
                     }
@@ -251,14 +250,4 @@ fun LoginScreen(
             Spacer(Modifier.height(24.dp))
         }
     }
-}
-
-private fun String.isLoginEmailError(): Boolean {
-    return contains("email", ignoreCase = true) &&
-        (contains("không hợp lệ", ignoreCase = true) || contains("nhập", ignoreCase = true))
-}
-
-private fun String.isLoginPasswordError(): Boolean {
-    return contains("mật khẩu", ignoreCase = true) &&
-        (contains("ít nhất", ignoreCase = true) || contains("nhập", ignoreCase = true))
 }

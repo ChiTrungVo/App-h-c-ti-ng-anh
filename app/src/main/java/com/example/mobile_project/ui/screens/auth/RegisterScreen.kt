@@ -21,7 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,6 +35,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.mobile_project.R
+import com.example.mobile_project.core.ui.FormFieldKeys
 import com.example.mobile_project.feature.auth.viewmodel.AuthUiState
 import com.example.mobile_project.ui.components.MascotBadge
 import com.example.mobile_project.ui.components.MimiMood
@@ -51,13 +52,13 @@ fun RegisterScreen(
     onLogin: () -> Unit,
     onClearMessage: () -> Unit = {}
 ) {
-    var displayName by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
+    var displayName by rememberSaveable { mutableStateOf("") }
+    var email by rememberSaveable { mutableStateOf("") }
+    var password by rememberSaveable { mutableStateOf("") }
+    var confirmPassword by rememberSaveable { mutableStateOf("") }
     
-    var passwordVisible by remember { mutableStateOf(false) }
-    var confirmPasswordVisible by remember { mutableStateOf(false) }
+    var passwordVisible by rememberSaveable { mutableStateOf(false) }
+    var confirmPasswordVisible by rememberSaveable { mutableStateOf(false) }
 
     val focusManager = LocalFocusManager.current
     
@@ -65,14 +66,11 @@ fun RegisterScreen(
         onClearMessage()
     }
     
-    val errorMsg = authState.errorMessage
-    val isNameError = errorMsg?.contains("tên hiển thị", true) == true
-    val isEmailError = errorMsg?.contains("email", true) == true
-    val isConfirmError = errorMsg?.contains("nhập lại", true) == true || errorMsg?.contains("khớp", true) == true
-    val isPasswordError = errorMsg?.contains("mật khẩu", true) == true && !isConfirmError
-    
-    // Nếu có lỗi nhưng không xác định được thuộc về trường nào, thì hiện ở dưới cùng.
-    val generalError = if (!isNameError && !isEmailError && !isConfirmError && !isPasswordError) errorMsg else null
+    val nameError = authState.fieldErrors[FormFieldKeys.DISPLAY_NAME]
+    val emailError = authState.fieldErrors[FormFieldKeys.EMAIL]
+    val passwordError = authState.fieldErrors[FormFieldKeys.PASSWORD]
+    val confirmPasswordError = authState.fieldErrors[FormFieldKeys.CONFIRM_PASSWORD]
+    val generalError = authState.errorMessage
 
     OceanBubblyBackground {
         Column(
@@ -103,8 +101,8 @@ fun RegisterScreen(
                         label = "Tên hiển thị",
                         iconRes = R.drawable.ic_profile,
                         enabled = !authState.isLoading,
-                        isError = isNameError,
-                        supportingText = if (isNameError) errorMsg else null,
+                        isError = nameError != null,
+                        supportingText = nameError,
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                         keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
                     )
@@ -118,8 +116,8 @@ fun RegisterScreen(
                         label = "Email",
                         iconRes = R.drawable.ic_email,
                         enabled = !authState.isLoading,
-                        isError = isEmailError,
-                        supportingText = if (isEmailError) errorMsg else null,
+                        isError = emailError != null,
+                        supportingText = emailError,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
                         keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
                     )
@@ -133,8 +131,8 @@ fun RegisterScreen(
                         label = "Mật khẩu",
                         iconRes = R.drawable.ic_lock,
                         enabled = !authState.isLoading,
-                        isError = isPasswordError,
-                        supportingText = if (isPasswordError) errorMsg else null,
+                        isError = passwordError != null,
+                        supportingText = passwordError,
                         visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                         trailingIcon = {
                             IconButton(onClick = { passwordVisible = !passwordVisible }) {
@@ -158,8 +156,8 @@ fun RegisterScreen(
                         label = "Nhập lại mật khẩu",
                         iconRes = R.drawable.ic_lock_retype,
                         enabled = !authState.isLoading,
-                        isError = isConfirmError,
-                        supportingText = if (isConfirmError) errorMsg else null,
+                        isError = confirmPasswordError != null,
+                        supportingText = confirmPasswordError,
                         visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                         trailingIcon = {
                             IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {

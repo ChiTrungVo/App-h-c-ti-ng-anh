@@ -5,8 +5,21 @@ export const name = 'media_storage';
 
 export async function up({ config, storage, ensureAttribute, isConflict, isNotFound, delay }) {
   try {
-    await storage.getBucket(config.mediaBucketId);
+    const bucket = await storage.getBucket(config.mediaBucketId);
     console.log(`✓ Storage bucket đã tồn tại: ${config.mediaBucketId}`);
+    await storage.updateBucket(
+      config.mediaBucketId,
+      bucket.name || 'MinLish Media',
+      mediaBucketPermissions,
+      bucket.fileSecurity ?? true,
+      bucket.enabled ?? true,
+      bucket.maximumFileSize || 15 * 1024 * 1024,
+      bucket.allowedFileExtensions || ['jpg', 'jpeg', 'png', 'webp', 'gif', 'mp3', 'm4a', 'wav', 'ogg'],
+      bucket.compression || Compression.Gzip,
+      bucket.encryption ?? true,
+      bucket.antivirus ?? true
+    );
+    console.log(`  ✓ Đã đồng bộ permissions bucket: ${config.mediaBucketId}`);
   } catch (error) {
     if (!isNotFound(error)) throw error;
     await storage.createBucket(

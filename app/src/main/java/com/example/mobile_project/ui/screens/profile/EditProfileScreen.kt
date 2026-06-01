@@ -86,6 +86,10 @@ fun EditProfileScreen(
                     ValidationMessageBox(message = message)
                     Spacer(Modifier.height(14.dp))
                 }
+                state.infoMessage?.let { message ->
+                    MessageBox(message = message, isError = false)
+                    Spacer(Modifier.height(14.dp))
+                }
                 OceanTextField(
                     form.displayName,
                     { value -> onFormChange { it.copy(displayName = value) } },
@@ -178,10 +182,6 @@ fun EditProfileScreen(
                     checked = form.darkModeEnabled,
                     onCheckedChange = { checked -> onFormChange { it.copy(darkModeEnabled = checked) } }
                 )
-                state.infoMessage?.let { message ->
-                    Spacer(Modifier.height(14.dp))
-                    MessageBox(message = message, isError = false)
-                }
                 Spacer(Modifier.height(18.dp))
                 PrimaryButton(
                     text = if (state.isSaving) "Đang lưu..." else "Lưu thay đổi",

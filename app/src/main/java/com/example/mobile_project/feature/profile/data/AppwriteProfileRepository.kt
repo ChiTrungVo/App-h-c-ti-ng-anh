@@ -1,6 +1,10 @@
 package com.example.mobile_project.feature.profile.data
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Matrix
+import android.media.ExifInterface
 import android.net.Uri
 import com.example.mobile_project.BuildConfig
 import com.example.mobile_project.core.appwrite.AppwriteClientProvider
@@ -193,18 +197,66 @@ class AppwriteProfileRepository {
     }
 
     private fun copyUriToTempFile(context: Context, uri: Uri): File {
-        val extension = when (context.contentResolver.getType(uri)) {
-            "image/png" -> ".png"
-            "image/webp" -> ".webp"
-            "image/gif" -> ".gif"
-            else -> ".jpg"
+        val transform = readImageTransform(context, uri)
+        if (transform.isIdentity) {
+            return copyOriginalUriToTempFile(context, uri)
         }
-        val tempFile = File.createTempFile("minlish_avatar_", extension, context.cacheDir)
+
+        val bitmap = context.contentResolver.openInputStream(uri).use { input ->
+            requireNotNull(input) { "Không thể đọc ảnh đại diện." }
+            BitmapFactory.decodeStream(input)
+        } ?: return copyOriginalUriToTempFile(context, uri)
+
+        val matrix = Matrix().apply {
+            if (transform.flipHorizontal || transform.flipVertical) {
+                postScale(
+                    if (transform.flipHorizontal) -1f else 1f,
+                    if (transform.flipVertical) -1f else 1f,
+                    bitmap.width / 2f,
+                    bitmap.height / 2f
+                )
+            }
+            if (transform.rotationDegrees != 0f) {
+                postRotate(transform.rotationDegrees, bitmap.width / 2f, bitmap.height / 2f)
+            }
+        }
+        val transformed = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+        val tempFile = File.createTempFile("minlish_avatar_", ".jpg", context.cacheDir)
+        tempFile.outputStream().use { output ->
+            transformed.compress(Bitmap.CompressFormat.JPEG, 92, output)
+        }
+        if (transformed != bitmap) transformed.recycle()
+        bitmap.recycle()
+        return tempFile
+    }
+
+    private fun copyOriginalUriToTempFile(context: Context, uri: Uri): File {
+        val tempFile = File.createTempFile("minlish_avatar_", imageExtension(context, uri), context.cacheDir)
         context.contentResolver.openInputStream(uri).use { input ->
             requireNotNull(input) { "Không thể đọc ảnh đại diện." }
             tempFile.outputStream().use { output -> input.copyTo(output) }
         }
         return tempFile
+    }
+
+    private fun imageExtension(context: Context, uri: Uri): String {
+        return when (context.contentResolver.getType(uri)) {
+            "image/png" -> ".png"
+            "image/webp" -> ".webp"
+            "image/gif" -> ".gif"
+            else -> ".jpg"
+        }
+    }
+
+    private fun readImageTransform(context: Context, uri: Uri): ImageTransform {
+        return runCatching {
+            context.contentResolver.openInputStream(uri).use { input ->
+                requireNotNull(input) { "Không thể đọc ảnh đại diện." }
+                val exif = ExifInterface(input)
+                exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
+                    .toImageTransform()
+            }
+        }.getOrDefault(ImageTransform.None)
     }
 
     private fun now(): String = isoFormatter.format(Date())
@@ -217,6 +269,32 @@ class AppwriteProfileRepository {
 
     private companion object {
         const val USER_PROFILES = "user_profiles"
+    }
+}
+
+private data class ImageTransform(
+    val rotationDegrees: Float = 0f,
+    val flipHorizontal: Boolean = false,
+    val flipVertical: Boolean = false
+) {
+    val isIdentity: Boolean
+        get() = rotationDegrees == 0f && !flipHorizontal && !flipVertical
+
+    companion object {
+        val None = ImageTransform()
+    }
+}
+
+private fun Int.toImageTransform(): ImageTransform {
+    return when (this) {
+        ExifInterface.ORIENTATION_FLIP_HORIZONTAL -> ImageTransform(flipHorizontal = true)
+        ExifInterface.ORIENTATION_ROTATE_180 -> ImageTransform(rotationDegrees = 180f)
+        ExifInterface.ORIENTATION_FLIP_VERTICAL -> ImageTransform(flipVertical = true)
+        ExifInterface.ORIENTATION_TRANSPOSE -> ImageTransform(rotationDegrees = 90f, flipHorizontal = true)
+        ExifInterface.ORIENTATION_ROTATE_90 -> ImageTransform(rotationDegrees = 90f)
+        ExifInterface.ORIENTATION_TRANSVERSE -> ImageTransform(rotationDegrees = 270f, flipHorizontal = true)
+        ExifInterface.ORIENTATION_ROTATE_270 -> ImageTransform(rotationDegrees = 270f)
+        else -> ImageTransform.None
     }
 }
 

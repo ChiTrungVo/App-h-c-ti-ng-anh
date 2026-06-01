@@ -34,6 +34,7 @@ import com.example.mobile_project.ui.components.OceanCard
 import com.example.mobile_project.ui.components.OceanTextField
 import com.example.mobile_project.ui.components.PrimaryButton
 import com.example.mobile_project.ui.components.SecondaryButton
+import com.example.mobile_project.ui.components.ValidationMessageBox
 import com.example.mobile_project.ui.theme.MinLishPrimaryContainer
 
 @Composable
@@ -47,6 +48,11 @@ fun EditProfileScreen(
         uri?.let(onUploadAvatar)
     }
     val form = state.form
+    val errorMessage = state.errorMessage
+    val isNameError = state.profile != null && form.displayName.isBlank() ||
+        errorMessage?.contains("Tên hiển thị", ignoreCase = true) == true
+    val isPhoneError = errorMessage?.contains("Số điện thoại", ignoreCase = true) == true
+    val isDailyTargetError = errorMessage?.contains("Mục tiêu hằng ngày", ignoreCase = true) == true
 
     Column(
         Modifier
@@ -76,13 +82,17 @@ fun EditProfileScreen(
                     enabled = !state.isSaving
                 )
                 Spacer(Modifier.height(14.dp))
+                errorMessage?.let { message ->
+                    ValidationMessageBox(message = message)
+                    Spacer(Modifier.height(14.dp))
+                }
                 OceanTextField(
                     form.displayName,
                     { value -> onFormChange { it.copy(displayName = value) } },
                     "Tên hiển thị",
                     R.drawable.ic_profile,
-                    isError = form.displayName.isBlank(),
-                    supportingText = if (form.displayName.isBlank()) "Tên hiển thị không được để trống." else null
+                    isError = isNameError,
+                    supportingText = if (isNameError) "Tên hiển thị không được để trống." else null
                 )
                 Spacer(Modifier.height(12.dp))
                 OceanTextField(
@@ -90,6 +100,8 @@ fun EditProfileScreen(
                     { value -> onFormChange { it.copy(phone = value) } },
                     "Số điện thoại",
                     R.drawable.ic_bell,
+                    isError = isPhoneError,
+                    supportingText = if (isPhoneError) errorMessage else null,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
                 )
                 Spacer(Modifier.height(12.dp))
@@ -151,6 +163,8 @@ fun EditProfileScreen(
                     { value -> onFormChange { it.copy(dailyTargetMinutes = value.filter(Char::isDigit)) } },
                     "Mục tiêu hằng ngày (phút)",
                     R.drawable.ic_clock,
+                    isError = isDailyTargetError,
+                    supportingText = if (isDailyTargetError) errorMessage else null,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
                 Spacer(Modifier.height(10.dp))
@@ -164,10 +178,6 @@ fun EditProfileScreen(
                     checked = form.darkModeEnabled,
                     onCheckedChange = { checked -> onFormChange { it.copy(darkModeEnabled = checked) } }
                 )
-                state.errorMessage?.let { message ->
-                    Spacer(Modifier.height(14.dp))
-                    MessageBox(message = message, isError = true)
-                }
                 state.infoMessage?.let { message ->
                     Spacer(Modifier.height(14.dp))
                     MessageBox(message = message, isError = false)

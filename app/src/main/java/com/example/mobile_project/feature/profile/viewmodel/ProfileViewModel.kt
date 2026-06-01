@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.mobile_project.feature.auth.data.toVietnameseAvatarUploadMessage
 import com.example.mobile_project.feature.auth.data.toVietnameseAuthMessage
 import com.example.mobile_project.feature.profile.data.AccountSecurityForm
 import com.example.mobile_project.feature.profile.data.AppwriteProfileRepository
@@ -115,7 +116,7 @@ class ProfileViewModel(
                     _uiState.update {
                         it.copy(
                             isSaving = false,
-                            errorMessage = "Không thể upload ảnh đại diện: ${error.toVietnameseAuthMessage()}"
+                            errorMessage = "Không thể upload ảnh đại diện: ${error.toVietnameseAvatarUploadMessage()}"
                         )
                     }
                 }

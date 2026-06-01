@@ -147,14 +147,14 @@ fun AccountSecurityScreen(
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.35f))
         ) {
             Column(Modifier.padding(18.dp)) {
-                Text("Xóa tài khoản mềm", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.error)
+                Text("Vô hiệu hóa tài khoản", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.error)
                 Text(
-                    "Hồ sơ sẽ được đánh dấu deleted và phiên đăng nhập hiện tại sẽ bị xóa. Appwrite Auth user không bị xóa khỏi server.",
+                    "Tài khoản của bạn sẽ được chuyển sang trạng thái không còn hoạt động và bạn sẽ bị đăng xuất khỏi MinLish. Dữ liệu học tập được giữ lại để hỗ trợ khôi phục khi cần.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(Modifier.height(12.dp))
-                SecondaryButton("Xóa tài khoản", onClick = { showDeleteDialog = true }, enabled = !state.isSaving)
+                SecondaryButton("Vô hiệu hóa tài khoản", onClick = { showDeleteDialog = true }, enabled = !state.isSaving)
             }
         }
         Spacer(Modifier.height(132.dp))
@@ -163,8 +163,10 @@ fun AccountSecurityScreen(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Xác nhận xóa tài khoản?") },
-            text = { Text("Hành động này sẽ đánh dấu hồ sơ là deleted và đăng xuất khỏi MinLish.") },
+            title = { Text("Vô hiệu hóa tài khoản?") },
+            text = {
+                Text("Bạn sẽ bị đăng xuất ngay sau khi xác nhận. Tài khoản sẽ không còn hoạt động trong MinLish cho đến khi được hỗ trợ khôi phục.")
+            },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -172,7 +174,7 @@ fun AccountSecurityScreen(
                         onSoftDelete()
                     }
                 ) {
-                    Text("Xóa", color = MaterialTheme.colorScheme.error)
+                    Text("Vô hiệu hóa", color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {

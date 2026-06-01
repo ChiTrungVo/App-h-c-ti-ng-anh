@@ -43,3 +43,30 @@ fun Throwable.toVietnameseAuthMessage(): String {
         else -> rawMessage.ifBlank { "Đã có lỗi xảy ra." }
     }
 }
+
+fun Throwable.toVietnameseAvatarUploadMessage(): String {
+    val rawMessage = message.orEmpty()
+    return when (this) {
+        is AppwriteException -> when {
+            code == 401 ->
+                "Phiên đăng nhập đã hết hạn hoặc tài khoản chưa có quyền tải ảnh lên. Vui lòng đăng nhập lại rồi thử lại."
+            code == 413 || rawMessage.contains("size", ignoreCase = true) ->
+                "Ảnh đại diện quá lớn. Vui lòng chọn ảnh nhỏ hơn."
+            rawMessage.contains("extension", ignoreCase = true) ||
+                rawMessage.contains("mime", ignoreCase = true) ||
+                rawMessage.contains("type", ignoreCase = true) ->
+                "Định dạng ảnh chưa được hỗ trợ. Vui lòng chọn ảnh JPG, PNG hoặc WEBP."
+            rawMessage.contains("bucket", ignoreCase = true) ||
+                rawMessage.contains("permission", ignoreCase = true) ||
+                rawMessage.contains("not authorized", ignoreCase = true) ->
+                "Chưa có quyền tải ảnh đại diện lên kho lưu trữ. Vui lòng thử đăng nhập lại."
+            rawMessage.contains("network", ignoreCase = true) ||
+                rawMessage.contains("timeout", ignoreCase = true) ->
+                "Không thể kết nối Appwrite. Vui lòng kiểm tra mạng."
+            rawMessage.isNotBlank() -> rawMessage
+            else -> "Không thể tải ảnh đại diện lên. Vui lòng thử lại."
+        }
+        is IOException -> "Không thể kết nối mạng. Vui lòng thử lại."
+        else -> rawMessage.ifBlank { "Không thể tải ảnh đại diện lên. Vui lòng thử lại." }
+    }
+}

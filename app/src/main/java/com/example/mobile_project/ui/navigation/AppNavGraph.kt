@@ -88,12 +88,15 @@ fun AppNavGraph(
     onIncomingDeepLinkConsumed: () -> Unit = {}
 ) {
     val context = LocalContext.current
-    val connectivityObserver = remember { NetworkConnectivityObserver(context) }
+    var connectivityRetryKey by remember { mutableStateOf(0) }
+    val connectivityObserver = remember(context, connectivityRetryKey) {
+        NetworkConnectivityObserver(context)
+    }
     val connectivityStatus by connectivityObserver.status.collectAsState(initial = ConnectivityStatus.Available)
 
     if (connectivityStatus == ConnectivityStatus.Unavailable) {
         NoInternetScreen(onRetry = {
-            // Re-checking is handled by the observer automatically
+            connectivityRetryKey += 1
         })
         return
     }
@@ -205,14 +208,16 @@ fun AppNavGraph(
                         (context as? ComponentActivity)?.let(authViewModel::loginWithGoogle)
                     },
                     onRegister = { navController.navigate(AppRoutes.Register) },
-                    onForgotPassword = { navController.navigate(AppRoutes.ForgotPassword) }
+                    onForgotPassword = { navController.navigate(AppRoutes.ForgotPassword) },
+                    onClearMessage = authViewModel::clearMessage
                 )
             }
             composable(AppRoutes.Register) {
                 RegisterScreen(
                     authState = authState,
                     onRegister = authViewModel::register,
-                    onLogin = { navController.navigate(AppRoutes.Login) }
+                    onLogin = { navController.navigate(AppRoutes.Login) },
+                    onClearMessage = authViewModel::clearMessage
                 )
             }
             composable(AppRoutes.ForgotPassword) {
@@ -272,7 +277,14 @@ fun AppNavGraph(
                 )
             }
             composable(AppRoutes.Home) {
+                val profile = profileState.profile
                 HomeScreen(
+                    displayName = profile?.displayName ?: authState.user?.displayName ?: "Người học MinLish",
+                    dailyTargetMinutes = profile?.dailyTargetMinutes ?: 15,
+                    studiedMinutesToday = 0,
+                    totalWordsLearned = 0,
+                    streakDays = 0,
+                    quizAccuracy = 0,
                     onStartLearning = { navController.navigate(AppRoutes.Learning) },
                     onProfileClick = { navController.navigate(AppRoutes.Profile) },
                     onAddSet = { navController.navigate(AppRoutes.editVocabularySet()) },

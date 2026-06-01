@@ -34,7 +34,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.mobile_project.R
-import com.example.mobile_project.data.sample.SampleData
 import com.example.mobile_project.ui.components.MinLishTopBar
 import com.example.mobile_project.ui.components.MimiMood
 import com.example.mobile_project.ui.components.PrimaryButton
@@ -45,13 +44,18 @@ import com.example.mobile_project.ui.theme.MinLishTertiaryContainer
 
 @Composable
 fun HomeScreen(
+    displayName: String,
+    dailyTargetMinutes: Int,
+    studiedMinutesToday: Int,
+    totalWordsLearned: Int,
+    streakDays: Int,
+    quizAccuracy: Int,
     onStartLearning: () -> Unit,
     onProfileClick: () -> Unit,
     onAddSet: () -> Unit,
     onQuiz: () -> Unit,
     onProgress: () -> Unit
 ) {
-    val stats = SampleData.daily_learning_stats
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -61,28 +65,39 @@ fun HomeScreen(
     ) {
         MinLishTopBar(title = "MinLish", onProfileClick = onProfileClick)
         Spacer(Modifier.height(22.dp))
-        Text("Chào bạn, ${SampleData.user.displayName}", style = MaterialTheme.typography.headlineLarge)
+        Text("Chào bạn, $displayName", style = MaterialTheme.typography.headlineLarge)
         Text(
             "Sẵn sàng cho bài học hôm nay chưa?",
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(Modifier.height(18.dp))
-        DailyGoalBento(onStartLearning = onStartLearning)
-        Spacer(Modifier.height(16.dp))
+        
+        DailyGoalBento(
+            dailyTargetMinutes = dailyTargetMinutes,
+            studiedMinutesToday = studiedMinutesToday,
+            onStartLearning = onStartLearning
+        )
+        Spacer(Modifier.height(18.dp))
+        
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            MiniStat("$totalWordsLearned", "Từ đã học", R.drawable.ic_book, MaterialTheme.colorScheme.primary, Modifier.weight(1f))
+            MiniStat("$streakDays", "Chuỗi ngày", R.drawable.ic_clock, MaterialTheme.colorScheme.tertiary, Modifier.weight(1f))
+            MiniStat("$quizAccuracy%", "Chính xác", R.drawable.ic_check_circle, MaterialTheme.colorScheme.secondary, Modifier.weight(1f))
+        }
+        Spacer(Modifier.height(24.dp))
+        
+        Text(
+            "Tiện ích nhanh",
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(Modifier.height(12.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             QuickActionCard("Từ vựng", R.drawable.ic_vocabulary, MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.74f), onAddSet, Modifier.weight(1f))
             QuickActionCard("Làm bài", R.drawable.ic_quiz, MinLishTertiaryContainer.copy(alpha = 0.7f), onQuiz, Modifier.weight(1f))
         }
-        Spacer(Modifier.height(16.dp))
-        PrimaryButton("Bắt đầu học", onClick = onStartLearning)
-        Spacer(Modifier.height(18.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            MiniStat("120", "Từ đã học", R.drawable.ic_book, MaterialTheme.colorScheme.primary, Modifier.weight(1f))
-            MiniStat("${stats.streakDays}", "Chuỗi ngày", R.drawable.ic_clock, MaterialTheme.colorScheme.tertiary, Modifier.weight(1f))
-            MiniStat("${stats.quizAccuracy}%", "Chính xác", R.drawable.ic_check_circle, MaterialTheme.colorScheme.secondary, Modifier.weight(1f))
-        }
-        Spacer(Modifier.height(18.dp))
+        Spacer(Modifier.height(12.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             QuickActionCard("Tiến độ", R.drawable.ic_chart, MinLishSurface, onProgress, Modifier.weight(1f))
             QuickActionCard("Flashcard", R.drawable.ic_flashcard, MinLishSurface, onStartLearning, Modifier.weight(1f))
@@ -92,7 +107,14 @@ fun HomeScreen(
 }
 
 @Composable
-private fun DailyGoalBento(onStartLearning: () -> Unit) {
+private fun DailyGoalBento(
+    dailyTargetMinutes: Int,
+    studiedMinutesToday: Int,
+    onStartLearning: () -> Unit
+) {
+    val targetMinutes = dailyTargetMinutes.coerceAtLeast(1)
+    val completedMinutes = studiedMinutesToday.coerceIn(0, targetMinutes)
+    val progress = completedMinutes.toFloat() / targetMinutes.toFloat()
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(36.dp),
@@ -119,9 +141,13 @@ private fun DailyGoalBento(onStartLearning: () -> Unit) {
                     )
                 }
                 Spacer(Modifier.height(16.dp))
-                GoalProgressRow("15 phút học", "10/15", 0.66f, MaterialTheme.colorScheme.primary, R.drawable.ic_clock)
-                Spacer(Modifier.height(14.dp))
-                GoalProgressRow("20 từ mới", "5/20", 0.25f, MaterialTheme.colorScheme.secondary, R.drawable.ic_vocabulary)
+                GoalProgressRow(
+                    label = "$targetMinutes phút học",
+                    value = "$completedMinutes/$targetMinutes",
+                    progress = progress,
+                    color = MaterialTheme.colorScheme.primary,
+                    icon = R.drawable.ic_clock
+                )
                 Spacer(Modifier.height(18.dp))
                 PrimaryButton("Học ngay", onClick = onStartLearning)
             }

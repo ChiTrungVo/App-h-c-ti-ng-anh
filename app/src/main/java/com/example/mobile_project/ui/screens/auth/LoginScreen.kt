@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -21,16 +22,21 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.mobile_project.R
@@ -41,7 +47,9 @@ import com.example.mobile_project.ui.components.OceanBubblyBackground
 import com.example.mobile_project.ui.components.OceanCard
 import com.example.mobile_project.ui.components.OceanTextField
 import com.example.mobile_project.ui.components.PrimaryButton
+import com.example.mobile_project.ui.components.ValidationMessageBox
 import com.example.mobile_project.ui.theme.MinLishPrimaryContainer
+import androidx.compose.runtime.LaunchedEffect
 
 @Composable
 fun LoginScreen(
@@ -49,10 +57,23 @@ fun LoginScreen(
     onLogin: (String, String) -> Unit,
     onGoogleLogin: () -> Unit,
     onRegister: () -> Unit,
-    onForgotPassword: () -> Unit
+    onForgotPassword: () -> Unit,
+    onClearMessage: () -> Unit = {}
 ) {
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+    var email by rememberSaveable { mutableStateOf("") }
+    var password by rememberSaveable { mutableStateOf("") }
+    var passwordVisible by rememberSaveable { mutableStateOf(false) }
+    val focusManager = LocalFocusManager.current
+
+    LaunchedEffect(Unit) {
+        onClearMessage()
+    }
+    val errorMessage = authState.errorMessage
+    val emailError = errorMessage?.takeIf { it.isLoginEmailError() }
+    val passwordError = errorMessage?.takeIf { it.isLoginPasswordError() }
+    val generalError = errorMessage?.takeUnless {
+        it.isLoginEmailError() || it.isLoginPasswordError()
+    }
 
     OceanBubblyBackground {
         Column(
@@ -91,20 +112,55 @@ fun LoginScreen(
                     Spacer(Modifier.height(18.dp))
                     OceanTextField(
                         value = email,
-                        onValueChange = { email = it },
+                        onValueChange = { 
+                            email = it
+                            onClearMessage()
+                        },
                         label = "Email",
-                        iconRes = R.drawable.ic_profile,
+                        iconRes = R.drawable.ic_email,
                         enabled = !authState.isLoading,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+                        isError = emailError != null,
+                        supportingText = emailError,
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Email,
+                            imeAction = ImeAction.Next
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                        )
                     )
                     Spacer(Modifier.height(12.dp))
                     OceanTextField(
                         value = password,
-                        onValueChange = { password = it },
+                        onValueChange = { 
+                            password = it
+                            onClearMessage()
+                        },
                         label = "Mật khẩu",
                         iconRes = R.drawable.ic_lock,
                         enabled = !authState.isLoading,
-                        visualTransformation = PasswordVisualTransformation()
+                        isError = passwordError != null,
+                        supportingText = passwordError,
+                        visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Password,
+                            imeAction = ImeAction.Done
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = {
+                                focusManager.clearFocus()
+                                onLogin(email, password)
+                            }
+                        ),
+                        trailingIcon = {
+                            TextButton(onClick = { passwordVisible = !passwordVisible }) {
+                                Text(
+                                    text = if (passwordVisible) "Ẩn" else "Hiện",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
                     )
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                         Text(
@@ -113,16 +169,15 @@ fun LoginScreen(
                             style = MaterialTheme.typography.labelLarge,
                             modifier = Modifier
                                 .padding(top = 4.dp)
-                                .clickable(onClick = onForgotPassword)
+                                .clickable {
+                                    onClearMessage()
+                                    onForgotPassword()
+                                }
                         )
                     }
                     Spacer(Modifier.height(18.dp))
-                    authState.errorMessage?.let { message ->
-                        Text(
-                            message,
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
+                    generalError?.let { message ->
+                        ValidationMessageBox(message = message)
                         Spacer(Modifier.height(12.dp))
                     }
                     authState.infoMessage?.let { message ->
@@ -135,7 +190,10 @@ fun LoginScreen(
                     }
                     PrimaryButton(
                         if (authState.isLoading) "Đang đăng nhập..." else "Đăng nhập",
-                        onClick = { onLogin(email, password) },
+                        onClick = {
+                            focusManager.clearFocus()
+                            onLogin(email, password)
+                        },
                         enabled = !authState.isLoading
                     )
                     Spacer(Modifier.height(18.dp))
@@ -185,9 +243,22 @@ fun LoginScreen(
                 color = MaterialTheme.colorScheme.primary,
                 style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.clickable(onClick = onRegister)
+                modifier = Modifier.clickable {
+                    onClearMessage()
+                    onRegister()
+                }
             )
             Spacer(Modifier.height(24.dp))
         }
     }
+}
+
+private fun String.isLoginEmailError(): Boolean {
+    return contains("email", ignoreCase = true) &&
+        (contains("không hợp lệ", ignoreCase = true) || contains("nhập", ignoreCase = true))
+}
+
+private fun String.isLoginPasswordError(): Boolean {
+    return contains("mật khẩu", ignoreCase = true) &&
+        (contains("ít nhất", ignoreCase = true) || contains("nhập", ignoreCase = true))
 }

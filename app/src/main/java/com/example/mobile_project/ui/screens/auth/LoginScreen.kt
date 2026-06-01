@@ -41,7 +41,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.mobile_project.R
+import com.example.mobile_project.core.ui.FormFieldKeys
 import com.example.mobile_project.feature.auth.viewmodel.AuthUiState
+import com.example.mobile_project.ui.components.FeedbackMessageBox
+import com.example.mobile_project.ui.components.FeedbackMessageType
 import com.example.mobile_project.ui.components.MascotBadge
 import com.example.mobile_project.ui.components.MimiMood
 import com.example.mobile_project.ui.components.OceanBubblyBackground
@@ -70,12 +73,9 @@ fun LoginScreen(
     LaunchedEffect(Unit) {
         onClearMessage()
     }
-    val errorMessage = authState.errorMessage
-    val emailError = errorMessage?.takeIf { it.isLoginEmailError() }
-    val passwordError = errorMessage?.takeIf { it.isLoginPasswordError() }
-    val generalError = errorMessage?.takeUnless {
-        it.isLoginEmailError() || it.isLoginPasswordError()
-    }
+    val emailError = authState.fieldErrors[FormFieldKeys.EMAIL]
+    val passwordError = authState.fieldErrors[FormFieldKeys.PASSWORD]
+    val generalError = authState.errorMessage
 
     OceanBubblyBackground {
         Column(
@@ -183,10 +183,9 @@ fun LoginScreen(
                         Spacer(Modifier.height(12.dp))
                     }
                     authState.infoMessage?.let { message ->
-                        Text(
-                            message,
-                            color = MaterialTheme.colorScheme.primary,
-                            style = MaterialTheme.typography.bodyMedium
+                        FeedbackMessageBox(
+                            message = message,
+                            type = FeedbackMessageType.Info
                         )
                         Spacer(Modifier.height(12.dp))
                     }

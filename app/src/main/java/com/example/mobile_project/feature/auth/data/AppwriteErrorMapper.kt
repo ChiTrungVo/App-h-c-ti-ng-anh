@@ -49,7 +49,7 @@ fun Throwable.toVietnameseAvatarUploadMessage(): String {
     return when (this) {
         is AppwriteException -> when {
             code == 401 ->
-                "Phiên đăng nhập đã hết hạn hoặc tài khoản chưa có quyền tải ảnh lên. Vui lòng đăng nhập lại rồi thử lại."
+                "Hệ thống chưa cấp quyền tải ảnh đại diện lên kho lưu trữ cho tài khoản đang đăng nhập."
             code == 413 || rawMessage.contains("size", ignoreCase = true) ->
                 "Ảnh đại diện quá lớn. Vui lòng chọn ảnh nhỏ hơn."
             rawMessage.contains("extension", ignoreCase = true) ||
@@ -59,7 +59,7 @@ fun Throwable.toVietnameseAvatarUploadMessage(): String {
             rawMessage.contains("bucket", ignoreCase = true) ||
                 rawMessage.contains("permission", ignoreCase = true) ||
                 rawMessage.contains("not authorized", ignoreCase = true) ->
-                "Chưa có quyền tải ảnh đại diện lên kho lưu trữ. Vui lòng thử đăng nhập lại."
+                "Kho lưu trữ ảnh đại diện chưa được cấu hình quyền upload cho người dùng."
             rawMessage.contains("network", ignoreCase = true) ||
                 rawMessage.contains("timeout", ignoreCase = true) ->
                 "Không thể kết nối Appwrite. Vui lòng kiểm tra mạng."

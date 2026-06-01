@@ -1,6 +1,5 @@
 package com.example.mobile_project.ui.screens.auth
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -12,21 +11,25 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.mobile_project.R
+import com.example.mobile_project.core.ui.FormFieldKeys
 import com.example.mobile_project.feature.auth.viewmodel.AuthUiState
+import com.example.mobile_project.ui.components.FeedbackMessageBox
+import com.example.mobile_project.ui.components.FeedbackMessageType
 import com.example.mobile_project.ui.components.MascotBadge
 import com.example.mobile_project.ui.components.OceanBubblyBackground
 import com.example.mobile_project.ui.components.OceanCard
@@ -40,9 +43,16 @@ import com.example.mobile_project.ui.theme.Mobile_projectTheme
 fun ForgotPasswordScreen(
     authState: AuthUiState,
     onSubmit: (String) -> Unit,
-    onBackToLogin: () -> Unit
+    onBackToLogin: () -> Unit,
+    onClearMessage: () -> Unit = {}
 ) {
-    var email by remember { mutableStateOf("") }
+    var email by rememberSaveable { mutableStateOf("") }
+    val emailError = authState.fieldErrors[FormFieldKeys.EMAIL]
+
+    LaunchedEffect(Unit) {
+        onClearMessage()
+    }
+
     OceanBubblyBackground {
         Column(
             modifier = Modifier
@@ -71,19 +81,27 @@ fun ForgotPasswordScreen(
                     Spacer(Modifier.height(22.dp))
                     OceanTextField(
                         value = email,
-                        onValueChange = { email = it },
+                        onValueChange = {
+                            email = it
+                            onClearMessage()
+                        },
                         label = "Email",
                         iconRes = R.drawable.ic_search,
                         enabled = !authState.isLoading,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+                        isError = emailError != null,
+                        supportingText = emailError,
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Email,
+                            imeAction = ImeAction.Done
+                        )
                     )
                     Spacer(Modifier.height(16.dp))
                     authState.errorMessage?.let { message ->
-                        MessageBox(message = message, isError = true)
+                        FeedbackMessageBox(message = message, type = FeedbackMessageType.Error)
                         Spacer(Modifier.height(12.dp))
                     }
                     authState.infoMessage?.let { message ->
-                        MessageBox(message = message, isError = false)
+                        FeedbackMessageBox(message = message, type = FeedbackMessageType.Success)
                         Spacer(Modifier.height(12.dp))
                     }
                     Spacer(Modifier.height(18.dp))

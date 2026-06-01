@@ -36,8 +36,15 @@ class AppwriteUserWordProgressRepository {
         private const val COLLECTION_ID = "user_word_progress"
 
         // SM-2 constants
-        private const val DEFAULT_EASE_FACTOR = 2.5
-        private const val MIN_EASE_FACTOR = 1.3
+        const val DEFAULT_EASE_FACTOR = 2.5
+        const val MIN_EASE_FACTOR = 1.3
+
+        private val ISO_FORMATTER = object : ThreadLocal<SimpleDateFormat>() {
+            override fun initialValue() =
+                SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).apply {
+                    timeZone = TimeZone.getTimeZone("UTC")
+                }
+        }
     }
 
     // ------------------------------------------------------------------ //
@@ -104,7 +111,7 @@ class AppwriteUserWordProgressRepository {
     }
 
     /**
-     * Lấy danh sách từ mới chưa học (status = NEW).
+     * Lấy danh sách từ mới chưa học (status = NOT_STARTED).
      * Dùng để gợi ý từ mới trong Daily Learning Plan.
      */
     suspend fun getNewWords(setId: String, limit: Int = 10): List<UserWordProgress> {
@@ -115,7 +122,7 @@ class AppwriteUserWordProgressRepository {
             queries = listOf(
                 Query.equal("userId", user.id),
                 Query.equal("setId", setId),
-                Query.equal("status", "NEW"),
+                Query.equal("status", "NOT_STARTED"),
                 Query.limit(limit)
             )
         )
@@ -125,20 +132,36 @@ class AppwriteUserWordProgressRepository {
     /**
      * Đếm số từ theo trạng thái trong một bộ từ.
      * Trả về map: status → count.
+     * Hỗ trợ pagination để xử lý bộ từ có >500 từ.
      */
     suspend fun countByStatus(setId: String): Map<String, Int> {
         val user = account.get()
-        val result = databases.listDocuments(
-            databaseId = databaseId,
-            collectionId = COLLECTION_ID,
-            queries = listOf(
+        val allProgress = mutableListOf<UserWordProgress>()
+        var lastDocId: String? = null
+
+        while (true) {
+            val queries = mutableListOf(
                 Query.equal("userId", user.id),
                 Query.equal("setId", setId),
                 Query.limit(500)
             )
-        )
-        return result.documents
-            .map { it.toUserWordProgress() }
+            lastDocId?.let { queries.add(Query.cursorAfter(it)) }
+
+            val result = databases.listDocuments(
+                databaseId = databaseId,
+                collectionId = COLLECTION_ID,
+                queries = queries
+            )
+
+            val docs = result.documents.map { it.toUserWordProgress() }
+            if (docs.isEmpty()) break
+            allProgress.addAll(docs)
+            lastDocId = docs.last().id
+
+            if (docs.size < 500) break
+        }
+
+        return allProgress
             .groupingBy { it.status }
             .eachCount()
     }
@@ -154,7 +177,7 @@ class AppwriteUserWordProgressRepository {
     suspend fun createProgress(
         setId: String,
         wordId: String,
-        status: String = "NEW"
+        status: String = "NOT_STARTED"
     ): UserWordProgress {
         val user = account.get()
         val now = nowIso()
@@ -167,12 +190,12 @@ class AppwriteUserWordProgressRepository {
                 "setId" to setId,
                 "wordId" to wordId,
                 "status" to status,
-                "easeFactor" to DEFAULT_EASE_FACTOR,
-                "repetitionCount" to 0,
-                "intervalDays" to 0,
+                "easinessFactor" to DEFAULT_EASE_FACTOR,
+                "repetitions" to 0,
+                "intervalDays" to 1,
                 "nextReviewAt" to now,
                 "lastReviewedAt" to now,
-                "lastQuality" to -1,
+                "lastQuality" to 0,
                 "createdAt" to now,
                 "updatedAt" to now
             ),
@@ -211,8 +234,8 @@ class AppwriteUserWordProgressRepository {
             documentId = progressId,
             data = mapOf(
                 "status" to sm2.status,
-                "easeFactor" to sm2.easeFactor,
-                "repetitionCount" to sm2.repetitionCount,
+                "easinessFactor" to sm2.easeFactor,
+                "repetitions" to sm2.repetitionCount,
                 "intervalDays" to sm2.intervalDays,
                 "nextReviewAt" to sm2.nextReviewAt,
                 "lastReviewedAt" to now,
@@ -240,51 +263,52 @@ class AppwriteUserWordProgressRepository {
      */
     suspend fun deleteProgressByUserSetWord(userId: String, setId: String, wordId: String) {
         val existing = getProgress(userId, setId, wordId) ?: return
-        // Tìm document ID từ listDocuments
-        val result = databases.listDocuments(
-            databaseId = databaseId,
-            collectionId = COLLECTION_ID,
-            queries = listOf(
-                Query.equal("userId", userId),
-                Query.equal("setId", setId),
-                Query.equal("wordId", wordId),
-                Query.limit(1)
+        runCatching {
+            databases.deleteDocument(
+                databaseId = databaseId,
+                collectionId = COLLECTION_ID,
+                documentId = existing.id
             )
-        )
-        result.documents.firstOrNull()?.let { doc ->
-            runCatching {
-                databases.deleteDocument(
-                    databaseId = databaseId,
-                    collectionId = COLLECTION_ID,
-                    documentId = doc.id
-                )
-            }
         }
     }
 
     /**
      * Xóa toàn bộ tiến độ trong một bộ từ.
      * Gọi khi xóa bộ từ (cascade).
+     * Hỗ trợ pagination để xử lý bộ từ có >500 từ.
      */
     suspend fun deleteAllProgressInSet(setId: String) {
         val user = account.get()
-        val result = databases.listDocuments(
-            databaseId = databaseId,
-            collectionId = COLLECTION_ID,
-            queries = listOf(
+        var lastDocId: String? = null
+
+        while (true) {
+            val queries = mutableListOf(
                 Query.equal("userId", user.id),
                 Query.equal("setId", setId),
                 Query.limit(500)
             )
-        )
-        result.documents.forEach { doc ->
-            runCatching {
-                databases.deleteDocument(
-                    databaseId = databaseId,
-                    collectionId = COLLECTION_ID,
-                    documentId = doc.id
-                )
+            lastDocId?.let { queries.add(Query.cursorAfter(it)) }
+
+            val result = databases.listDocuments(
+                databaseId = databaseId,
+                collectionId = COLLECTION_ID,
+                queries = queries
+            )
+
+            if (result.documents.isEmpty()) break
+
+            result.documents.forEach { doc ->
+                runCatching {
+                    databases.deleteDocument(
+                        databaseId = databaseId,
+                        collectionId = COLLECTION_ID,
+                        documentId = doc.id
+                    )
+                }
             }
+
+            lastDocId = result.documents.last().id
+            if (result.documents.size < 500) break
         }
     }
 
@@ -302,7 +326,7 @@ class AppwriteUserWordProgressRepository {
         current: UserWordProgress,
         quality: Int
     ): SM2Result {
-        val oldEF = current.easeFactor.toDouble().let {
+        val oldEF = current.easinessFactor.let {
             if (it < MIN_EASE_FACTOR) MIN_EASE_FACTOR else it
         }
         val newEF = oldEF + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02))
@@ -322,7 +346,7 @@ class AppwriteUserWordProgressRepository {
             newIntervalDays = when (newRepetitionCount) {
                 1 -> 1
                 2 -> 6
-                else -> (current.boxLevel * clampedEF).toInt()
+                else -> (current.intervalDays * clampedEF).toInt()
             }
             newStatus = if (newRepetitionCount >= 5) "MASTERED" else "REVIEWING"
         }
@@ -336,7 +360,7 @@ class AppwriteUserWordProgressRepository {
             easeFactor = clampedEF,
             repetitionCount = newRepetitionCount,
             intervalDays = newIntervalDays,
-            nextReviewAt = ISO_FORMATTER.get().format(nextReview)
+            nextReviewAt = Companion.ISO_FORMATTER.get().format(nextReview)
         )
     }
 
@@ -358,16 +382,7 @@ class AppwriteUserWordProgressRepository {
         Permission.delete(Role.user(ownerId))
     )
 
-    private fun nowIso(): String = ISO_FORMATTER.get().format(Date())
-
-    companion object Formatter {
-        private val ISO_FORMATTER = object : ThreadLocal<SimpleDateFormat>() {
-            override fun initialValue() =
-                SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).apply {
-                    timeZone = TimeZone.getTimeZone("UTC")
-                }
-        }
-    }
+    private fun nowIso(): String = Companion.ISO_FORMATTER.get().format(Date())
 }
 
 // ------------------------------------------------------------------ //
@@ -378,12 +393,19 @@ class AppwriteUserWordProgressRepository {
 private fun Document<Map<String, Any>>.toUserWordProgress(): UserWordProgress {
     val d = data
     return UserWordProgress(
+        id = id,
         userId = d["userId"] as? String ?: "",
         setId = d["setId"] as? String ?: "",
         wordId = d["wordId"] as? String ?: "",
-        status = d["status"] as? String ?: "NEW",
-        boxLevel = (d["repetitionCount"] as? Number)?.toInt() ?: 0,
+        status = d["status"] as? String ?: "NOT_STARTED",
+        boxLevel = (d["boxLevel"] as? Number)?.toInt() ?: 0,
+        easinessFactor = (d["easinessFactor"] as? Number)?.toDouble() ?: AppwriteUserWordProgressRepository.DEFAULT_EASE_FACTOR,
+        repetitions = (d["repetitions"] as? Number)?.toInt() ?: 0,
+        intervalDays = (d["intervalDays"] as? Number)?.toInt() ?: 1,
         nextReviewAt = d["nextReviewAt"] as? String ?: "",
-        lastQuality = (d["lastQuality"] as? Number)?.toInt() ?: -1
+        lastReviewedAt = d["lastReviewedAt"] as? String ?: "",
+        lastQuality = (d["lastQuality"] as? Number)?.toInt() ?: -1,
+        createdAt = d["createdAt"] as? String ?: "",
+        updatedAt = d["updatedAt"] as? String ?: ""
     )
 }

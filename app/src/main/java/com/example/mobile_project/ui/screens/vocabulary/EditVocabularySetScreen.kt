@@ -79,14 +79,16 @@ fun EditVocabularySetScreen(
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        Spacer(Modifier.height(20.dp))
 
+        Spacer(Modifier.height(20.dp))
         OutlinedTextField(
             value = uiState.form.title,
             onValueChange = { viewModel.onTitleChanged(it) },
             label = { Text("Tên bộ từ") },
             isError = uiState.titleError != null,
-            supportingText = uiState.titleError,
+            supportingText = {
+                uiState.titleError?.let { Text(it) }
+            },
             modifier = Modifier.fillMaxWidth()
         )
         if (uiState.titleError != null) {

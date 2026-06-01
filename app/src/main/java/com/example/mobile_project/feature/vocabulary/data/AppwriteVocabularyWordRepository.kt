@@ -32,6 +32,13 @@ class AppwriteVocabularyWordRepository {
 
     companion object {
         private const val COLLECTION_ID = "vocabularies"
+
+        private val ISO_FORMATTER = object : ThreadLocal<SimpleDateFormat>() {
+            override fun initialValue() =
+                SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).apply {
+                    timeZone = TimeZone.getTimeZone("UTC")
+                }
+        }
     }
 
     // ------------------------------------------------------------------ //
@@ -284,16 +291,7 @@ class AppwriteVocabularyWordRepository {
         Permission.delete(Role.user(ownerId))
     )
 
-    private fun nowIso(): String = ISO_FORMATTER.get().format(Date())
-
-    companion object Formatter {
-        private val ISO_FORMATTER = object : ThreadLocal<SimpleDateFormat>() {
-            override fun initialValue() =
-                SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).apply {
-                    timeZone = TimeZone.getTimeZone("UTC")
-                }
-        }
-    }
+    private fun nowIso(): String = Companion.ISO_FORMATTER.get().format(Date())
 }
 
 // ------------------------------------------------------------------ //

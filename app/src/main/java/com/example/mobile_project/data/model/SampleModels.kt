@@ -40,13 +40,20 @@ data class VocabularyWord(
 )
 
 data class UserWordProgress(
+    val id: String,
     val userId: String,
     val setId: String,
     val wordId: String,
     val status: String,
     val boxLevel: Int,
+    val easinessFactor: Double,
+    val repetitions: Int,
+    val intervalDays: Int,
     val nextReviewAt: String,
-    val lastQuality: Int
+    val lastReviewedAt: String,
+    val lastQuality: Int,
+    val createdAt: String,
+    val updatedAt: String
 )
 
 data class DailyLearningStats(

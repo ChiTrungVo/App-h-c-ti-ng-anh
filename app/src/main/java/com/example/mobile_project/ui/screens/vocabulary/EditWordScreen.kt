@@ -84,7 +84,9 @@ fun EditWordScreen(
             onValueChange = { viewModel.onWordChanged(it) },
             label = { Text("Từ vựng") },
             isError = uiState.wordError != null,
-            supportingText = uiState.wordError,
+            supportingText = {
+                uiState.wordError?.let { Text(it) }
+            },
             modifier = Modifier.fillMaxWidth()
         )
         if (uiState.wordError != null) {
@@ -106,7 +108,9 @@ fun EditWordScreen(
             onValueChange = { viewModel.onMeaningChanged(it) },
             label = { Text("Nghĩa tiếng Việt") },
             isError = uiState.meaningError != null,
-            supportingText = uiState.meaningError,
+            supportingText = {
+                uiState.meaningError?.let { Text(it) }
+            },
             modifier = Modifier.fillMaxWidth()
         )
         if (uiState.meaningError != null) {

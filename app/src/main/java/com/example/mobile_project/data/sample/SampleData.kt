@@ -101,10 +101,10 @@ object SampleData {
         )
     )
 
-    val user_word_progress = listOf(
-        UserWordProgress(user.userId, "set_travel", "word_journey", "REVIEWING", 2, "2026-06-01T08:00:00Z", 4),
-        UserWordProgress(user.userId, "set_ocean", "word_current", "LEARNING", 1, "2026-05-31T14:00:00Z", 3)
-    )
+//    val user_word_progress = listOf(
+//        UserWordProgress(user.userId, "set_travel", "word_journey", "REVIEWING", "STARTED", 1, 2.5),
+//        UserWordProgress(user.userId, "set_ocean", "word_current", "LEARNING", "NOT_STARTED", 2, 3.0)
+//    )
 
     val daily_learning_stats = DailyLearningStats(
         userId = user.userId,

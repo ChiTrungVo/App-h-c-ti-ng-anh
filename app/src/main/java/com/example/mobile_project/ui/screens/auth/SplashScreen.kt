@@ -50,6 +50,7 @@ import com.example.mobile_project.ui.theme.MinLishPrimary
 import com.example.mobile_project.ui.theme.MinLishPrimaryContainer
 import com.example.mobile_project.ui.theme.MinLishSurface
 import com.example.mobile_project.ui.theme.MinLishSurfaceContainer
+import com.example.mobile_project.ui.theme.Mobile_projectTheme
 
 @Composable
 fun SplashScreen(
@@ -283,7 +284,7 @@ private fun RisingBubble(
 @Preview(showBackground = true)
 @Composable
 private fun SplashScreenPreview() {
-    MinLishPrimaryContainer {
+    Mobile_projectTheme() {
         SplashScreen()
     }
 }

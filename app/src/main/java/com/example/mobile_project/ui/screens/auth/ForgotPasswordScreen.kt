@@ -34,6 +34,7 @@ import com.example.mobile_project.ui.components.OceanTextField
 import com.example.mobile_project.ui.components.PrimaryButton
 import com.example.mobile_project.ui.components.SecondaryButton
 import com.example.mobile_project.ui.theme.MinLishPrimaryContainer
+import com.example.mobile_project.ui.theme.Mobile_projectTheme
 
 @Composable
 fun ForgotPasswordScreen(
@@ -109,10 +110,15 @@ fun ForgotPasswordScreen(
 @Preview(showBackground = true)
 @Composable
 private fun ForgotPasswordScreenPreview() {
-    MinLishPrimaryContainer {
+    Mobile_projectTheme() {
         ForgotPasswordScreen(
             onSubmit = {},
-            onBackToLogin = {}
+            onBackToLogin = {},
+            authState = AuthUiState(
+                isLoading = false,
+                errorMessage = "Email không hợp lệ",
+                infoMessage = "Liên kết đặt lại mật khẩu đã được gửi đến email của bạn."
+            )
         )
     }
 }

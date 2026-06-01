@@ -135,9 +135,15 @@ fun VerifyEmailScreen(
 private fun VerifyEmailScreenPreview() {
     Mobile_projectTheme {
         VerifyEmailScreen(
-            authState = AuthUiState(),
+            authState = AuthUiState(
+                isLoading = false,
+                user = null,
+                errorMessage = "Không thể gửi email xác minh. Vui lòng thử lại sau.",
+                infoMessage = "Email xác minh đã được gửi lại. Vui lòng kiểm tra hộp thư đến của bạn."
+            ),
             onResendEmail = {},
             onRefresh = {},
+            onBackToLogin = {},
             onLogout = {}
         )
     }

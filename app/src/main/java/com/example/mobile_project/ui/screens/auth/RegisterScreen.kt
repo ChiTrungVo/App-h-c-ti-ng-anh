@@ -45,6 +45,7 @@ import com.example.mobile_project.ui.components.OceanTextField
 import com.example.mobile_project.ui.components.PrimaryButton
 import com.example.mobile_project.ui.theme.MinLishPrimaryContainer
 import com.example.mobile_project.ui.components.ValidationMessageBox
+import com.example.mobile_project.ui.theme.Mobile_projectTheme
 
 @Composable
 fun RegisterScreen(
@@ -210,7 +211,7 @@ fun RegisterScreen(
 @Preview(showBackground = true)
 @Composable
 private fun RegisterScreenPreview() {
-    MinLishPrimaryContainer {
+    Mobile_projectTheme() {
         RegisterScreen(
             authState = AuthUiState(),
             onRegister = { _, _, _, _ -> },

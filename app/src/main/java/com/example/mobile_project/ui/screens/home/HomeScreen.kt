@@ -278,6 +278,12 @@ private fun BubbleIcon(@DrawableRes icon: Int, color: Color, size: androidx.comp
 private fun HomeScreenPreview() {
     Mobile_projectTheme {
         HomeScreen(
+            displayName = "Minh Anh",
+            dailyTargetMinutes = 30,
+            studiedMinutesToday = 12,
+            totalWordsLearned = 120,
+            streakDays = 5,
+            quizAccuracy = 85,
             onStartLearning = {},
             onProfileClick = {},
             onAddSet = {},

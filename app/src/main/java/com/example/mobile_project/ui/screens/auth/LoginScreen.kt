@@ -51,6 +51,7 @@ import com.example.mobile_project.ui.components.PrimaryButton
 import com.example.mobile_project.ui.components.ValidationMessageBox
 import com.example.mobile_project.ui.theme.MinLishPrimaryContainer
 import androidx.compose.runtime.LaunchedEffect
+import com.example.mobile_project.ui.theme.Mobile_projectTheme
 
 @Composable
 fun LoginScreen(
@@ -257,7 +258,7 @@ fun LoginScreen(
 @Preview(showBackground = true)
 @Composable
 private fun LoginScreenPreview() {
-    MinLishPrimaryContainer {
+    Mobile_projectTheme() {
         LoginScreen(
             authState = AuthUiState(),
             onLogin = { _, _ -> },

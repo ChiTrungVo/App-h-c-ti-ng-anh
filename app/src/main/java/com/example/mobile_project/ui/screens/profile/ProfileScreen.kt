@@ -181,3 +181,19 @@ private fun ProfileRow(@DrawableRes iconRes: Int, label: String, value: String) 
     }
 }
 
+@Preview(showBackground = true)
+@Composable
+private fun ProfileScreenPreview() {
+    ProfileScreen(
+        authUser = null,
+        profileState = ProfileUiState(
+            profile = null,
+            avatarBytes = null,
+            errorMessage = null
+        ),
+        onEditProfile = {},
+        onNotifications = {},
+        onAccountSecurity = {},
+        onLogout = {}
+    )
+}

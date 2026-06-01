@@ -236,6 +236,28 @@ private fun MessageBox(message: String, isError: Boolean) {
 @Composable
 private fun EditProfileScreenPreview() {
     Mobile_projectTheme {
-        EditProfileScreen(onSave = {})
+        EditProfileScreen(
+            state = ProfileUiState(
+                form = ProfileEditForm(
+                    displayName = "Nguyễn Văn A",
+                    phone = "0123456789",
+                    bio = "Yêu thích tiếng Anh và muốn cải thiện kỹ năng giao tiếp.",
+                    nativeLanguage = "Tiếng Việt",
+                    targetLanguage = "Tiếng Anh",
+                    proficiencyLevel = "intermediate",
+                    studyGoal = "Có thể xem phim không cần phụ đề.",
+                    dailyTargetMinutes = "30",
+                    soundEnabled = true,
+                    darkModeEnabled = false
+                ),
+                isLoading = false,
+                isSaving = false,
+                errorMessage = null,
+                infoMessage = "Thông tin đã được cập nhật thành công."
+            ),
+            onFormChange = { it },
+            onUploadAvatar = {},
+            onSave = {}
+        )
     }
 }

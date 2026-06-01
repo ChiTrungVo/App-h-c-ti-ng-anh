@@ -35,6 +35,7 @@ import com.example.mobile_project.ui.components.OceanCard
 import com.example.mobile_project.ui.components.OceanTextField
 import com.example.mobile_project.ui.components.PrimaryButton
 import com.example.mobile_project.ui.theme.MinLishPrimaryContainer
+import com.example.mobile_project.ui.theme.Mobile_projectTheme
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -147,8 +148,23 @@ fun NotificationSettingsScreen(
 @Preview(showBackground = true)
 @Composable
 private fun NotificationSettingsScreenPreview() {
-    MinLishPrimaryContainer {
-        NotificationSettingsScreen(onSave = {})
+    Mobile_projectTheme() {
+        NotificationSettingsScreen(
+            state = NotificationSettingsUiState(
+                form = NotificationSettingsForm(
+                    isEnabled = true,
+                    reminderTime = "20:30",
+                    reminderDays = listOf("T2", "T4", "T6"),
+                    timezone = "GMT+7"
+                ),
+                isSaving = false,
+                isLoading = false,
+                errorMessage = "Không thể lưu cài đặt. Vui lòng thử lại.",
+                infoMessage = "Cài đặt nhắc học đã được cập nhật thành công."
+            ),
+            onFormChange = { it },
+            onSave = {}
+        )
     }
 }
 @Composable

@@ -24,7 +24,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 import com.example.mobile_project.R
+import com.example.mobile_project.ui.theme.Mobile_projectTheme
 
 @Composable
 fun SplashScreen(
@@ -96,4 +98,12 @@ private fun Bubble(modifier: Modifier, alpha: Float) {
             shape = CircleShape
         )
     )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun SplashScreenPreview() {
+    Mobile_projectTheme {
+        SplashScreen()
+    }
 }

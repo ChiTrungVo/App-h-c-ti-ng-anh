@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 import com.example.mobile_project.R
 import com.example.mobile_project.data.sample.SampleData
 import com.example.mobile_project.ui.components.MascotBadge
@@ -31,6 +32,7 @@ import com.example.mobile_project.ui.components.OceanCard
 import com.example.mobile_project.ui.components.OceanTextField
 import com.example.mobile_project.ui.components.PrimaryButton
 import com.example.mobile_project.ui.theme.MinLishPrimaryContainer
+import com.example.mobile_project.ui.theme.Mobile_projectTheme
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -109,5 +111,13 @@ fun NotificationSettingsScreen(onSave: () -> Unit) {
             }
         }
         Spacer(Modifier.height(132.dp))
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun NotificationSettingsScreenPreview() {
+    Mobile_projectTheme {
+        NotificationSettingsScreen(onSave = {})
     }
 }

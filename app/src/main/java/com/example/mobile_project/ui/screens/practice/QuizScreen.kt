@@ -13,11 +13,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 import com.example.mobile_project.data.sample.SampleData
 import com.example.mobile_project.ui.components.PrimaryButton
 import com.example.mobile_project.ui.components.QuizOptionCard
 import com.example.mobile_project.ui.components.QuizOptionState
 import com.example.mobile_project.ui.components.SecondaryButton
+import com.example.mobile_project.ui.theme.Mobile_projectTheme
 
 @Composable
 fun QuizScreen(onResult: () -> Unit) {
@@ -46,5 +48,13 @@ fun QuizScreen(onResult: () -> Unit) {
         SecondaryButton("Kiểm tra", onClick = {})
         Spacer(Modifier.height(10.dp))
         PrimaryButton("Câu tiếp theo", onClick = onResult)
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun QuizScreenPreview() {
+    Mobile_projectTheme {
+        QuizScreen(onResult = {})
     }
 }

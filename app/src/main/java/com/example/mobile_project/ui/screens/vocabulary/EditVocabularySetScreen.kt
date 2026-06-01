@@ -23,8 +23,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 import com.example.mobile_project.data.sample.VocabularyDemoStore
 import com.example.mobile_project.ui.components.PrimaryButton
+import com.example.mobile_project.ui.theme.Mobile_projectTheme
 
 @Composable
 fun EditVocabularySetScreen(
@@ -83,3 +85,14 @@ private fun parseList(value: String): List<String> = value
     .split(",")
     .map { it.trim() }
     .filter { it.isNotBlank() }
+
+@Preview(showBackground = true)
+@Composable
+private fun EditVocabularySetScreenPreview() {
+    Mobile_projectTheme {
+        EditVocabularySetScreen(
+            setId = null,
+            onSave = {}
+        )
+    }
+}

@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 import com.example.mobile_project.R
 import com.example.mobile_project.data.sample.SampleData
 import com.example.mobile_project.ui.components.MimiMood
@@ -23,6 +24,7 @@ import com.example.mobile_project.ui.components.PrimaryButton
 import com.example.mobile_project.ui.components.SecondaryButton
 import com.example.mobile_project.ui.components.StatCard
 import com.example.mobile_project.ui.components.WhaleMascot
+import com.example.mobile_project.ui.theme.Mobile_projectTheme
 
 @Composable
 fun SessionResultScreen(
@@ -54,5 +56,16 @@ fun SessionResultScreen(
         Spacer(Modifier.height(12.dp))
         SecondaryButton("Ôn lại", onClick = onReview)
         Spacer(Modifier.height(132.dp))
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun SessionResultScreenPreview() {
+    Mobile_projectTheme {
+        SessionResultScreen(
+            onContinue = {},
+            onReview = {}
+        )
     }
 }

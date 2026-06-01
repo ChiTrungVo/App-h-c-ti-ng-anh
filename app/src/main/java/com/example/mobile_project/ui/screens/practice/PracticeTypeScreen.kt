@@ -25,10 +25,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 import com.example.mobile_project.R
 import com.example.mobile_project.ui.components.PrimaryButton
 import com.example.mobile_project.ui.theme.MinLishPrimaryContainer
 import com.example.mobile_project.ui.theme.MinLishSurface
+import com.example.mobile_project.ui.theme.Mobile_projectTheme
 
 @Composable
 fun PracticeTypeScreen(
@@ -107,5 +109,16 @@ private fun PracticeTypeCard(title: String, description: String, icon: Int, onCl
                 Text(description, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PracticeTypeScreenPreview() {
+    Mobile_projectTheme {
+        PracticeTypeScreen(
+            onFlashcard = {},
+            onQuiz = {}
+        )
     }
 }

@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 import com.example.mobile_project.feature.auth.viewmodel.AuthUiState
 import com.example.mobile_project.ui.components.MascotBadge
 import com.example.mobile_project.ui.components.MimiMood
@@ -22,6 +23,7 @@ import com.example.mobile_project.ui.components.OceanBubblyBackground
 import com.example.mobile_project.ui.components.OceanCard
 import com.example.mobile_project.ui.components.PrimaryButton
 import com.example.mobile_project.ui.components.SecondaryButton
+import com.example.mobile_project.ui.theme.Mobile_projectTheme
 
 @Composable
 fun VerifyEmailScreen(
@@ -115,5 +117,18 @@ fun VerifyEmailScreen(
             }
             Spacer(Modifier.height(32.dp))
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun VerifyEmailScreenPreview() {
+    Mobile_projectTheme {
+        VerifyEmailScreen(
+            authState = AuthUiState(),
+            onResendEmail = {},
+            onRefresh = {},
+            onLogout = {}
+        )
     }
 }

@@ -25,6 +25,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 import com.example.mobile_project.R
 import com.example.mobile_project.feature.auth.viewmodel.AuthUiState
 import com.example.mobile_project.ui.components.MascotBadge
@@ -33,6 +34,7 @@ import com.example.mobile_project.ui.components.OceanBubblyBackground
 import com.example.mobile_project.ui.components.OceanCard
 import com.example.mobile_project.ui.components.OceanTextField
 import com.example.mobile_project.ui.components.PrimaryButton
+import com.example.mobile_project.ui.theme.Mobile_projectTheme
 
 @Composable
 fun RegisterScreen(
@@ -131,5 +133,17 @@ fun RegisterScreen(
             )
             Spacer(Modifier.height(24.dp))
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun RegisterScreenPreview() {
+    Mobile_projectTheme {
+        RegisterScreen(
+            authState = AuthUiState(),
+            onRegister = { _, _, _, _ -> },
+            onLogin = {}
+        )
     }
 }

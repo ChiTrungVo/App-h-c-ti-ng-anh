@@ -20,12 +20,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 import com.example.mobile_project.R
 import com.example.mobile_project.data.sample.VocabularyDemoStore
 import com.example.mobile_project.ui.components.EmptyStateView
 import com.example.mobile_project.ui.components.PrimaryButton
 import com.example.mobile_project.ui.components.SecondaryButton
 import com.example.mobile_project.ui.components.WordCard
+import com.example.mobile_project.ui.theme.Mobile_projectTheme
 
 @Composable
 fun VocabularySetDetailScreen(
@@ -84,5 +86,21 @@ fun VocabularySetDetailScreen(
         item {
             Spacer(Modifier.height(132.dp))
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun VocabularySetDetailScreenPreview() {
+    val setId = VocabularyDemoStore.vocabularySets.firstOrNull()?.setId.orEmpty()
+    Mobile_projectTheme {
+        VocabularySetDetailScreen(
+            setId = setId,
+            onAddWord = {},
+            onEditWord = {},
+            onEditSet = {},
+            onStartLearning = {},
+            onQuiz = {}
+        )
     }
 }

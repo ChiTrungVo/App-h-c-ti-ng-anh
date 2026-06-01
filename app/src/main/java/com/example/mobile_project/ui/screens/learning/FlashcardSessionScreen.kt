@@ -15,10 +15,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 import com.example.mobile_project.data.sample.SampleData
 import com.example.mobile_project.ui.components.FlashcardView
 import com.example.mobile_project.ui.components.PrimaryButton
 import com.example.mobile_project.ui.components.SecondaryButton
+import com.example.mobile_project.ui.theme.Mobile_projectTheme
 
 @Composable
 fun FlashcardSessionScreen(onFinish: () -> Unit) {
@@ -41,5 +43,13 @@ fun FlashcardSessionScreen(onFinish: () -> Unit) {
             SecondaryButton("Ổn", onClick = {}, modifier = Modifier.weight(1f))
             PrimaryButton("Dễ", onClick = onFinish, modifier = Modifier.weight(1f))
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun FlashcardSessionScreenPreview() {
+    Mobile_projectTheme {
+        FlashcardSessionScreen(onFinish = {})
     }
 }

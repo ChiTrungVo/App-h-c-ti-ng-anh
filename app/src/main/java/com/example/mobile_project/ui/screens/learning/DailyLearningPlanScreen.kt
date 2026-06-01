@@ -23,11 +23,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 import com.example.mobile_project.R
 import com.example.mobile_project.data.sample.SampleData
 import com.example.mobile_project.ui.components.PrimaryButton
 import com.example.mobile_project.ui.components.StatCard
 import com.example.mobile_project.ui.components.WhaleMascot
+import com.example.mobile_project.ui.theme.Mobile_projectTheme
 
 @Composable
 fun DailyLearningPlanScreen(
@@ -98,5 +100,16 @@ private fun LearningEntryCard(
                 Text(description, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun DailyLearningPlanScreenPreview() {
+    Mobile_projectTheme {
+        DailyLearningPlanScreen(
+            onFlashcard = {},
+            onQuiz = {}
+        )
     }
 }

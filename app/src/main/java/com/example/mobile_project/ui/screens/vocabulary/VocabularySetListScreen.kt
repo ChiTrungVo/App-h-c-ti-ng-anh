@@ -30,11 +30,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 import com.example.mobile_project.R
 import com.example.mobile_project.data.sample.VocabularyDemoStore
 import com.example.mobile_project.ui.components.EmptyStateView
 import com.example.mobile_project.ui.components.PrimaryButton
 import com.example.mobile_project.ui.components.VocabularySetCard
+import com.example.mobile_project.ui.theme.Mobile_projectTheme
 
 @Composable
 fun VocabularySetListScreen(
@@ -117,5 +119,16 @@ fun VocabularySetListScreen(
         ) {
             Image(painter = painterResource(R.drawable.ic_add), contentDescription = "Thêm bộ từ", modifier = Modifier.size(28.dp), colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onPrimary))
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun VocabularySetListScreenPreview() {
+    Mobile_projectTheme {
+        VocabularySetListScreen(
+            onSetClick = {},
+            onAddClick = {}
+        )
     }
 }

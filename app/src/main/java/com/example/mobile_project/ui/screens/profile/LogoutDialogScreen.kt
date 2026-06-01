@@ -16,12 +16,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 import com.example.mobile_project.ui.components.MascotBadge
 import com.example.mobile_project.ui.components.MimiMood
 import com.example.mobile_project.ui.components.OceanBubblyBackground
 import com.example.mobile_project.ui.components.OceanCard
 import com.example.mobile_project.ui.components.PrimaryButton
 import com.example.mobile_project.ui.theme.MinLishPrimaryContainer
+import com.example.mobile_project.ui.theme.Mobile_projectTheme
 
 @Composable
 fun LogoutDialogScreen(
@@ -83,5 +85,16 @@ fun LogoutDialogScreen(
             }
             Spacer(Modifier.weight(1f))
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun LogoutDialogScreenPreview() {
+    Mobile_projectTheme {
+        LogoutDialogScreen(
+            onConfirm = {},
+            onDismiss = {}
+        )
     }
 }

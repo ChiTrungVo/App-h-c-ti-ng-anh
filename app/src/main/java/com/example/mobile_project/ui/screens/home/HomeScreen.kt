@@ -33,6 +33,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 import com.example.mobile_project.R
 import com.example.mobile_project.data.sample.SampleData
 import com.example.mobile_project.ui.components.MinLishTopBar
@@ -40,6 +41,7 @@ import com.example.mobile_project.ui.components.PrimaryButton
 import com.example.mobile_project.ui.theme.MinLishPrimaryContainer
 import com.example.mobile_project.ui.theme.MinLishSurface
 import com.example.mobile_project.ui.theme.MinLishTertiaryContainer
+import com.example.mobile_project.ui.theme.Mobile_projectTheme
 
 @Composable
 fun HomeScreen(
@@ -239,5 +241,19 @@ private fun BubbleIcon(@DrawableRes icon: Int, color: Color, size: androidx.comp
                 colorFilter = ColorFilter.tint(color)
             )
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun HomeScreenPreview() {
+    Mobile_projectTheme {
+        HomeScreen(
+            onStartLearning = {},
+            onProfileClick = {},
+            onAddSet = {},
+            onQuiz = {},
+            onProgress = {}
+        )
     }
 }

@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 import com.example.mobile_project.R
 import com.example.mobile_project.ui.components.MascotBadge
 import com.example.mobile_project.ui.components.OceanBubblyBackground
@@ -28,6 +29,7 @@ import com.example.mobile_project.ui.components.OceanTextField
 import com.example.mobile_project.ui.components.PrimaryButton
 import com.example.mobile_project.ui.components.SecondaryButton
 import com.example.mobile_project.ui.theme.MinLishPrimaryContainer
+import com.example.mobile_project.ui.theme.Mobile_projectTheme
 
 @Composable
 fun ForgotPasswordScreen(
@@ -94,5 +96,16 @@ fun ForgotPasswordScreen(
                 modifier = Modifier.clickable(onClick = onBackToLogin)
             )
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ForgotPasswordScreenPreview() {
+    Mobile_projectTheme {
+        ForgotPasswordScreen(
+            onSubmit = {},
+            onBackToLogin = {}
+        )
     }
 }

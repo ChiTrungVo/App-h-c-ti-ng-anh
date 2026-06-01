@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 import com.example.mobile_project.R
 import com.example.mobile_project.data.sample.SampleData
 import com.example.mobile_project.ui.components.MascotBadge
@@ -31,6 +32,7 @@ import com.example.mobile_project.ui.components.OceanCard
 import com.example.mobile_project.ui.components.OceanTextField
 import com.example.mobile_project.ui.components.PrimaryButton
 import com.example.mobile_project.ui.theme.MinLishPrimaryContainer
+import com.example.mobile_project.ui.theme.Mobile_projectTheme
 
 @Composable
 fun EditProfileScreen(onSave: () -> Unit) {
@@ -138,5 +140,13 @@ private fun ProfileToggleRow(label: String, checked: Boolean) {
     ) {
         Text(label, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
         Switch(checked = checked, onCheckedChange = {})
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun EditProfileScreenPreview() {
+    Mobile_projectTheme {
+        EditProfileScreen(onSave = {})
     }
 }

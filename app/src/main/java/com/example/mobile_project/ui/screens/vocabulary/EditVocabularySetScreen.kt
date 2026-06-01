@@ -11,20 +11,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.mobile_project.data.sample.VocabularyDemoStore
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.mobile_project.feature.vocabulary.viewmodel.EditVocabularySetViewModel
 import com.example.mobile_project.ui.components.PrimaryButton
 import com.example.mobile_project.ui.components.ValidationMessageBox
 import com.example.mobile_project.ui.theme.Mobile_projectTheme
@@ -32,69 +33,121 @@ import com.example.mobile_project.ui.theme.Mobile_projectTheme
 @Composable
 fun EditVocabularySetScreen(
     setId: String?,
-    onSave: (String) -> Unit
+    onSave: (String) -> Unit,
+    viewModel: EditVocabularySetViewModel = viewModel()
 ) {
-    val set = VocabularyDemoStore.getSet(setId.orEmpty())
-    var title by rememberSaveable(setId) { mutableStateOf(set?.title.orEmpty()) }
-    var description by rememberSaveable(setId) { mutableStateOf(set?.description.orEmpty()) }
-    var tagsText by rememberSaveable(setId) { mutableStateOf(set?.tags?.joinToString(", ").orEmpty()) }
-    var isPublic by rememberSaveable(setId) { mutableStateOf(set?.isPublic ?: false) }
-    var showErrors by rememberSaveable(setId) { mutableStateOf(false) }
-    val isEditing = set != null
-    val titleError = title.trim().isEmpty()
+    val uiState by viewModel.uiState.collectAsState()
 
-    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).verticalScroll(rememberScrollState()).padding(20.dp)) {
-        Spacer(Modifier.height(28.dp))
-        Text(if (isEditing) "Sửa bộ từ" else "Tạo bộ từ", style = MaterialTheme.typography.headlineLarge)
-        Text("Bộ từ sẽ tương ứng một document trong collection vocabulary_sets.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Spacer(Modifier.height(20.dp))
-        OutlinedTextField(title, { title = it }, label = { Text("Tên bộ từ") }, modifier = Modifier.fillMaxWidth())
-        if (showErrors && titleError) {
-            Spacer(Modifier.height(8.dp))
-            ValidationMessageBox("Tên bộ từ không được để trống.")
+    // Khởi tạo form khi mở màn hình
+    LaunchedEffect(setId) {
+        viewModel.initForm(setId)
+    }
+
+    // Lưu thành công → callback
+    LaunchedEffect(uiState.saveSuccess) {
+        if (uiState.saveSuccess && uiState.savedSetId != null) {
+            viewModel.clearSaveSuccess()
+            onSave(uiState.savedSetId!!)
         }
+    }
+
+    if (uiState.isLoading) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(Modifier.height(100.dp))
+            CircularProgressIndicator()
+        }
+        return
+    }
+
+    Column(
+        Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .verticalScroll(rememberScrollState())
+            .padding(20.dp)
+    ) {
+        Spacer(Modifier.height(28.dp))
+        Text(
+            if (uiState.isEditing) "Sửa bộ từ" else "Tạo bộ từ",
+            style = MaterialTheme.typography.headlineLarge
+        )
+        Text(
+            "Tổ chức từ vựng theo chủ đề để học hiệu quả hơn.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(Modifier.height(20.dp))
+
+        OutlinedTextField(
+            value = uiState.form.title,
+            onValueChange = { viewModel.onTitleChanged(it) },
+            label = { Text("Tên bộ từ") },
+            isError = uiState.titleError != null,
+            supportingText = uiState.titleError,
+            modifier = Modifier.fillMaxWidth()
+        )
+        if (uiState.titleError != null) {
+            Spacer(Modifier.height(8.dp))
+            ValidationMessageBox(uiState.titleError!!)
+        }
+
         Spacer(Modifier.height(12.dp))
-        OutlinedTextField(description, { description = it }, label = { Text("Mô tả") }, minLines = 3, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(
+            value = uiState.form.description,
+            onValueChange = { viewModel.onDescriptionChanged(it) },
+            label = { Text("Mô tả") },
+            minLines = 3,
+            modifier = Modifier.fillMaxWidth()
+        )
+
         Spacer(Modifier.height(12.dp))
         Text("Thẻ chủ đề", style = MaterialTheme.typography.titleMedium)
-        OutlinedTextField(tagsText, { tagsText = it }, label = { Text("Tags, cách nhau bằng dấu phẩy") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(
+            value = uiState.form.tags,
+            onValueChange = { viewModel.onTagsChanged(it) },
+            label = { Text("Tags, cách nhau bằng dấu phẩy") },
+            modifier = Modifier.fillMaxWidth()
+        )
         Spacer(Modifier.height(8.dp))
         Row(horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
-            parseList(tagsText).forEach { AssistChip(onClick = {}, label = { Text(it) }) }
+            uiState.form.tagList.forEach { tag ->
+                AssistChip(onClick = {}, label = { Text(tag) })
+            }
         }
+
         Spacer(Modifier.height(12.dp))
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text("Công khai/Riêng tư", style = MaterialTheme.typography.titleMedium)
-                Text(if (isPublic) "Bộ từ công khai" else "Chỉ mình tôi", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    if (uiState.form.isPublic) "Bộ từ công khai" else "Chỉ mình tôi",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
-            Switch(checked = isPublic, onCheckedChange = { isPublic = it })
+            Switch(
+                checked = uiState.form.isPublic,
+                onCheckedChange = { viewModel.onPublicChanged(it) }
+            )
         }
+
+        uiState.errorMessage?.let { msg ->
+            Spacer(Modifier.height(12.dp))
+            ValidationMessageBox(msg)
+        }
+
         Spacer(Modifier.height(20.dp))
         PrimaryButton(
-            "Lưu",
-            enabled = !titleError,
-            onClick = {
-                showErrors = true
-                if (titleError) return@PrimaryButton
-                val savedSetId = VocabularyDemoStore.saveSet(
-                    setId = set?.setId,
-                    title = title,
-                    description = description,
-                    tags = parseList(tagsText),
-                    isPublic = isPublic
-                )
-                onSave(savedSetId)
-            }
+            if (uiState.isSaving) "Đang lưu..." else "Lưu",
+            enabled = !uiState.isSaving && uiState.titleError == null,
+            onClick = { viewModel.save() }
         )
         Spacer(Modifier.height(132.dp))
     }
 }
-
-private fun parseList(value: String): List<String> = value
-    .split(",")
-    .map { it.trim() }
-    .filter { it.isNotBlank() }
 
 @Preview(showBackground = true)
 @Composable

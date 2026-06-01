@@ -9,18 +9,20 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.mobile_project.data.sample.VocabularyDemoStore
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.mobile_project.feature.vocabulary.viewmodel.EditWordViewModel
 import com.example.mobile_project.ui.components.PrimaryButton
 import com.example.mobile_project.ui.components.ValidationMessageBox
 import com.example.mobile_project.ui.theme.Mobile_projectTheme
@@ -29,90 +31,153 @@ import com.example.mobile_project.ui.theme.Mobile_projectTheme
 fun EditWordScreen(
     setId: String,
     wordId: String?,
-    onSave: () -> Unit
+    onSave: () -> Unit,
+    viewModel: EditWordViewModel = viewModel()
 ) {
-    val existingWord = VocabularyDemoStore.getWord(wordId)
-    var word by rememberSaveable(wordId, setId) { mutableStateOf(existingWord?.word.orEmpty()) }
-    var pronunciation by rememberSaveable(wordId, setId) { mutableStateOf(existingWord?.pronunciation.orEmpty()) }
-    var meaning by rememberSaveable(wordId, setId) { mutableStateOf(existingWord?.meaning.orEmpty()) }
-    var definition by rememberSaveable(wordId, setId) { mutableStateOf(existingWord?.definition.orEmpty()) }
-    var example by rememberSaveable(wordId, setId) { mutableStateOf(existingWord?.example.orEmpty()) }
-    var collocations by rememberSaveable(wordId, setId) { mutableStateOf(existingWord?.collocations?.joinToString(", ").orEmpty()) }
-    var note by rememberSaveable(wordId, setId) { mutableStateOf(existingWord?.note.orEmpty()) }
-    var imageUrl by rememberSaveable(wordId, setId) { mutableStateOf(existingWord?.imageUrl.orEmpty()) }
-    var showErrors by rememberSaveable(wordId, setId) { mutableStateOf(false) }
-    val isEditing = existingWord != null
-    val wordError = word.trim().isEmpty()
-    val meaningError = meaning.trim().isEmpty()
+    val uiState by viewModel.uiState.collectAsState()
 
-    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).verticalScroll(rememberScrollState()).padding(20.dp)) {
+    // Khởi tạo form khi mở màn hình
+    LaunchedEffect(setId, wordId) {
+        viewModel.initForm(setId, wordId)
+    }
+
+    // Lưu thành công → callback
+    LaunchedEffect(uiState.saveSuccess) {
+        if (uiState.saveSuccess) {
+            viewModel.clearSaveSuccess()
+            onSave()
+        }
+    }
+
+    if (uiState.isLoading) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(Modifier.height(100.dp))
+            CircularProgressIndicator()
+        }
+        return
+    }
+
+    Column(
+        Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .verticalScroll(rememberScrollState())
+            .padding(20.dp)
+    ) {
         Spacer(Modifier.height(28.dp))
-        Text(if (isEditing) "Sửa từ vựng" else "Thêm từ vựng", style = MaterialTheme.typography.headlineLarge)
-        Text("Từ này sẽ lưu vào vocabularies và trỏ về bộ từ bằng setId.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(
+            if (uiState.isEditing) "Sửa từ vựng" else "Thêm từ vựng",
+            style = MaterialTheme.typography.headlineLarge
+        )
+        Text(
+            "Thêm từ mới vào bộ từ để học flashcard và quiz.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
         Spacer(Modifier.height(20.dp))
-        OutlinedTextField(word, { word = it }, label = { Text("Từ vựng") }, modifier = Modifier.fillMaxWidth())
-        if (showErrors && wordError) {
+
+        OutlinedTextField(
+            value = uiState.form.word,
+            onValueChange = { viewModel.onWordChanged(it) },
+            label = { Text("Từ vựng") },
+            isError = uiState.wordError != null,
+            supportingText = uiState.wordError,
+            modifier = Modifier.fillMaxWidth()
+        )
+        if (uiState.wordError != null) {
             Spacer(Modifier.height(8.dp))
-            ValidationMessageBox("Từ vựng không được để trống.")
+            ValidationMessageBox(uiState.wordError!!)
         }
+
         Spacer(Modifier.height(12.dp))
-        OutlinedTextField(pronunciation, { pronunciation = it }, label = { Text("Phiên âm IPA") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(
+            value = uiState.form.pronunciation,
+            onValueChange = { viewModel.onPronunciationChanged(it) },
+            label = { Text("Phiên âm IPA") },
+            modifier = Modifier.fillMaxWidth()
+        )
+
         Spacer(Modifier.height(12.dp))
-        OutlinedTextField(meaning, { meaning = it }, label = { Text("Nghĩa tiếng Việt") }, modifier = Modifier.fillMaxWidth())
-        if (showErrors && meaningError) {
+        OutlinedTextField(
+            value = uiState.form.meaning,
+            onValueChange = { viewModel.onMeaningChanged(it) },
+            label = { Text("Nghĩa tiếng Việt") },
+            isError = uiState.meaningError != null,
+            supportingText = uiState.meaningError,
+            modifier = Modifier.fillMaxWidth()
+        )
+        if (uiState.meaningError != null) {
             Spacer(Modifier.height(8.dp))
-            ValidationMessageBox("Nghĩa tiếng Việt không được để trống.")
+            ValidationMessageBox(uiState.meaningError!!)
         }
+
         Spacer(Modifier.height(12.dp))
-        OutlinedTextField(definition, { definition = it }, label = { Text("Định nghĩa") }, minLines = 2, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(
+            value = uiState.form.definition,
+            onValueChange = { viewModel.onDefinitionChanged(it) },
+            label = { Text("Định nghĩa tiếng Anh") },
+            minLines = 2,
+            modifier = Modifier.fillMaxWidth()
+        )
+
         Spacer(Modifier.height(12.dp))
-        OutlinedTextField(example, { example = it }, label = { Text("Ví dụ") }, minLines = 2, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(
+            value = uiState.form.example,
+            onValueChange = { viewModel.onExampleChanged(it) },
+            label = { Text("Ví dụ") },
+            minLines = 2,
+            modifier = Modifier.fillMaxWidth()
+        )
+
         Spacer(Modifier.height(12.dp))
-        OutlinedTextField(collocations, { collocations = it }, label = { Text("Cụm từ đi kèm") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(
+            value = uiState.form.collocations,
+            onValueChange = { viewModel.onCollocationsChanged(it) },
+            label = { Text("Cụm từ đi kèm (cách nhau bằng dấu phẩy)") },
+            modifier = Modifier.fillMaxWidth()
+        )
+
         Spacer(Modifier.height(12.dp))
-        OutlinedTextField(note, { note = it }, label = { Text("Ghi chú") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(
+            value = uiState.form.note,
+            onValueChange = { viewModel.onNoteChanged(it) },
+            label = { Text("Ghi chú") },
+            modifier = Modifier.fillMaxWidth()
+        )
+
         Spacer(Modifier.height(12.dp))
-        OutlinedTextField(imageUrl, { imageUrl = it }, label = { Text("URL hình ảnh") }, modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(
+            value = uiState.form.imageUrl,
+            onValueChange = { viewModel.onImageUrlChanged(it) },
+            label = { Text("URL hình ảnh (tùy chọn)") },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        uiState.errorMessage?.let { msg ->
+            Spacer(Modifier.height(12.dp))
+            ValidationMessageBox(msg)
+        }
+
         Spacer(Modifier.height(20.dp))
         PrimaryButton(
-            "Lưu từ",
-            enabled = !wordError && !meaningError,
-            onClick = {
-                showErrors = true
-                if (wordError || meaningError) return@PrimaryButton
-                VocabularyDemoStore.saveWord(
-                    wordId = existingWord?.wordId,
-                    setId = setId,
-                    word = word,
-                    pronunciation = pronunciation,
-                    meaning = meaning,
-                    definition = definition,
-                    example = example,
-                    collocations = parseList(collocations),
-                    note = note,
-                    imageUrl = imageUrl
-                )
-                onSave()
-            }
+            if (uiState.isSaving) "Đang lưu..." else "Lưu từ",
+            enabled = !uiState.isSaving,
+            onClick = { viewModel.save() }
         )
         Spacer(Modifier.height(132.dp))
     }
 }
 
-private fun parseList(value: String): List<String> = value
-    .split(",")
-    .map { it.trim() }
-    .filter { it.isNotBlank() }
-
 @Preview(showBackground = true)
 @Composable
 private fun EditWordScreenPreview() {
-    val setId = VocabularyDemoStore.vocabularySets.firstOrNull()?.setId.orEmpty()
-    val wordId = VocabularyDemoStore.wordsForSet(setId).firstOrNull()?.wordId
     Mobile_projectTheme {
         EditWordScreen(
-            setId = setId,
-            wordId = wordId,
+            setId = "preview_set_id",
+            wordId = null,
             onSave = {}
         )
     }

@@ -2,6 +2,7 @@ package com.example.mobile_project.ui.screens.vocabulary
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,21 +16,23 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mobile_project.R
-import com.example.mobile_project.data.sample.VocabularyDemoStore
+import com.example.mobile_project.feature.vocabulary.viewmodel.VocabularySetDetailViewModel
 import com.example.mobile_project.ui.components.EmptyStateView
 import com.example.mobile_project.ui.components.PrimaryButton
 import com.example.mobile_project.ui.components.SecondaryButton
@@ -44,24 +47,26 @@ fun VocabularySetDetailScreen(
     onEditSet: () -> Unit,
     onStartLearning: () -> Unit,
     onQuiz: () -> Unit,
-    onDeleteSet: () -> Unit
+    onDeleteSet: () -> Unit,
+    viewModel: VocabularySetDetailViewModel = viewModel()
 ) {
-    val set = VocabularyDemoStore.getSet(setId)
-    val words = VocabularyDemoStore.wordsForSet(setId)
-    var searchQuery by remember { mutableStateOf("") }
-    var confirmDeleteSet by remember { mutableStateOf(false) }
-    var deletingWordId by remember { mutableStateOf<String?>(null) }
-    val filteredWords = words.filter { word ->
-        val query = searchQuery.trim()
-        query.isBlank() || listOf(
-            word.word,
-            word.meaning,
-            word.definition,
-            word.example,
-            word.pronunciation
-        ).any { it.contains(query, ignoreCase = true) }
+    val uiState by viewModel.uiState.collectAsState()
+
+    // Tải dữ liệu khi mở màn hình
+    LaunchedEffect(setId) {
+        viewModel.loadSet(setId)
     }
 
+    // Xóa thành công → quay lại
+    LaunchedEffect(uiState.deleteSuccess) {
+        if (uiState.deleteSuccess) {
+            viewModel.clearDeleteSuccess()
+            onDeleteSet()
+        }
+    }
+
+    // Dialog xác nhận xóa bộ từ
+    var confirmDeleteSet by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
     if (confirmDeleteSet) {
         AlertDialog(
             onDismissRequest = { confirmDeleteSet = false },
@@ -70,9 +75,8 @@ fun VocabularySetDetailScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        VocabularyDemoStore.deleteSet(setId)
+                        viewModel.deleteSet()
                         confirmDeleteSet = false
-                        onDeleteSet()
                     }
                 ) {
                     Text("Xóa")
@@ -86,6 +90,8 @@ fun VocabularySetDetailScreen(
         )
     }
 
+    // Dialog xác nhận xóa từ vựng
+    var deletingWordId by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<String?>(null) }
     if (deletingWordId != null) {
         AlertDialog(
             onDismissRequest = { deletingWordId = null },
@@ -94,7 +100,7 @@ fun VocabularySetDetailScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        VocabularyDemoStore.deleteWord(deletingWordId.orEmpty())
+                        deletingWordId?.let { viewModel.deleteWord(it) }
                         deletingWordId = null
                     }
                 ) {
@@ -109,101 +115,147 @@ fun VocabularySetDetailScreen(
         )
     }
 
+    if (uiState.isLoading) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+
+    if (uiState.set == null) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                "Không tìm thấy bộ từ",
+                style = MaterialTheme.typography.headlineLarge
+            )
+            Text(
+                "Bộ từ đã bị xóa hoặc không tồn tại.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(Modifier.height(16.dp))
+            EmptyStateView(
+                title = "Không có dữ liệu",
+                message = "Hãy quay lại danh sách và tạo bộ từ mới để bắt đầu."
+            )
+        }
+        return
+    }
+
+    val set = uiState.set!!
+
     LazyColumn(
-        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(20.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        if (set == null) {
+        item {
+            Spacer(Modifier.height(16.dp))
+            Text(set.title, style = MaterialTheme.typography.headlineLarge)
+            Text(
+                "${set.wordCount} từ",
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.labelLarge
+            )
+            Spacer(Modifier.height(12.dp))
+            Card(
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
+                Column(Modifier.padding(16.dp)) {
+                    Text("Tiến độ bộ từ", style = MaterialTheme.typography.titleMedium)
+                    Spacer(Modifier.height(10.dp))
+                    LinearProgressIndicator(
+                        progress = { set.progress },
+                        modifier = Modifier.fillMaxWidth().height(10.dp),
+                        color = MaterialTheme.colorScheme.primary,
+                        trackColor = MaterialTheme.colorScheme.primaryContainer
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        "${(set.progress * 100).toInt()}% đã hoàn thành",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                SecondaryButton("Thêm từ", onClick = onAddWord, modifier = Modifier.weight(1f))
+                SecondaryButton("Sửa bộ từ", onClick = onEditSet, modifier = Modifier.weight(1f))
+            }
+            Spacer(Modifier.height(10.dp))
+            SecondaryButton("Xóa bộ từ", onClick = { confirmDeleteSet = true })
+            Spacer(Modifier.height(10.dp))
+            PrimaryButton(
+                "Bắt đầu học",
+                onClick = onStartLearning,
+                enabled = uiState.words.isNotEmpty()
+            )
+            Spacer(Modifier.height(10.dp))
+            SecondaryButton(
+                "Làm quiz",
+                onClick = onQuiz,
+                enabled = uiState.words.isNotEmpty()
+            )
+            Spacer(Modifier.height(10.dp))
+            OutlinedTextField(
+                value = uiState.searchQuery,
+                onValueChange = { viewModel.onSearchQueryChanged(it) },
+                label = { Text("Tìm trong bộ từ") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                "Danh sách từ (${uiState.filteredWords.size}/${uiState.words.size})",
+                style = MaterialTheme.typography.titleLarge
+            )
+        }
+
+        if (uiState.words.isEmpty()) {
             item {
-                Spacer(Modifier.height(16.dp))
-                Text("Không tìm thấy bộ từ", style = MaterialTheme.typography.headlineLarge)
-                Text(
-                    "Bộ từ đã bị xóa hoặc không tồn tại.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(Modifier.height(16.dp))
                 EmptyStateView(
-                    title = "Không có dữ liệu",
-                    message = "Hãy quay lại danh sách và tạo bộ từ mới để bắt đầu."
+                    title = "Chưa có từ trong bộ này",
+                    message = "Thêm từ đầu tiên để flashcard, quiz và SRS có dữ liệu học.",
+                    asset = R.drawable.mimi_an_ui
                 )
-                Spacer(Modifier.height(132.dp))
+            }
+        } else if (uiState.filteredWords.isEmpty()) {
+            item {
+                EmptyStateView(
+                    title = "Không tìm thấy từ phù hợp",
+                    message = "Thử tìm theo từ vựng, nghĩa hoặc ví dụ khác."
+                )
             }
         } else {
-            item {
-                Spacer(Modifier.height(16.dp))
-                Text(set.title, style = MaterialTheme.typography.headlineLarge)
-                Text("${set.wordCount} từ", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelLarge)
-                Spacer(Modifier.height(12.dp))
-                Card(shape = RoundedCornerShape(24.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
-                    Column(Modifier.padding(16.dp)) {
-                        Text("Tiến độ bộ từ", style = MaterialTheme.typography.titleMedium)
-                        Spacer(Modifier.height(10.dp))
-                        LinearProgressIndicator(
-                            progress = { set.progress },
-                            modifier = Modifier.fillMaxWidth().height(10.dp),
-                            color = MaterialTheme.colorScheme.primary,
-                            trackColor = MaterialTheme.colorScheme.primaryContainer
-                        )
-                        Spacer(Modifier.height(8.dp))
-                        Text(
-                            "${(set.progress * 100).toInt()}% đã hoàn thành",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-                Spacer(Modifier.height(8.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    SecondaryButton("Thêm từ", onClick = onAddWord, modifier = Modifier.weight(1f))
-                    SecondaryButton("Sửa bộ từ", onClick = onEditSet, modifier = Modifier.weight(1f))
-                }
-                Spacer(Modifier.height(10.dp))
-                SecondaryButton("Xóa bộ từ", onClick = { confirmDeleteSet = true })
-                Spacer(Modifier.height(10.dp))
-                PrimaryButton("Bắt đầu học", onClick = onStartLearning, enabled = words.isNotEmpty())
-                Spacer(Modifier.height(10.dp))
-                SecondaryButton("Làm quiz", onClick = onQuiz, enabled = words.isNotEmpty())
-                Spacer(Modifier.height(10.dp))
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    label = { Text("Tìm trong bộ từ") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(Modifier.height(8.dp))
-                Text("Danh sách từ (${filteredWords.size}/${words.size})", style = MaterialTheme.typography.titleLarge)
-            }
-            if (words.isEmpty()) {
-                item {
-                    EmptyStateView(
-                        title = "Chưa có từ trong bộ này",
-                        message = "Thêm từ đầu tiên để flashcard, quiz và SRS có dữ liệu học.",
-                        asset = R.drawable.mimi_an_ui
-                    )
-                }
-            } else if (filteredWords.isEmpty()) {
-                item {
-                    EmptyStateView(
-                        title = "Không tìm thấy từ phù hợp",
-                        message = "Thử tìm theo từ vựng, nghĩa hoặc ví dụ khác."
-                    )
-                }
-            } else {
-                items(filteredWords, key = { it.wordId }) { word ->
-                    Column {
-                        WordCard(word = word, onClick = { onEditWord(word.wordId) })
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                            TextButton(onClick = { deletingWordId = word.wordId }) {
-                                Text("Xóa")
-                            }
+            items(uiState.filteredWords, key = { it.wordId }) { word ->
+                Column {
+                    WordCard(word = word, onClick = { onEditWord(word.wordId) })
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        TextButton(onClick = { deletingWordId = word.wordId }) {
+                            Text("Xóa")
                         }
                     }
                 }
             }
-            item {
-                Spacer(Modifier.height(132.dp))
-            }
+        }
+        item {
+            Spacer(Modifier.height(132.dp))
         }
     }
 }
@@ -211,10 +263,9 @@ fun VocabularySetDetailScreen(
 @Preview(showBackground = true)
 @Composable
 private fun VocabularySetDetailScreenPreview() {
-    val setId = VocabularyDemoStore.vocabularySets.firstOrNull()?.setId.orEmpty()
     Mobile_projectTheme {
         VocabularySetDetailScreen(
-            setId = setId,
+            setId = "preview_set_id",
             onAddWord = {},
             onEditWord = {},
             onEditSet = {},

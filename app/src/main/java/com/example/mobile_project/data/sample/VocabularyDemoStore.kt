@@ -92,6 +92,19 @@ object VocabularyDemoStore {
         return resolvedWordId
     }
 
+    fun deleteSet(setId: String) {
+        val removed = vocabularySets.removeAll { it.setId == setId }
+        if (removed) {
+            vocabularies.removeAll { it.setId == setId }
+        }
+    }
+
+    fun deleteWord(wordId: String) {
+        val existing = vocabularies.firstOrNull { it.wordId == wordId } ?: return
+        vocabularies.removeAll { it.wordId == wordId }
+        refreshWordCount(existing.setId)
+    }
+
     private fun refreshWordCount(setId: String) {
         val index = vocabularySets.indexOfFirst { it.setId == setId }
         if (index >= 0) {

@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.mobile_project.data.sample.VocabularyDemoStore
 import com.example.mobile_project.ui.components.PrimaryButton
+import com.example.mobile_project.ui.components.ValidationMessageBox
 import com.example.mobile_project.ui.theme.Mobile_projectTheme
 
 @Composable
@@ -38,7 +39,9 @@ fun EditVocabularySetScreen(
     var description by rememberSaveable(setId) { mutableStateOf(set?.description.orEmpty()) }
     var tagsText by rememberSaveable(setId) { mutableStateOf(set?.tags?.joinToString(", ").orEmpty()) }
     var isPublic by rememberSaveable(setId) { mutableStateOf(set?.isPublic ?: false) }
+    var showErrors by rememberSaveable(setId) { mutableStateOf(false) }
     val isEditing = set != null
+    val titleError = title.trim().isEmpty()
 
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).verticalScroll(rememberScrollState()).padding(20.dp)) {
         Spacer(Modifier.height(28.dp))
@@ -46,6 +49,10 @@ fun EditVocabularySetScreen(
         Text("Bộ từ sẽ tương ứng một document trong collection vocabulary_sets.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(20.dp))
         OutlinedTextField(title, { title = it }, label = { Text("Tên bộ từ") }, modifier = Modifier.fillMaxWidth())
+        if (showErrors && titleError) {
+            Spacer(Modifier.height(8.dp))
+            ValidationMessageBox("Tên bộ từ không được để trống.")
+        }
         Spacer(Modifier.height(12.dp))
         OutlinedTextField(description, { description = it }, label = { Text("Mô tả") }, minLines = 3, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(12.dp))
@@ -66,7 +73,10 @@ fun EditVocabularySetScreen(
         Spacer(Modifier.height(20.dp))
         PrimaryButton(
             "Lưu",
+            enabled = !titleError,
             onClick = {
+                showErrors = true
+                if (titleError) return@PrimaryButton
                 val savedSetId = VocabularyDemoStore.saveSet(
                     setId = set?.setId,
                     title = title,

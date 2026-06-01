@@ -309,7 +309,8 @@ fun AppNavGraph(
                     onEditWord = { wordId -> navController.navigate(AppRoutes.editWord(setId, wordId)) },
                     onEditSet = { navController.navigate(AppRoutes.editVocabularySet(setId)) },
                     onStartLearning = { navController.navigate(AppRoutes.Flashcard) },
-                    onQuiz = { navController.navigate(AppRoutes.Quiz) }
+                    onQuiz = { navController.navigate(AppRoutes.Quiz) },
+                    onDeleteSet = { navController.popBackStack(AppRoutes.Vocabulary, false) }
                 )
             }
             composable(

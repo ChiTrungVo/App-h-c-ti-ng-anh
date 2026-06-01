@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.mobile_project.data.sample.VocabularyDemoStore
 import com.example.mobile_project.ui.components.PrimaryButton
+import com.example.mobile_project.ui.components.ValidationMessageBox
 import com.example.mobile_project.ui.theme.Mobile_projectTheme
 
 @Composable
@@ -39,7 +40,10 @@ fun EditWordScreen(
     var collocations by rememberSaveable(wordId, setId) { mutableStateOf(existingWord?.collocations?.joinToString(", ").orEmpty()) }
     var note by rememberSaveable(wordId, setId) { mutableStateOf(existingWord?.note.orEmpty()) }
     var imageUrl by rememberSaveable(wordId, setId) { mutableStateOf(existingWord?.imageUrl.orEmpty()) }
+    var showErrors by rememberSaveable(wordId, setId) { mutableStateOf(false) }
     val isEditing = existingWord != null
+    val wordError = word.trim().isEmpty()
+    val meaningError = meaning.trim().isEmpty()
 
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).verticalScroll(rememberScrollState()).padding(20.dp)) {
         Spacer(Modifier.height(28.dp))
@@ -47,10 +51,18 @@ fun EditWordScreen(
         Text("Từ này sẽ lưu vào vocabularies và trỏ về bộ từ bằng setId.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(20.dp))
         OutlinedTextField(word, { word = it }, label = { Text("Từ vựng") }, modifier = Modifier.fillMaxWidth())
+        if (showErrors && wordError) {
+            Spacer(Modifier.height(8.dp))
+            ValidationMessageBox("Từ vựng không được để trống.")
+        }
         Spacer(Modifier.height(12.dp))
         OutlinedTextField(pronunciation, { pronunciation = it }, label = { Text("Phiên âm IPA") }, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(12.dp))
         OutlinedTextField(meaning, { meaning = it }, label = { Text("Nghĩa tiếng Việt") }, modifier = Modifier.fillMaxWidth())
+        if (showErrors && meaningError) {
+            Spacer(Modifier.height(8.dp))
+            ValidationMessageBox("Nghĩa tiếng Việt không được để trống.")
+        }
         Spacer(Modifier.height(12.dp))
         OutlinedTextField(definition, { definition = it }, label = { Text("Định nghĩa") }, minLines = 2, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(12.dp))
@@ -64,7 +76,10 @@ fun EditWordScreen(
         Spacer(Modifier.height(20.dp))
         PrimaryButton(
             "Lưu từ",
+            enabled = !wordError && !meaningError,
             onClick = {
+                showErrors = true
+                if (wordError || meaningError) return@PrimaryButton
                 VocabularyDemoStore.saveWord(
                     wordId = existingWord?.wordId,
                     setId = setId,

@@ -49,7 +49,8 @@ import com.example.mobile_project.ui.screens.vocabulary.EditWordScreen
 import com.example.mobile_project.ui.screens.vocabulary.VocabularySetDetailScreen
 import com.example.mobile_project.ui.screens.vocabulary.VocabularySetListScreen
 import com.example.mobile_project.ui.screens.common.NoInternetScreen
-
+import com.example.mobile_project.feature.practice.viewmodel.PracticeViewModel
+import com.example.mobile_project.feature.progress.viewmodel.ProgressViewModel
 object AppRoutes {
     const val Splash = "splash"
     const val Login = "login"
@@ -80,6 +81,7 @@ object AppRoutes {
     fun editWord(setId: String, wordId: String = "new") = "$EditWord/$setId/$wordId"
     fun resetPassword(userId: String, secret: String) =
         "$ResetPassword?userId=${Uri.encode(userId)}&secret=${Uri.encode(secret)}"
+    fun quiz(setId: String) = "$Quiz/$setId"
 }
 
 @Composable
@@ -112,7 +114,8 @@ fun AppNavGraph(
     val currentRoute = backStackEntry?.destination?.route
     val currentRootRoute = currentRoute.toBottomRootRoute()
     val lifecycleOwner = LocalLifecycleOwner.current
-
+    val practiceViewModel: PracticeViewModel = viewModel()
+    val progressViewModel: ProgressViewModel = viewModel()
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
@@ -311,7 +314,7 @@ fun AppNavGraph(
                     onEditWord = { wordId -> navController.navigate(AppRoutes.editWord(setId, wordId)) },
                     onEditSet = { navController.navigate(AppRoutes.editVocabularySet(setId)) },
                     onStartLearning = { navController.navigate(AppRoutes.Flashcard) },
-                    onQuiz = { navController.navigate(AppRoutes.Quiz) },
+                    onQuiz = { navController.navigate(AppRoutes.quiz(setId)) },
                     onDeleteSet = { navController.popBackStack(AppRoutes.Vocabulary, false) }
                 )
             }
@@ -363,15 +366,60 @@ fun AppNavGraph(
                 )
             }
             composable(AppRoutes.Quiz) {
-                QuizScreen(onResult = { navController.navigate(AppRoutes.QuizResult) })
+                QuizScreen(
+                    setId = "",
+                    onResult = { navController.navigate(AppRoutes.QuizResult) },
+                    practiceViewModel = practiceViewModel
+                )
+            }
+            composable(
+                route = "${AppRoutes.Quiz}/{setId}",
+                arguments = listOf(navArgument("setId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val setId = backStackEntry.arguments?.getString("setId").orEmpty()
+                QuizScreen(
+                    setId = setId,
+                    onResult = { navController.navigate(AppRoutes.QuizResult) },
+                    practiceViewModel = practiceViewModel
+                )
             }
             composable(AppRoutes.QuizResult) {
-                QuizResultScreen(onReviewWrong = { navController.navigate(AppRoutes.Quiz) })
+                QuizResultScreen(
+                    onReviewWrong = {
+                        // Làm lại: retry() đã được gọi bên trong QuizResultScreen
+                        // Chỉ cần navigate về Quiz với cùng setId — practiceViewModel giữ state
+                        navController.popBackStack()
+                    },
+                    onBackToVocabulary = {
+                        navController.navigate(AppRoutes.Vocabulary) {
+                            popUpTo(AppRoutes.Practice) { inclusive = false }
+                        }
+                    },
+                    practiceViewModel = practiceViewModel
+                )
+                // Ghi kết quả vào ProgressViewModel khi đến màn này
+                LaunchedEffect(Unit) {
+                    val state = practiceViewModel.uiState.value
+                    val setId = state.questions.firstOrNull()?.wordId
+                        ?.let { wordId ->
+                            com.example.mobile_project.data.sample.VocabularyDemoStore
+                                .vocabularies.firstOrNull { it.wordId == wordId }?.setId
+                        }
+                    if (setId != null) {
+                        progressViewModel.recordQuizResult(
+                            setId = setId,
+                            correctCount = state.correctCount,
+                            totalCount = state.totalQuestions
+                        )
+                    }
+                }
             }
             composable(AppRoutes.Progress) {
+                LaunchedEffect(Unit) { progressViewModel.loadProgress() }
                 ProgressDashboardScreen(
                     onProfileClick = { navController.navigate(AppRoutes.Profile) },
-                    onNotificationsClick = { navController.navigate(AppRoutes.Notifications) }
+                    onNotificationsClick = { navController.navigate(AppRoutes.Notifications) },
+                    progressViewModel = progressViewModel
                 )
             }
             composable(AppRoutes.Profile) {
@@ -493,6 +541,7 @@ private fun String?.toBottomRootRoute(): String? = when (this) {
     AppRoutes.Flashcard,
     AppRoutes.SessionResult,
     AppRoutes.Quiz,
+    "${AppRoutes.Quiz}/{setId}",
     AppRoutes.QuizResult -> AppRoutes.Practice
 
     AppRoutes.Profile,

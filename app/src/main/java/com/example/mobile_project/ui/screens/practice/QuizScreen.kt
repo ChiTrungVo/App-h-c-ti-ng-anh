@@ -11,79 +11,139 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.mobile_project.data.sample.SampleData
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.mobile_project.feature.practice.viewmodel.PracticeViewModel
 import com.example.mobile_project.ui.components.PrimaryButton
 import com.example.mobile_project.ui.components.QuizOptionCard
 import com.example.mobile_project.ui.components.QuizOptionState
 import com.example.mobile_project.ui.components.SecondaryButton
-import com.example.mobile_project.ui.theme.Mobile_projectTheme
 
 @Composable
-fun QuizScreen(onResult: () -> Unit) {
-    val question = SampleData.quizQuestions.first()
-    var selectedOption by remember { mutableStateOf<String?>(null) }
-    var checked by remember { mutableStateOf(false) }
-    val isCorrect = selectedOption == question.correctAnswer
+fun QuizScreen(
+    setId: String,
+    onResult: () -> Unit,
+    practiceViewModel: PracticeViewModel = viewModel()
+) {
+    val state by practiceViewModel.uiState.collectAsState()
 
-    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(20.dp)) {
+    // Khởi động quiz khi màn hình được mở
+    LaunchedEffect(setId) {
+        practiceViewModel.startQuiz(setId)
+    }
+
+    // Chuyển sang màn kết quả khi quiz xong
+    LaunchedEffect(state.isFinished) {
+        if (state.isFinished) onResult()
+    }
+
+    val question = state.currentQuestion ?: return
+
+    Column(
+        Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .padding(20.dp)
+    ) {
         Spacer(Modifier.height(28.dp))
+
+        // Tiêu đề + tên bộ từ
         Text("Quiz từ vựng", style = MaterialTheme.typography.headlineLarge)
-        Text("Câu 4/7", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Spacer(Modifier.height(12.dp))
-        LinearProgressIndicator(progress = { 0.57f }, modifier = Modifier.fillMaxWidth().height(10.dp), color = MaterialTheme.colorScheme.primary, trackColor = MaterialTheme.colorScheme.primaryContainer)
+        Text(
+            state.setTitle.ifBlank { "Bộ từ đã chọn" },
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Spacer(Modifier.height(6.dp))
+
+        // Số câu hiện tại
+        Text(
+            "Câu ${state.currentIndex + 1}/${state.totalQuestions}",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Spacer(Modifier.height(10.dp))
+
+        // Thanh tiến độ
+        LinearProgressIndicator(
+            progress = {
+                if (state.totalQuestions == 0) 0f
+                else (state.currentIndex + 1).toFloat() / state.totalQuestions
+            },
+            modifier = Modifier.fillMaxWidth().height(10.dp),
+            color = MaterialTheme.colorScheme.primary,
+            trackColor = MaterialTheme.colorScheme.primaryContainer
+        )
+
         Spacer(Modifier.height(28.dp))
+
+        // Câu hỏi
         Text(question.questionText, style = MaterialTheme.typography.titleLarge)
+
         Spacer(Modifier.height(18.dp))
+
+        // 4 đáp án
         question.options.forEach { option ->
-            val state = when (option) {
-                question.correctAnswer -> if (checked) QuizOptionState.Correct else if (selectedOption == option) QuizOptionState.Selected else QuizOptionState.Default
-                selectedOption -> if (checked) QuizOptionState.Incorrect else QuizOptionState.Selected
+            val optionState = when {
+                !state.isChecked && state.selectedAnswer == option -> QuizOptionState.Selected
+                !state.isChecked -> QuizOptionState.Default
+                option == question.correctAnswer -> QuizOptionState.Correct
+                option == state.selectedAnswer -> QuizOptionState.Incorrect
                 else -> QuizOptionState.Default
             }
+
             QuizOptionCard(
                 text = option,
-                state = state,
-                onClick = {
-                    selectedOption = option
-                    checked = false
-                }
+                state = optionState,
+                onClick = { practiceViewModel.selectAnswer(option) }
             )
             Spacer(Modifier.height(10.dp))
         }
+
         Spacer(Modifier.height(14.dp))
-        if (checked) {
+
+        // Phản hồi sau khi kiểm tra
+        if (state.isChecked) {
             Text(
-                if (isCorrect) {
-                    "Chính xác. Journey nghĩa là chuyến đi."
-                } else {
-                    "Chưa đúng. Đáp án đúng là ${question.correctAnswer}."
-                },
-                color = if (isCorrect) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                text = if (state.isCorrect)
+                    "Chính xác! ✓"
+                else
+                    "Chưa đúng. Đáp án đúng là: ${question.correctAnswer}",
+                color = if (state.isCorrect)
+                    MaterialTheme.colorScheme.primary
+                else
+                    MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodyLarge
             )
+            Spacer(Modifier.height(14.dp))
         }
-        Spacer(Modifier.height(18.dp))
-        SecondaryButton(
-            "Kiểm tra",
-            onClick = { checked = selectedOption != null },
-            enabled = selectedOption != null
-        )
+
+        Spacer(Modifier.height(4.dp))
+
+        // Nút Kiểm tra
+        if (!state.isChecked) {
+            SecondaryButton(
+                "Kiểm tra",
+                onClick = { practiceViewModel.checkAnswer() },
+                enabled = state.selectedAnswer != null
+            )
+        }
+
         Spacer(Modifier.height(10.dp))
-        PrimaryButton("Câu tiếp theo", onClick = onResult, enabled = checked)
+
+        // Nút Câu tiếp theo / Nộp bài
+        PrimaryButton(
+            text = if (state.isLastQuestion) "Nộp bài" else "Câu tiếp theo",
+            onClick = { practiceViewModel.nextQuestion() },
+            enabled = state.isChecked
+        )
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-private fun QuizScreenPreview() {
-    Mobile_projectTheme {
-        QuizScreen(onResult = {})
-    }
-}

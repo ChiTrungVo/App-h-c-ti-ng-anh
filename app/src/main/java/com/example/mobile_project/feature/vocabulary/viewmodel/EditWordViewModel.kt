@@ -177,7 +177,7 @@ class EditWordViewModel(
                     )
                 } else {
                     // Tạo từ mới
-                    wordRepository.createWord(
+                    val newWord = wordRepository.createWord(
                         setId = state.setId,
                         word = form.word,
                         pronunciation = form.pronunciation,
@@ -189,10 +189,10 @@ class EditWordViewModel(
                         imageFileId = form.imageUrl.takeIf { it.isNotBlank() }
                     )
 
-                    // Tạo bản ghi progress cho từ mới
+                    // Tạo bản ghi progress cho từ mới sử dụng ID thật của từ vừa tạo
                     progressRepository.createProgress(
                         setId = state.setId,
-                        wordId = "" // wordId sẽ được tạo bởi Appwrite
+                        wordId = newWord.wordId
                     )
 
                     // Cập nhật wordCount cho bộ từ

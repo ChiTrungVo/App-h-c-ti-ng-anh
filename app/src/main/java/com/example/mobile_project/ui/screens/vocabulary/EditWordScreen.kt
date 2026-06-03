@@ -1,15 +1,22 @@
 package com.example.mobile_project.ui.screens.vocabulary
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -85,10 +92,49 @@ fun EditWordScreen(
             label = { Text("Từ vựng") },
             isError = uiState.wordError != null,
             supportingText = {
-                uiState.wordError?.let { Text(it) }
+                Text(
+                    if (uiState.isLoadingDetails) "Đang tải dữ liệu từ điển..."
+                    else "Gõ tiếng Anh để xem gợi ý từ điển (nghĩa, IPA, ví dụ...)"
+                )
             },
+            trailingIcon = {
+                if (uiState.isLoadingSuggestions || uiState.isLoadingDetails) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp
+                    )
+                }
+            },
+            singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
+
+        // Danh sách gợi ý từ điển — chọn để tự động điền các thuộc tính của từ
+        if (uiState.suggestions.isNotEmpty()) {
+            Spacer(Modifier.height(4.dp))
+            Card(
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                ),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column {
+                    uiState.suggestions.forEachIndexed { index, suggestion ->
+                        if (index > 0) HorizontalDivider()
+                        Text(
+                            text = suggestion,
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { viewModel.onSuggestionSelected(suggestion) }
+                                .padding(horizontal = 16.dp, vertical = 12.dp)
+                        )
+                    }
+                }
+            }
+        }
+
         if (uiState.wordError != null) {
             Spacer(Modifier.height(8.dp))
             ValidationMessageBox(uiState.wordError!!)

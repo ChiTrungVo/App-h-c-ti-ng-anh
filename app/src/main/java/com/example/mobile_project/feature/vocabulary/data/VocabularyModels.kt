@@ -39,7 +39,7 @@ data class WordForm(
     val meaning: String = "",
     val definition: String = "",
     val example: String = "",
-    val collocations: String = "", // Chuỗi cách nhau bằng dấu phẩy
+    val collocations: String = "", // Chuỗi cách nh�u bằng dấu phẩy
     val note: String = "",
     val imageUrl: String = ""
 ) {

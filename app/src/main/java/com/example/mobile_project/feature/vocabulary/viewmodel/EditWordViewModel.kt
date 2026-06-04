@@ -7,7 +7,6 @@ import com.example.mobile_project.feature.vocabulary.data.AppwriteVocabularyWord
 import com.example.mobile_project.feature.vocabulary.data.AppwriteUserWordProgressRepository
 import com.example.mobile_project.feature.vocabulary.data.DictionaryRepository
 import com.example.mobile_project.feature.vocabulary.data.WordForm
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,7 +23,6 @@ data class EditWordUiState(
     val setId: String = "",
     val wordId: String? = null,      // null = tạo mới, non-null = đang sửa
     val isEditing: Boolean = false,
-    val isSetPublic: Boolean = false, // bộ từ có công khai không (để set permission cho từ)
     val isLoading: Boolean = false,
     val isSaving: Boolean = false,
     val wordError: String? = null,
@@ -67,14 +65,6 @@ class EditWordViewModel(
      */
     fun initForm(setId: String, wordId: String?) {
         _uiState.update { it.copy(setId = setId) }
-
-        // Load thông tin set để biết isPublic
-        viewModelScope.launch {
-            runCatching { setRepository.getSet(setId) }
-                .onSuccess { set ->
-                    _uiState.update { it.copy(isSetPublic = set?.isPublic ?: false) }
-                }
-        }
 
         if (wordId == null || wordId == "new") {
             _uiState.update {
@@ -236,8 +226,14 @@ class EditWordViewModel(
         val form = state.form
 
         // Validate
-        val wordError = if (form.word.isBlank()) "Từ vựng không được để trống." else null
-        val meaningError = if (form.meaning.isBlank()) "Nghĩa tiếng Việt không được để trống." else null
+        var wordError: String? = null
+        var meaningError: String? = null
+        when {
+            form.word.isBlank() -> wordError = "Từ vựng không được để trống."
+        }
+        when {
+            form.meaning.isBlank() -> meaningError = "Nghĩa tiếng Việt không được để trống."
+        }
         if (wordError != null || meaningError != null) {
             _uiState.update { it.copy(wordError = wordError, meaningError = meaningError) }
             return
@@ -259,8 +255,7 @@ class EditWordViewModel(
                         example = form.example,
                         collocations = form.collocationList,
                         note = form.note,
-                        imageFileId = form.imageUrl.takeIf { it.isNotBlank() },
-                        isSetPublic = state.isSetPublic
+                        imageFileId = form.imageUrl.takeIf { it.isNotBlank() }
                     )
                 } else {
                     // Tạo từ mới
@@ -273,8 +268,7 @@ class EditWordViewModel(
                         example = form.example,
                         collocations = form.collocationList,
                         note = form.note,
-                        imageFileId = form.imageUrl.takeIf { it.isNotBlank() },
-                        isSetPublic = state.isSetPublic
+                        imageFileId = form.imageUrl.takeIf { it.isNotBlank() }
                     )
 
                     // Tạo bản ghi progress cho từ mới sử dụng ID thật của từ vừa tạo
@@ -289,9 +283,6 @@ class EditWordViewModel(
                 }
 
                 _uiState.update { it.copy(isSaving = false, saveSuccess = true) }
-            } catch (error: CancellationException) {
-                // Coroutine bị cancel (ví dụ user rời màn hình) → re-throw, không set error
-                throw error
             } catch (error: Exception) {
                 _uiState.update {
                     it.copy(

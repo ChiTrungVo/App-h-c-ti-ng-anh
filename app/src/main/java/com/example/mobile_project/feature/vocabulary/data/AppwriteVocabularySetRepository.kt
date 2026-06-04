@@ -61,23 +61,6 @@ class AppwriteVocabularySetRepository {
     }
 
     /**
-     * Lấy danh sách bộ từ công khai từ tất cả người dùng (không filter userId).
-     * Dùng cho màn hình Khám phá. Có pagination để xử lý nhiều bộ từ.
-     */
-    suspend fun getPublicSets(limit: Int = 50): List<VocabularySet> {
-        val result = databases.listDocuments(
-            databaseId = databaseId,
-            collectionId = COLLECTION_ID,
-            queries = listOf(
-                Query.equal("isPublic", true),
-                Query.orderDesc("createdAt"),
-                Query.limit(limit)
-            )
-        )
-        return result.documents.map { it.toVocabularySet() }
-    }
-
-    /**
      * Lấy một bộ từ theo ID.
      * Trả về null nếu không tìm thấy.
      */
@@ -97,9 +80,6 @@ class AppwriteVocabularySetRepository {
      * Tìm kiếm bộ từ theo từ khóa (title hoặc description)
      * và lọc theo tag (nếu có).
      * Chỉ tìm trong bộ từ của người dùng hiện tại.
-     *
-     * Lưu ý: tag được lọc ở memory vì Appwrite Query.equal trên array field
-     * kiểm tra toàn bộ array == value, không phải value nằm trong array.
      */
     suspend fun searchSets(query: String?, tag: String?): List<VocabularySet> {
         val user = account.get()
@@ -110,6 +90,10 @@ class AppwriteVocabularySetRepository {
             queries.add(Query.search("title", it.trim()))
         }
 
+        tag?.takeIf { it.isNotBlank() && it != "Tất cả" }?.let {
+            queries.add(Query.equal("tags", it.trim()))
+        }
+
         queries.add(Query.orderDesc("createdAt"))
         queries.add(Query.limit(100))
 
@@ -118,15 +102,7 @@ class AppwriteVocabularySetRepository {
             collectionId = COLLECTION_ID,
             queries = queries
         )
-        val docs = result.documents.map { it.toVocabularySet() }
-
-        // Lọc tag ở memory thay vì Appwrite query để xử lý đúng array contains
-        val effectiveTag = tag?.trim()
-        return if (effectiveTag.isNullOrBlank() || effectiveTag == "Tất cả") {
-            docs
-        } else {
-            docs.filter { set -> effectiveTag in set.tags }
-        }
+        return result.documents.map { it.toVocabularySet() }
     }
 
     // ------------------------------------------------------------------ //
@@ -246,7 +222,7 @@ class AppwriteVocabularySetRepository {
     }
 
     private fun nowIso(): String =
-        Companion.ISO_FORMATTER.get().format(Date())
+        Companion.ISO_FORMATTER.get()!!.format(Date())
 }
 
 // ------------------------------------------------------------------ //

@@ -51,6 +51,8 @@ import com.example.mobile_project.ui.screens.vocabulary.VocabularySetListScreen
 import com.example.mobile_project.ui.screens.common.NoInternetScreen
 import com.example.mobile_project.feature.practice.viewmodel.PracticeViewModel
 import com.example.mobile_project.feature.progress.viewmodel.ProgressViewModel
+import android.app.Application
+import androidx.lifecycle.ViewModelProvider
 object AppRoutes {
     const val Splash = "splash"
     const val Login = "login"
@@ -106,7 +108,11 @@ fun AppNavGraph(
     val navController = rememberNavController()
     val authViewModel: AuthViewModel = viewModel()
     val profileViewModel: ProfileViewModel = viewModel()
-    val notificationSettingsViewModel: NotificationSettingsViewModel = viewModel()
+    val notificationSettingsViewModel: NotificationSettingsViewModel = viewModel(
+        factory = NotificationSettingsViewModel.factory(
+            context.applicationContext as Application
+        )
+    )
     val authState by authViewModel.uiState.collectAsState()
     val profileState by profileViewModel.uiState.collectAsState()
     val notificationSettingsState by notificationSettingsViewModel.uiState.collectAsState()

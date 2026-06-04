@@ -11,6 +11,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModelProvider
+import com.example.mobile_project.feature.notification.worker.NotificationHelper
+import com.example.mobile_project.feature.notification.worker.ReminderScheduler
+
 
 data class NotificationSettingsUiState(
     val settings: NotificationSettings? = null,
@@ -22,11 +28,12 @@ data class NotificationSettingsUiState(
 )
 
 class NotificationSettingsViewModel(
+    application: Application,
     private val repository: AppwriteNotificationSettingsRepository = AppwriteNotificationSettingsRepository()
-) : ViewModel() {
+) : AndroidViewModel(application) {
     private val _uiState = MutableStateFlow(NotificationSettingsUiState())
     val uiState: StateFlow<NotificationSettingsUiState> = _uiState.asStateFlow()
-
+    private val context get() = getApplication<Application>().applicationContext
     fun loadSettings(force: Boolean = false) {
         if (!force && (_uiState.value.isLoading || _uiState.value.settings != null)) return
         viewModelScope.launch {
@@ -64,6 +71,14 @@ class NotificationSettingsViewModel(
             _uiState.update { it.copy(isSaving = true, errorMessage = null, infoMessage = null) }
             runCatching { repository.saveSettings(form) }
                 .onSuccess { settings ->
+                    // Thêm 3 dòng này
+                    NotificationHelper.createChannel(context)
+                    if (form.isEnabled) {
+                        ReminderScheduler.schedule(context, form.reminderTime, form.reminderDays)
+                    } else {
+                        ReminderScheduler.cancel(context)
+                    }
+
                     _uiState.update {
                         it.copy(
                             settings = settings,
@@ -91,7 +106,15 @@ class NotificationSettingsViewModel(
         }
     }
 
-    private companion object {
+    companion object {
         val TIME_REGEX = Regex("^([01]\\d|2[0-3]):[0-5]\\d$")
+        fun factory(application: Application): ViewModelProvider.Factory =
+            object : ViewModelProvider.AndroidViewModelFactory(application) {
+                @Suppress("UNCHECKED_CAST")
+                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                    return NotificationSettingsViewModel(application) as T
+                }
+            }
     }
+
 }

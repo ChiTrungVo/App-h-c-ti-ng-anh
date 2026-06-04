@@ -9,18 +9,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-// ---------- Model ----------
-
 data class SetProgress(
     val setId: String,
     val title: String,
     val totalWords: Int,
-    val quizzedWords: Int,   // số từ đã từng quiz ít nhất 1 lần
-    val correctWords: Int,   // số từ đã trả lời đúng ít nhất 1 lần
-    val progressPercent: Float  // correctWords / totalWords
+    val quizzedWords: Int,
+    val correctWords: Int,
+    val progressPercent: Float
 )
-
-// ---------- State ----------
 
 data class ProgressUiState(
     val setProgressList: List<SetProgress> = emptyList(),
@@ -30,8 +26,6 @@ data class ProgressUiState(
     val overallPercent: Float = 0f,
     val isLoading: Boolean = true
 )
-
-// ---------- ViewModel ----------
 
 class ProgressViewModel(
     private val repository: AppwriteProgressRepository = AppwriteProgressRepository()
@@ -56,8 +50,7 @@ class ProgressViewModel(
                     val result = quizResults[set.setId]
                     val correctWords = result?.first ?: 0
                     val quizzedWords = result?.second ?: 0
-                    val progressPercent = if (totalWords == 0) 0f
-                    else correctWords.toFloat() / totalWords
+                    val progressPercent = if (totalWords == 0) 0f else correctWords.toFloat() / totalWords
 
                     SetProgress(
                         setId = set.setId,
@@ -71,8 +64,7 @@ class ProgressViewModel(
 
                 val totalWords = setProgressList.sumOf { it.totalWords }
                 val totalCorrect = setProgressList.sumOf { it.correctWords }
-                val overallPercent = if (totalWords == 0) 0f
-                else totalCorrect.toFloat() / totalWords
+                val overallPercent = if (totalWords == 0) 0f else totalCorrect.toFloat() / totalWords
 
                 _uiState.update {
                     it.copy(
@@ -96,6 +88,7 @@ class ProgressViewModel(
                 repository.saveQuizResult(setId, correctCount, totalCount)
                 loadProgress()
             } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false) }
             }
         }
     }

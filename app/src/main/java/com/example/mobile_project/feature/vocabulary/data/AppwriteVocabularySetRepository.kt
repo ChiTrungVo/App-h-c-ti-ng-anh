@@ -6,21 +6,12 @@ import io.appwrite.ID
 import io.appwrite.Permission
 import io.appwrite.Query
 import io.appwrite.Role
-import io.appwrite.exceptions.AppwriteException
 import io.appwrite.models.Document
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 
-/**
- * Repository thao tác với collection "vocabulary_sets" trên Appwrite.
- *
- * Mỗi bộ từ vưu là một document.
- * Phân quyền:
- *   - Chủ sở hữu: read, update, delete
- *   - Người khác: read (nếu isPublic == true)
- */
 class AppwriteVocabularySetRepository {
 
     private val databases get() = AppwriteClientProvider.databases
@@ -38,14 +29,6 @@ class AppwriteVocabularySetRepository {
         }
     }
 
-    // ------------------------------------------------------------------ //
-    //  READ                                                              //
-    // ------------------------------------------------------------------ //
-
-    /**
-     * Lấy tất cả bộ từ của người dùng hiện tại.
-     * Sắp xếp mới nhất trước (theo createdAt giảm dần).
-     */
     suspend fun getMySets(): List<VocabularySet> {
         val user = account.get()
         val result = databases.listDocuments(
@@ -60,10 +43,18 @@ class AppwriteVocabularySetRepository {
         return result.documents.map { it.toVocabularySet() }
     }
 
-    /**
-     * Lấy một bộ từ theo ID.
-     * Trả về null nếu không tìm thấy.
-     */
+    suspend fun getPublicSets(): List<VocabularySet> {
+        val result = databases.listDocuments(
+            databaseId = databaseId,
+            collectionId = COLLECTION_ID,
+            queries = listOf(
+                Query.equal("isPublic", true),
+                Query.limit(50)
+            )
+        )
+        return result.documents.map { it.toVocabularySet() }
+    }
+
     suspend fun getSet(setId: String): VocabularySet? {
         return try {
             val result = databases.listDocuments(
@@ -80,11 +71,6 @@ class AppwriteVocabularySetRepository {
         }
     }
 
-    /**
-     * Tìm kiếm bộ từ theo từ khóa (title hoặc description)
-     * và lọc theo tag (nếu có).
-     * Chỉ tìm trong bộ từ của người dùng hiện tại.
-     */
     suspend fun searchSets(query: String?, tag: String?): List<VocabularySet> {
         val user = account.get()
         val queries = mutableListOf<String>()
@@ -109,14 +95,6 @@ class AppwriteVocabularySetRepository {
         return result.documents.map { it.toVocabularySet() }
     }
 
-    // ------------------------------------------------------------------ //
-    //  WRITE                                                             //
-    // ------------------------------------------------------------------ //
-
-    /**
-     * Tạo bộ từ mới.
-     * @return Document ID vừa tạo.
-     */
     suspend fun createSet(
         title: String,
         description: String,
@@ -146,9 +124,6 @@ class AppwriteVocabularySetRepository {
         return document.toVocabularySet()
     }
 
-    /**
-     * Cập nhật bộ từ.
-     */
     suspend fun updateSet(
         setId: String,
         title: String,
@@ -173,11 +148,6 @@ class AppwriteVocabularySetRepository {
         return document.toVocabularySet()
     }
 
-    /**
-     * Xóa bộ từ.
-     * Lưu ý: cần xóa luôn các từ vựng liên quan (vocabularies collection).
-     * Việc này nên được xử lý ở use-case hoặc ViewModel layer.
-     */
     suspend fun deleteSet(setId: String) {
         databases.deleteDocument(
             databaseId = databaseId,
@@ -186,9 +156,6 @@ class AppwriteVocabularySetRepository {
         )
     }
 
-    /**
-     * Cập nhật wordCount sau khi thêm/xóa từ vựng.
-     */
     suspend fun updateWordCount(setId: String, count: Int) {
         databases.updateDocument(
             databaseId = databaseId,
@@ -201,15 +168,28 @@ class AppwriteVocabularySetRepository {
         )
     }
 
-    // ------------------------------------------------------------------ //
-    //  HELPERS                                                           //
-    // ------------------------------------------------------------------ //
+    suspend fun forkSet(setId: String) {
+        val user = account.get()
+        val original = getSet(setId) ?: return
 
-    /**
-     * Quyền truy cập:
-     * - Owner: read, update, delete
-     * - Mọi user đã đăng nhập: read (nếu isPublic == true)
-     */
+        databases.createDocument(
+            databaseId = databaseId,
+            collectionId = COLLECTION_ID,
+            documentId = ID.unique(),
+            data = mapOf(
+                "userId" to user.id,
+                "title" to "${original.title} (copy)",
+                "description" to original.description,
+                "tags" to original.tags,
+                "wordCount" to original.wordCount,
+                "isPublic" to false,
+                "createdAt" to nowIso(),
+                "updatedAt" to nowIso()
+            ),
+            permissions = setOwnerAndPublicPermissions(user.id, false)
+        )
+    }
+
     private fun setOwnerAndPublicPermissions(
         ownerId: String,
         isPublic: Boolean
@@ -227,54 +207,7 @@ class AppwriteVocabularySetRepository {
 
     private fun nowIso(): String =
         Companion.ISO_FORMATTER.get()!!.format(Date())
-    // Lấy tất cả bộ từ public của cộng đồng
-    suspend fun getPublicSets(): List<VocabularySet> {
-        val result = databases.listDocuments(
-            databaseId = databaseId,
-            collectionId = COLLECTION_ID,
-            queries = listOf(
-                Query.equal("isPublic", true),
-                Query.limit(50)
-            )
-        )
-        return result.documents.map { it.toVocabularySet() }
-    }
-
-    // Sao chép bộ từ của người khác về tài khoản mình
-    suspend fun forkSet(setId: String) {
-        val user = account.get()
-        val original = databases.listDocuments(
-            databaseId = databaseId,
-            collectionId = COLLECTION_ID,
-            queries = listOf(
-                Query.equal("\$id", setId),
-                Query.limit(1)
-            )
-        ).documents.firstOrNull()?.toVocabularySet() ?: return
-
-        databases.createDocument(
-            databaseId = databaseId,
-            collectionId = COLLECTION_ID,
-            documentId = ID.unique(),
-            data = mapOf(
-                "userId" to user.id,
-                "title" to "${original.title} (copy)",
-                "description" to original.description,
-                "tags" to original.tags,
-                "isPublic" to false
-            ),
-            permissions = listOf(
-                Permission.read(Role.user(user.id)),
-                Permission.update(Role.user(user.id)),
-                Permission.delete(Role.user(user.id))
-            )
-        )
-    }
 }
-
-// ------------------------------------------------------------------ //
-//  EXTENSION: Map Appwrite Document → VocabularySet                  //
-// ------------------------------------------------------------------ //
 
 @Suppress("UNCHECKED_CAST")
 private fun Document<Map<String, Any>>.toVocabularySet(): VocabularySet {
@@ -291,4 +224,3 @@ private fun Document<Map<String, Any>>.toVocabularySet(): VocabularySet {
         status = d["status"] as? String ?: "Đang học"
     )
 }
-

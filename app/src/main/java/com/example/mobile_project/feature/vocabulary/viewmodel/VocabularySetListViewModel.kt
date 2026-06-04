@@ -10,9 +10,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/**
- * UI state cho màn hình danh sách bộ từ vựng.
- */
 data class VocabularySetListUiState(
     val sets: List<VocabularySet> = emptyList(),
     val filteredSets: List<VocabularySet> = emptyList(),
@@ -27,13 +24,6 @@ data class VocabularySetListUiState(
     val forkLoadingSetId: String? = null
 )
 
-/**
- * ViewModel cho VocabularySetListScreen.
- * Quản lý:
- *   - Tải danh sách bộ từ từ Appwrite
- *   - Tìm kiếm bộ từ
- *   - Lọc theo tag
- */
 class VocabularySetListViewModel(
     private val repository: AppwriteVocabularySetRepository = AppwriteVocabularySetRepository()
 ) : ViewModel() {
@@ -45,10 +35,6 @@ class VocabularySetListViewModel(
         loadSets()
     }
 
-    /**
-     * Tải toàn bộ bộ từ của người dùng từ Appwrite.
-     * Gọi lại khi cần refresh (pull-to-reload, sau khi thêm/xóa).
-     */
     fun loadSets() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
@@ -70,17 +56,13 @@ class VocabularySetListViewModel(
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            errorMessage = error.localizedMessage
-                                ?: "Không thể tải danh sách bộ từ."
+                            errorMessage = error.localizedMessage ?: "Không thể tải danh sách bộ từ."
                         )
                     }
                 }
         }
     }
 
-    /**
-     * Cập nhật từ khóa tìm kiếm và lọc lại danh sách.
-     */
     fun onSearchQueryChanged(query: String) {
         _uiState.update { state ->
             state.copy(
@@ -90,9 +72,6 @@ class VocabularySetListViewModel(
         }
     }
 
-    /**
-     * Cập nhật tag được chọn và lọc lại danh sách.
-     */
     fun onTagSelected(tag: String) {
         _uiState.update { state ->
             state.copy(
@@ -102,13 +81,45 @@ class VocabularySetListViewModel(
         }
     }
 
+    fun onTabSelected(tab: VocabularyTab) {
+        _uiState.update { it.copy(selectedTab = tab) }
+        if (tab == VocabularyTab.Discover) loadPublicSets()
+    }
+
     fun clearError() {
         _uiState.update { it.copy(errorMessage = null) }
     }
 
-    // ------------------------------------------------------------------ //
-    //  PRIVATE HELPERS                                                   //
-    // ------------------------------------------------------------------ //
+    fun forkSet(setId: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(forkLoadingSetId = setId) }
+            try {
+                repository.forkSet(setId)
+                loadSets()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(errorMessage = e.localizedMessage ?: "Không thể sao chép bộ từ.") }
+            } finally {
+                _uiState.update { it.copy(forkLoadingSetId = null) }
+            }
+        }
+    }
+
+    private fun loadPublicSets() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingPublic = true) }
+            try {
+                val sets = repository.getPublicSets()
+                _uiState.update { it.copy(isLoadingPublic = false, publicSets = sets) }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isLoadingPublic = false,
+                        errorMessage = e.localizedMessage ?: "Không thể tải bộ từ công khai."
+                    )
+                }
+            }
+        }
+    }
 
     private fun applyFilter(
         sets: List<VocabularySet>,
@@ -122,36 +133,6 @@ class VocabularySetListViewModel(
                 set.tags.any { it.contains(query, ignoreCase = true) }
             val matchesTag = tag == "Tất cả" || tag in set.tags
             matchesSearch && matchesTag
-        }
-    }
-    fun onTabSelected(tab: VocabularyTab) {
-        _uiState.update { it.copy(selectedTab = tab) }
-        if (tab == VocabularyTab.Discover) loadPublicSets()
-    }
-
-    private fun loadPublicSets() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoadingPublic = true) }
-            try {
-                val sets = repository.getPublicSets()
-                _uiState.update { it.copy(isLoadingPublic = false, publicSets = sets) }
-            } catch (e: Exception) {
-                _uiState.update { it.copy(isLoadingPublic = false) }
-            }
-        }
-    }
-
-    fun forkSet(setId: String) {
-        viewModelScope.launch {
-            _uiState.update { it.copy(forkLoadingSetId = setId) }
-            try {
-                repository.forkSet(setId)
-                loadSets()
-            } catch (e: Exception) {
-                // handle error nếu cần
-            } finally {
-                _uiState.update { it.copy(forkLoadingSetId = null) }
-            }
         }
     }
 }

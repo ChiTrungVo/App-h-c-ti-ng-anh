@@ -63,10 +63,10 @@ class AppwriteDailyLearningStatsRepository {
             collectionId = COLLECTION_ID,
             documentId = current.id,
             data = mapOf(
-                "wordsLearned"  to current.wordsLearned + learnedDelta,
+                "wordsLearned" to current.wordsLearned + learnedDelta,
                 "wordsReviewed" to current.wordsReviewed + reviewedDelta,
                 "wordsMastered" to current.wordsMastered + masteredDelta,
-                "studyMinutes"  to current.studyMinutes + minutesDelta
+                "studyMinutes" to current.studyMinutes + minutesDelta
             )
         )
         return document.toDailyLearningStats()
@@ -78,14 +78,14 @@ class AppwriteDailyLearningStatsRepository {
             collectionId = COLLECTION_ID,
             documentId = docId,
             data = mapOf(
-                "wordsLearned"   to stats.wordsLearned,
-                "wordsReviewed"  to stats.wordsReviewed,
-                "wordsMastered"  to stats.wordsMastered,
-                "studyMinutes"   to stats.studyMinutes,
-                "quizCount"      to stats.quizCount,
+                "wordsLearned" to stats.wordsLearned,
+                "wordsReviewed" to stats.wordsReviewed,
+                "wordsMastered" to stats.wordsMastered,
+                "studyMinutes" to stats.studyMinutes,
+                "quizCount" to stats.quizCount,
                 "correctAnswers" to stats.correctAnswers,
                 "totalQuestions" to stats.totalQuestions,
-                "avgScore"       to stats.avgScore
+                "avgScore" to stats.avgScore
             )
         )
         return document.toDailyLearningStats()
@@ -97,16 +97,16 @@ class AppwriteDailyLearningStatsRepository {
             collectionId = COLLECTION_ID,
             documentId = ID.unique(),
             data = mapOf(
-                "userId"         to userId,
-                "date"           to date,
-                "wordsLearned"   to 0,
-                "wordsReviewed"  to 0,
-                "wordsMastered"  to 0,
-                "quizCount"      to 0,
+                "userId" to userId,
+                "date" to date,
+                "wordsLearned" to 0,
+                "wordsReviewed" to 0,
+                "wordsMastered" to 0,
+                "quizCount" to 0,
                 "correctAnswers" to 0,
                 "totalQuestions" to 0,
-                "avgScore"       to 0.0,
-                "studyMinutes"   to 0
+                "avgScore" to 0.0,
+                "studyMinutes" to 0
             ),
             permissions = listOf(
                 Permission.read(Role.user(userId)),
@@ -133,6 +133,13 @@ class AppwriteDailyLearningStatsRepository {
         )
 
         val dates = result.documents
+            .filter { doc ->
+                val wordsLearned = (doc.data["wordsLearned"] as? Number)?.toInt() ?: 0
+                val wordsReviewed = (doc.data["wordsReviewed"] as? Number)?.toInt() ?: 0
+                val quizCount = (doc.data["quizCount"] as? Number)?.toInt() ?: 0
+                val studyMinutes = (doc.data["studyMinutes"] as? Number)?.toInt() ?: 0
+                wordsLearned > 0 || wordsReviewed > 0 || quizCount > 0 || studyMinutes > 0
+            }
             .mapNotNull { it.data["date"] as? String }
             .toSortedSet(reverseOrder())
 
@@ -166,19 +173,19 @@ class AppwriteDailyLearningStatsRepository {
     private fun Document<Map<String, Any>>.toDailyLearningStats(): DailyLearningStats {
         val d = data
         return DailyLearningStats(
-            id             = id,
-            userId         = d["userId"] as? String ?: "",
-            date           = d["date"] as? String ?: "",
-            wordsLearned   = (d["wordsLearned"] as? Number)?.toInt() ?: 0,
-            wordsReviewed  = (d["wordsReviewed"] as? Number)?.toInt() ?: 0,
-            wordsMastered  = (d["wordsMastered"] as? Number)?.toInt() ?: 0,
-            quizCount      = (d["quizCount"] as? Number)?.toInt() ?: 0,
+            id = id,
+            userId = d["userId"] as? String ?: "",
+            date = d["date"] as? String ?: "",
+            wordsLearned = (d["wordsLearned"] as? Number)?.toInt() ?: 0,
+            wordsReviewed = (d["wordsReviewed"] as? Number)?.toInt() ?: 0,
+            wordsMastered = (d["wordsMastered"] as? Number)?.toInt() ?: 0,
+            quizCount = (d["quizCount"] as? Number)?.toInt() ?: 0,
             correctAnswers = (d["correctAnswers"] as? Number)?.toInt() ?: 0,
             totalQuestions = (d["totalQuestions"] as? Number)?.toInt() ?: 0,
-            avgScore       = (d["avgScore"] as? Number)?.toDouble() ?: 0.0,
-            studyMinutes   = (d["studyMinutes"] as? Number)?.toInt() ?: 0,
-            createdAt      = d["createdAt"] as? String ?: "",
-            updatedAt      = d["updatedAt"] as? String ?: ""
+            avgScore = (d["avgScore"] as? Number)?.toDouble() ?: 0.0,
+            studyMinutes = (d["studyMinutes"] as? Number)?.toInt() ?: 0,
+            createdAt = d["createdAt"] as? String ?: "",
+            updatedAt = d["updatedAt"] as? String ?: ""
         )
     }
 }

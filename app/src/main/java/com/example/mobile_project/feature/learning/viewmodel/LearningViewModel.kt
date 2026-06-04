@@ -19,7 +19,6 @@ class LearningViewModel : ViewModel() {
     private val statsRepo = AppwriteDailyLearningStatsRepository()
     private val wordRepo = AppwriteVocabularyWordRepository()
 
-    // --- Daily Plan State ---
     private val _dailyStats = MutableStateFlow<DailyLearningStats?>(null)
     val dailyStats: StateFlow<DailyLearningStats?> = _dailyStats.asStateFlow()
 
@@ -29,7 +28,6 @@ class LearningViewModel : ViewModel() {
     private val _newWordsCount = MutableStateFlow(0)
     val newWordsCount: StateFlow<Int> = _newWordsCount.asStateFlow()
 
-    // --- Flashcard Session State ---
     private val _sessionWords = MutableStateFlow<List<VocabularyWord>>(emptyList())
     val sessionWords: StateFlow<List<VocabularyWord>> = _sessionWords.asStateFlow()
 
@@ -50,6 +48,7 @@ class LearningViewModel : ViewModel() {
     fun loadDailyPlan(setId: String) {
         viewModelScope.launch {
             _isLoading.value = true
+            _errorMessage.value = null
             try {
                 _dailyStats.value = statsRepo.getTodayStats()
                 val due = progressRepo.getDueWords(setId)
@@ -57,7 +56,7 @@ class LearningViewModel : ViewModel() {
                 _dueWordsCount.value = due.size
                 _newWordsCount.value = new.size
             } catch (e: Exception) {
-                e.printStackTrace()
+                _errorMessage.value = e.localizedMessage ?: "Không thể tải kế hoạch học."
             } finally {
                 _isLoading.value = false
             }
@@ -73,7 +72,7 @@ class LearningViewModel : ViewModel() {
             _currentWordIndex.value = 0
             try {
                 if (setId.isBlank()) {
-                    _errorMessage.value = "Chua chon bo tu de hoc flashcard."
+                    _errorMessage.value = "Chưa chọn bộ từ để học flashcard."
                     return@launch
                 }
 
@@ -82,7 +81,6 @@ class LearningViewModel : ViewModel() {
                 val dueProgress = progressRepo.getDueWords(setId)
                 val newProgress = progressRepo.getNewWords(setId, limit = 5)
                 val allProgress = (dueProgress + newProgress).distinctBy { it.wordId }
-
                 val sessionItems = allProgress.mapNotNull { progress ->
                     wordRepo.getWord(progress.wordId)?.let { word -> progress to word }
                 }
@@ -91,17 +89,13 @@ class LearningViewModel : ViewModel() {
                 _sessionWords.value = sessionItems.map { it.second }
                 _currentWordIndex.value = 0
             } catch (e: Exception) {
-                _errorMessage.value = e.localizedMessage ?: "Khong the tai phien hoc flashcard."
-                e.printStackTrace()
+                _errorMessage.value = e.localizedMessage ?: "Không thể tải phiên học flashcard."
             } finally {
                 _isLoading.value = false
             }
         }
     }
 
-    /**
-     * @param quality 0-5 (0=Again, 1=Hard, 3=Good, 5=Easy)
-     */
     fun evaluateWord(quality: Int) {
         if (_isEvaluating.value) return
 
@@ -117,30 +111,25 @@ class LearningViewModel : ViewModel() {
         viewModelScope.launch {
             _errorMessage.value = null
             try {
-                // 1. Update SRS progress
                 progressRepo.updateProgressAfterReview(currentProgress.id, quality)
-                
-                // 2. Update Daily Stats
+
                 val isNew = currentProgress.status == "NOT_STARTED"
-                val isNowMastered = quality >= 3 && currentProgress.repetitions >= 4 // Example logic
-                
+                val isNowMastered = quality >= 3 && currentProgress.repetitions >= 4
+
                 statsRepo.incrementStats(
                     learnedDelta = if (isNew) 1 else 0,
                     reviewedDelta = 1,
                     masteredDelta = if (isNowMastered) 1 else 0,
-                    minutesDelta = 1 // Assume 1 min per word session for simplicity
+                    minutesDelta = 1
                 )
 
-                // 3. Move to next word
                 if (currentIndex < words.size - 1) {
                     _currentWordIndex.value = currentIndex + 1
                 } else {
-                    // Session finished
                     _currentWordIndex.value = words.size
                 }
             } catch (e: Exception) {
-                _errorMessage.value = e.localizedMessage ?: "Khong the cap nhat tien do SRS."
-                e.printStackTrace()
+                _errorMessage.value = e.localizedMessage ?: "Không thể cập nhật tiến độ SRS."
             } finally {
                 _isEvaluating.value = false
             }

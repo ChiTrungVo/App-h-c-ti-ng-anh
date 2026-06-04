@@ -122,6 +122,7 @@ class AppwriteVocabularyWordRepository {
 
     /**
      * Tạo từ vựng mới.
+     * @param isSetPublic nếu true, cấp quyền đọc cho mọi user đã đăng nhập.
      * @return Document ID vừa tạo.
      */
     suspend fun createWord(
@@ -133,7 +134,8 @@ class AppwriteVocabularyWordRepository {
         example: String,
         collocations: List<String>,
         note: String,
-        imageFileId: String? = null
+        imageFileId: String? = null,
+        isSetPublic: Boolean = false
     ): VocabularyWord {
         val user = account.get()
         val now = nowIso()
@@ -157,13 +159,14 @@ class AppwriteVocabularyWordRepository {
                 "createdAt" to now,
                 "updatedAt" to now
             ),
-            permissions = ownerOnlyPermissions(user.id)
+            permissions = wordPermissions(user.id, isSetPublic)
         )
         return document.toVocabularyWord()
     }
 
     /**
      * Cập nhật từ vựng.
+     * @param isSetPublic nếu true, cấp quyền đọc cho mọi user đã đăng nhập.
      */
     suspend fun updateWord(
         wordId: String,
@@ -175,7 +178,8 @@ class AppwriteVocabularyWordRepository {
         example: String,
         collocations: List<String>,
         note: String,
-        imageFileId: String?
+        imageFileId: String?,
+        isSetPublic: Boolean = false
     ): VocabularyWord {
         val user = account.get()
         val document = databases.updateDocument(
@@ -195,7 +199,7 @@ class AppwriteVocabularyWordRepository {
                 "imageFileId" to imageFileId,
                 "updatedAt" to nowIso()
             ),
-            permissions = ownerOnlyPermissions(user.id)
+            permissions = wordPermissions(user.id, isSetPublic)
         )
         return document.toVocabularyWord()
     }
@@ -231,13 +235,42 @@ class AppwriteVocabularyWordRepository {
     }
 
     /**
-     * Xóa tất cả từ vựng trong một bộ từ.
+     * Xóa tất cả từ vựng trong một bộ từ (có pagination).
      * Dùng khi xóa bộ từ (cascade delete).
+     * Hỗ trợ bộ từ có >500 từ bằng cách duyệt tuần tự từng trang.
      */
     suspend fun deleteAllWordsInSet(setId: String) {
-        val words = getWordsInSet(setId)
-        words.forEach { word ->
-            runCatching { deleteWord(word.wordId) }
+        val user = account.get()
+        var lastDocId: String? = null
+
+        while (true) {
+            val queries = mutableListOf(
+                Query.equal("userId", user.id),
+                Query.equal("setId", setId),
+                Query.limit(500)
+            )
+            lastDocId?.let { queries.add(Query.cursorAfter(it)) }
+
+            val result = databases.listDocuments(
+                databaseId = databaseId,
+                collectionId = COLLECTION_ID,
+                queries = queries
+            )
+
+            if (result.documents.isEmpty()) break
+
+            result.documents.forEach { doc ->
+                runCatching {
+                    databases.deleteDocument(
+                        databaseId = databaseId,
+                        collectionId = COLLECTION_ID,
+                        documentId = doc.id
+                    )
+                }
+            }
+
+            lastDocId = result.documents.last().id
+            if (result.documents.size < 500) break
         }
     }
 
@@ -290,6 +323,18 @@ class AppwriteVocabularyWordRepository {
         Permission.update(Role.user(ownerId)),
         Permission.delete(Role.user(ownerId))
     )
+
+    private fun wordPermissions(ownerId: String, isPublic: Boolean): List<String> {
+        val perms = mutableListOf(
+            Permission.read(Role.user(ownerId)),
+            Permission.update(Role.user(ownerId)),
+            Permission.delete(Role.user(ownerId))
+        )
+        if (isPublic) {
+            perms.add(Permission.read(Role.users()))
+        }
+        return perms
+    }
 
     private fun nowIso(): String = Companion.ISO_FORMATTER.get().format(Date())
 }

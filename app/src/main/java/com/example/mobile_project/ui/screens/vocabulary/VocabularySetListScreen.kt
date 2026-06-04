@@ -20,6 +20,8 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.PrimaryTabRow
+import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -34,8 +36,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mobile_project.R
 import com.example.mobile_project.feature.vocabulary.viewmodel.VocabularySetListViewModel
+import com.example.mobile_project.feature.vocabulary.viewmodel.VocabularyTab
 import com.example.mobile_project.ui.components.EmptyStateView
 import com.example.mobile_project.ui.components.PrimaryButton
+import com.example.mobile_project.ui.components.SecondaryButton
 import com.example.mobile_project.ui.components.VocabularySetCard
 import com.example.mobile_project.ui.theme.Mobile_projectTheme
 
@@ -94,54 +98,117 @@ fun VocabularySetListScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(Modifier.height(16.dp))
-                    OutlinedTextField(
-                        value = uiState.searchQuery,
-                        onValueChange = { viewModel.onSearchQueryChanged(it) },
-                        label = { Text("Tìm bộ từ") },
-                        leadingIcon = {
-                            Image(
-                                painter = painterResource(R.drawable.ic_search),
-                                contentDescription = null,
-                                modifier = Modifier.size(22.dp),
-                                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary)
-                            )
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(Modifier.height(12.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        uiState.allTags.forEach { tag ->
-                            AssistChip(
-                                onClick = { viewModel.onTagSelected(tag) },
-                                label = { Text(tag) }
+
+                    // ── Tab Row ──────────────────────────────────
+                    PrimaryTabRow(
+                        selectedTabIndex = if (uiState.selectedTab == VocabularyTab.Mine) 0 else 1
+                    ) {
+                        Tab(
+                            selected = uiState.selectedTab == VocabularyTab.Mine,
+                            onClick = { viewModel.onTabSelected(VocabularyTab.Mine) },
+                            text = { Text("Của tôi") }
+                        )
+                        Tab(
+                            selected = uiState.selectedTab == VocabularyTab.Discover,
+                            onClick = { viewModel.onTabSelected(VocabularyTab.Discover) },
+                            text = { Text("Khám phá") }
+                        )
+                    }
+                    Spacer(Modifier.height(16.dp))
+                }
+
+                // ── Tab: CỦA TÔI ────────────────────────────────
+                if (uiState.selectedTab == VocabularyTab.Mine) {
+                    item {
+                        OutlinedTextField(
+                            value = uiState.searchQuery,
+                            onValueChange = { viewModel.onSearchQueryChanged(it) },
+                            label = { Text("Tìm bộ từ") },
+                            leadingIcon = {
+                                Image(
+                                    painter = painterResource(R.drawable.ic_search),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(22.dp),
+                                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.primary)
+                                )
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(Modifier.height(12.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            uiState.allTags.forEach { tag ->
+                                AssistChip(
+                                    onClick = { viewModel.onTagSelected(tag) },
+                                    label = { Text(tag) }
+                                )
+                            }
+                        }
+                        Spacer(Modifier.height(12.dp))
+                        PrimaryButton("Tạo bộ từ", onClick = onAddClick)
+                        Spacer(Modifier.height(12.dp))
+                    }
+
+                    items(uiState.filteredSets, key = { it.setId }) { set ->
+                        VocabularySetCard(
+                            vocabularySet = set,
+                            onClick = { onSetClick(set.setId) }
+                        )
+                    }
+
+                    if (uiState.filteredSets.isEmpty()) {
+                        item {
+                            Spacer(Modifier.height(16.dp))
+                            EmptyStateView(
+                                title = "Chưa có bộ từ phù hợp",
+                                message = "Tạo bộ từ theo chủ đề IELTS, TOEIC, Business hoặc Travel."
                             )
                         }
                     }
-                    Spacer(Modifier.height(12.dp))
-                    PrimaryButton("Tạo bộ từ", onClick = onAddClick)
-                    Spacer(Modifier.height(12.dp))
                 }
 
-                items(uiState.filteredSets, key = { it.setId }) { set ->
-                    VocabularySetCard(
-                        vocabularySet = set,
-                        onClick = { onSetClick(set.setId) }
-                    )
+                // ── Tab: KHÁM PHÁ ───────────────────────────────
+                if (uiState.selectedTab == VocabularyTab.Discover) {
+                    if (uiState.isLoadingPublic) {
+                        item {
+                            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                                CircularProgressIndicator()
+                            }
+                        }
+                    } else if (uiState.publicSets.isEmpty()) {
+                        item {
+                            Spacer(Modifier.height(32.dp))
+                            EmptyStateView(
+                                title = "Chưa có bộ từ công khai",
+                                message = "Hãy tạo bộ từ và bật chế độ công khai để chia sẻ với cộng đồng."
+                            )
+                        }
+                    } else {
+                        items(uiState.publicSets, key = { "public_${it.setId}" }) { set ->
+                            Column {
+                                VocabularySetCard(
+                                    vocabularySet = set,
+                                    onClick = { } // Không navigate, chỉ để xem
+                                )
+                                Row(
+                                    Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.End
+                                ) {
+                                    SecondaryButton(
+                                        text = if (uiState.forkLoadingSetId == set.setId)
+                                            "Đang sao chép..."
+                                        else "Sao chép",
+                                        onClick = { viewModel.forkSet(set.setId) },
+                                        enabled = uiState.forkLoadingSetId == null
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
 
-                if (uiState.filteredSets.isEmpty()) {
-                    item {
-                        Spacer(Modifier.height(16.dp))
-                        EmptyStateView(
-                            title = "Chưa có bộ từ phù hợp",
-                            message = "Tạo bộ từ theo chủ đề IELTS, TOEIC, Business hoặc Travel."
-                        )
-                        Spacer(Modifier.height(132.dp))
-                    }
-                } else {
-                    item {
-                        Spacer(Modifier.height(132.dp))
-                    }
+                // Spacer bottom cho FAB
+                item {
+                    Spacer(Modifier.height(132.dp))
                 }
             }
         }

@@ -4,8 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mobile_project.data.model.VocabularySet
 import com.example.mobile_project.data.model.VocabularyWord
+import com.example.mobile_project.feature.vocabulary.data.AppwriteUserWordProgressRepository
 import com.example.mobile_project.feature.vocabulary.data.AppwriteVocabularySetRepository
 import com.example.mobile_project.feature.vocabulary.data.AppwriteVocabularyWordRepository
+import com.example.mobile_project.feature.vocabulary.data.VocabularyWordMatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -37,7 +39,8 @@ data class VocabularySetDetailUiState(
  */
 class VocabularySetDetailViewModel(
     private val setRepository: AppwriteVocabularySetRepository = AppwriteVocabularySetRepository(),
-    private val wordRepository: AppwriteVocabularyWordRepository = AppwriteVocabularyWordRepository()
+    private val wordRepository: AppwriteVocabularyWordRepository = AppwriteVocabularyWordRepository(),
+    private val progressRepository: AppwriteUserWordProgressRepository = AppwriteUserWordProgressRepository()
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(VocabularySetDetailUiState())
@@ -111,9 +114,9 @@ class VocabularySetDetailViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isDeleting = true, errorMessage = null) }
             runCatching {
-                // Cascade: xóa tất cả từ vựng trong bộ trước
+                // Cascade: xóa progress → words → set (đúng thứ tự data integrity)
+                progressRepository.deleteAllProgressInSet(currentSetId)
                 wordRepository.deleteAllWordsInSet(currentSetId)
-                // Sau đó xóa bộ từ
                 setRepository.deleteSet(currentSetId)
             }
                 .onSuccess {
@@ -132,15 +135,29 @@ class VocabularySetDetailViewModel(
     }
 
     /**
-     * Xóa một từ vựng khỏi bộ từ.
+     * Xóa một từ vựng khỏi bộ từ, kèm cascade xóa progress.
+     * Dùng local list removal thay vì reload toàn bộ set để tiết kiệm API call.
      */
     fun deleteWord(wordId: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(errorMessage = null) }
+            val userId = _uiState.value.set?.userId ?: ""
+            // Cascade: xóa progress trước, rồi mới xóa từ
+            if (userId.isNotBlank()) {
+                runCatching {
+                    progressRepository.deleteProgressByUserSetWord(userId, currentSetId, wordId)
+                }
+            }
             runCatching { wordRepository.deleteWord(wordId) }
                 .onSuccess {
-                    // Reload danh sách từ sau khi xóa
-                    loadSet(currentSetId)
+                    // Xóa khỏi local list thay vì gọi API loadSet
+                    _uiState.update { state ->
+                        val newWords = state.words.filter { it.wordId != wordId }
+                        state.copy(
+                            words = newWords,
+                            filteredWords = VocabularyWordMatcher.filter(newWords, state.searchQuery)
+                        )
+                    }
                 }
                 .onFailure { error ->
                     _uiState.update {

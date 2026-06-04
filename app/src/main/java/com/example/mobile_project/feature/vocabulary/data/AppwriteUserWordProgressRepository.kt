@@ -190,6 +190,7 @@ class AppwriteUserWordProgressRepository {
                 "setId" to setId,
                 "wordId" to wordId,
                 "status" to status,
+                "boxLevel" to 0,
                 "easinessFactor" to DEFAULT_EASE_FACTOR,
                 "repetitions" to 0,
                 "intervalDays" to 1,
@@ -234,6 +235,7 @@ class AppwriteUserWordProgressRepository {
             documentId = progressId,
             data = mapOf(
                 "status" to sm2.status,
+                "boxLevel" to sm2.repetitionCount,
                 "easinessFactor" to sm2.easeFactor,
                 "repetitions" to sm2.repetitionCount,
                 "intervalDays" to sm2.intervalDays,
@@ -342,7 +344,7 @@ class AppwriteUserWordProgressRepository {
             newIntervalDays = 1
             newStatus = "LEARNING"
         } else {
-            newRepetitionCount = current.boxLevel + 1
+            newRepetitionCount = current.repetitions + 1
             newIntervalDays = when (newRepetitionCount) {
                 1 -> 1
                 2 -> 6

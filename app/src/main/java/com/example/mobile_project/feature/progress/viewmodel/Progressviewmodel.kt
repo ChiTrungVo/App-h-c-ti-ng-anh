@@ -7,7 +7,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-
+import com.example.mobile_project.feature.progress.domain.model.ProgressItem
+import com.example.mobile_project.feature.progress.domain.usecase.CalculateNextReviewUseCase
+import com.example.mobile_project.feature.progress.domain.usecase.UpdateLearningPlanUseCase
 // ---------- Model ----------
 
 data class SetProgress(

@@ -11,7 +11,7 @@ class UpdateLearningPlanUseCase {
      * @param allProgress Toàn bộ trạng thái SRS của các từ vựng từ Database/Store
      * @return Cặp dữ liệu gồm: Pair(Danh sách từ cần ôn tập, Danh sách từ mới)
      */
-    operator fun invoke(allProgress: List<ProgressItem>): Pair<List<ProgressItem>, List<List<ProgressItem>>> {
+    operator fun invoke(allProgress: List<ProgressItem>): Pair<List<ProgressItem>, List<ProgressItem>> {
         val today = Date()
 
         // 1. Lọc các từ đến hạn ôn tập (nextReviewDate <= hôm nay) và đã từng được kích hoạt (repetitions > 0)

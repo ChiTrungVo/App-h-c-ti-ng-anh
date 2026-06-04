@@ -60,33 +60,6 @@ fun PracticeTypeScreen(
             shadowColor = Color(0xFFFFC107),
             iconTint = Color(0xFFFFB300),
             onClick = onQuiz
-        ),
-        PracticeTypeItem(
-            title = "Điền từ",
-            iconRes = R.drawable.ic_edit,
-            containerColor = Color(0xFFB2EBF2),
-            borderColor = Color(0xFF80DEEA),
-            shadowColor = Color(0xFF00BCD4),
-            iconTint = Color(0xFF00ACC1),
-            onClick = {}
-        ),
-        PracticeTypeItem(
-            title = "Nghe và chọn",
-            iconRes = R.drawable.ic_clock,
-            containerColor = Color(0xFFC8E6C9),
-            borderColor = Color(0xFFA5D6A7),
-            shadowColor = Color(0xFF4CAF50),
-            iconTint = Color(0xFF43A047),
-            onClick = {}
-        ),
-        PracticeTypeItem(
-            title = "Ghép cặp",
-            iconRes = R.drawable.ic_check_circle,
-            containerColor = Color(0xFFF8BBD0),
-            borderColor = Color(0xFFF48FB1),
-            shadowColor = Color(0xFFE91E63),
-            iconTint = Color(0xFFD81B60),
-            onClick = {}
         )
     )
 
@@ -122,23 +95,18 @@ fun PracticeTypeScreen(
             Spacer(Modifier.height(28.dp))
             MascotGuidance()
             Spacer(Modifier.height(26.dp))
-            practiceTypes.chunked(2).forEach { rowItems ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    rowItems.forEach { item ->
-                        PracticeTypeCard(
-                            item = item,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                    if (rowItems.size == 1) {
-                        Spacer(Modifier.weight(1f))
-                    }
-                }
-                Spacer(Modifier.height(16.dp))
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                PracticeTypeCard(
+                    item = practiceTypes[0],
+                    modifier = Modifier
+                        .fillMaxWidth(0.5f)
+                        .aspectRatio(1f)
+                )
             }
+            Spacer(Modifier.height(16.dp))
             Spacer(Modifier.height(104.dp))
         }
     }
@@ -181,9 +149,7 @@ private fun PracticeTypeCard(
     modifier: Modifier = Modifier
 ) {
     Box(
-        modifier = modifier
-            .aspectRatio(1f)
-            .padding(bottom = 6.dp)
+        modifier = modifier.padding(bottom = 6.dp)
     ) {
         Box(
             modifier = Modifier

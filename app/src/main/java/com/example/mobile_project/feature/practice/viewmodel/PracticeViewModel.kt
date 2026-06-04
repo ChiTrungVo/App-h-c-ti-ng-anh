@@ -31,7 +31,8 @@ class PracticeViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(PracticeUiState())
     val uiState: StateFlow<PracticeUiState> = _uiState.asStateFlow()
-
+    private val _navigateToQuiz = MutableStateFlow(false)
+    val navigateToQuiz: StateFlow<Boolean> = _navigateToQuiz.asStateFlow()
     fun startQuiz(setId: String) {
         val words = if (setId.isBlank()) VocabularyDemoStore.vocabularies.toList()
         else VocabularyDemoStore.wordsForSet(setId)
@@ -99,8 +100,11 @@ class PracticeViewModel : ViewModel() {
             ?.let { wordId -> VocabularyDemoStore.vocabularies.firstOrNull { it.wordId == wordId }?.setId }
             ?: return
         startQuiz(currentSetId)
+        _navigateToQuiz.update { true }
     }
-
+    fun onNavigatedToQuiz() {
+        _navigateToQuiz.update { false }
+    }
     private fun buildQuestions(words: List<VocabularyWord>): List<QuizQuestion> {
         val shuffled = words.shuffled()
         return shuffled.map { word ->

@@ -13,6 +13,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -34,6 +35,7 @@ import com.example.mobile_project.ui.theme.Mobile_projectTheme
 fun QuizResultScreen(
     onReviewWrong: () -> Unit,
     onBackToVocabulary: () -> Unit,
+    onRetry: () -> Unit,
     practiceViewModel: PracticeViewModel = viewModel()
 ) {
     val state by practiceViewModel.uiState.collectAsState()
@@ -41,7 +43,13 @@ fun QuizResultScreen(
     val mood = if (state.scorePercent >= 80) MimiMood.Celebrate else MimiMood.NeedCare
     val durationMinutes = state.durationSeconds / 60
     val durationSecs = state.durationSeconds % 60
-
+    val navigateToQuiz by practiceViewModel.navigateToQuiz.collectAsState()
+    LaunchedEffect(navigateToQuiz) {
+        if (navigateToQuiz) {
+            practiceViewModel.onNavigatedToQuiz()
+            onRetry()
+        }
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()

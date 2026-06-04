@@ -386,8 +386,6 @@ fun AppNavGraph(
             composable(AppRoutes.QuizResult) {
                 QuizResultScreen(
                     onReviewWrong = {
-                        // Làm lại: retry() đã được gọi bên trong QuizResultScreen
-                        // Chỉ cần navigate về Quiz với cùng setId — practiceViewModel giữ state
                         navController.popBackStack()
                     },
                     onBackToVocabulary = {
@@ -395,7 +393,12 @@ fun AppNavGraph(
                             popUpTo(AppRoutes.Practice) { inclusive = false }
                         }
                     },
-                    practiceViewModel = practiceViewModel
+                    practiceViewModel = practiceViewModel,
+                    onRetry = {
+                        navController.navigate(AppRoutes.Quiz) {
+                            popUpTo(AppRoutes.QuizResult) { inclusive = true }
+                        }
+                    }
                 )
                 // Ghi kết quả vào ProgressViewModel khi đến màn này
                 LaunchedEffect(Unit) {

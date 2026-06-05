@@ -4,23 +4,41 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mobile_project.data.model.DailyLearningStats
 import com.example.mobile_project.data.model.UserWordProgress
+import com.example.mobile_project.data.model.VocabularySet
 import com.example.mobile_project.data.model.VocabularyWord
 import com.example.mobile_project.feature.progress.data.repository.AppwriteDailyLearningStatsRepository
 import com.example.mobile_project.feature.vocabulary.data.AppwriteUserWordProgressRepository
+import com.example.mobile_project.feature.vocabulary.data.AppwriteVocabularySetRepository
 import com.example.mobile_project.feature.vocabulary.data.AppwriteVocabularyWordRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+data class LearningSessionSummary(
+    val setId: String = "",
+    val studiedWords: Int = 0,
+    val newWords: Int = 0,
+    val reviewedWords: Int = 0,
+    val masteredWords: Int = 0,
+    val studyMinutes: Int = 0
+)
+
 class LearningViewModel : ViewModel() {
 
     private val progressRepo = AppwriteUserWordProgressRepository()
     private val statsRepo = AppwriteDailyLearningStatsRepository()
     private val wordRepo = AppwriteVocabularyWordRepository()
+    private val setRepo = AppwriteVocabularySetRepository()
 
     private val _dailyStats = MutableStateFlow<DailyLearningStats?>(null)
     val dailyStats: StateFlow<DailyLearningStats?> = _dailyStats.asStateFlow()
+
+    private val _availableSets = MutableStateFlow<List<VocabularySet>>(emptyList())
+    val availableSets: StateFlow<List<VocabularySet>> = _availableSets.asStateFlow()
+
+    private val _selectedSetId = MutableStateFlow("")
+    val selectedSetId: StateFlow<String> = _selectedSetId.asStateFlow()
 
     private val _dueWordsCount = MutableStateFlow(0)
     val dueWordsCount: StateFlow<Int> = _dueWordsCount.asStateFlow()
@@ -36,6 +54,9 @@ class LearningViewModel : ViewModel() {
 
     private val _sessionProgress = MutableStateFlow<List<UserWordProgress>>(emptyList())
 
+    private val _sessionSummary = MutableStateFlow(LearningSessionSummary())
+    val sessionSummary: StateFlow<LearningSessionSummary> = _sessionSummary.asStateFlow()
+
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
@@ -45,14 +66,24 @@ class LearningViewModel : ViewModel() {
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
-    fun loadDailyPlan(setId: String) {
+    fun loadDailyPlan(setId: String? = null) {
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null
             try {
                 _dailyStats.value = statsRepo.getTodayStats()
-                val due = progressRepo.getDueWords(setId)
-                val new = progressRepo.getNewWords(setId)
+                val selectedSetId = resolveSetId(setId)
+                if (selectedSetId.isBlank()) {
+                    _dueWordsCount.value = 0
+                    _newWordsCount.value = 0
+                    return@launch
+                }
+
+                ensureProgressForSet(selectedSetId)
+
+                val due = progressRepo.getDueWords(selectedSetId)
+                    .filterNot { it.status == "NOT_STARTED" }
+                val new = progressRepo.getNewWords(selectedSetId)
                 _dueWordsCount.value = due.size
                 _newWordsCount.value = new.size
             } catch (e: Exception) {
@@ -63,7 +94,7 @@ class LearningViewModel : ViewModel() {
         }
     }
 
-    fun startFlashcardSession(setId: String) {
+    fun startFlashcardSession(setId: String? = null) {
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null
@@ -71,15 +102,19 @@ class LearningViewModel : ViewModel() {
             _sessionProgress.value = emptyList()
             _currentWordIndex.value = 0
             try {
-                if (setId.isBlank()) {
-                    _errorMessage.value = "Chưa chọn bộ từ để học flashcard."
+                val selectedSetId = resolveSetId(setId)
+                if (selectedSetId.isBlank()) {
+                    _sessionSummary.value = LearningSessionSummary()
+                    _errorMessage.value = "Bạn chưa có bộ từ nào để học flashcard."
                     return@launch
                 }
 
-                ensureProgressForSet(setId)
+                _sessionSummary.value = LearningSessionSummary(setId = selectedSetId)
+                ensureProgressForSet(selectedSetId)
 
-                val dueProgress = progressRepo.getDueWords(setId)
-                val newProgress = progressRepo.getNewWords(setId, limit = 5)
+                val dueProgress = progressRepo.getDueWords(selectedSetId)
+                    .filterNot { it.status == "NOT_STARTED" }
+                val newProgress = progressRepo.getNewWords(selectedSetId, limit = 5)
                 val allProgress = (dueProgress + newProgress).distinctBy { it.wordId }
                 val sessionItems = allProgress.mapNotNull { progress ->
                     wordRepo.getWord(progress.wordId)?.let { word -> progress to word }
@@ -111,17 +146,28 @@ class LearningViewModel : ViewModel() {
         viewModelScope.launch {
             _errorMessage.value = null
             try {
-                progressRepo.updateProgressAfterReview(currentProgress.id, quality)
+                val updatedProgress = progressRepo.updateProgressAfterReview(currentProgress.id, quality)
 
-                val isNew = currentProgress.status == "NOT_STARTED"
-                val isNowMastered = quality >= 3 && currentProgress.repetitions >= 4
-
-                statsRepo.incrementStats(
-                    learnedDelta = if (isNew) 1 else 0,
-                    reviewedDelta = 1,
-                    masteredDelta = if (isNowMastered) 1 else 0,
-                    minutesDelta = 1
+                val reviewDelta = LearningReviewStats.deltaForReview(
+                    previousProgress = currentProgress,
+                    updatedProgress = updatedProgress
                 )
+
+                _dailyStats.value = statsRepo.incrementStats(
+                    learnedDelta = reviewDelta.newWords,
+                    reviewedDelta = reviewDelta.reviewedWords,
+                    masteredDelta = reviewDelta.masteredWords,
+                    minutesDelta = reviewDelta.studyMinutes
+                )
+                _sessionSummary.value = _sessionSummary.value.let { summary ->
+                    summary.copy(
+                        studiedWords = summary.studiedWords + reviewDelta.studiedWords,
+                        newWords = summary.newWords + reviewDelta.newWords,
+                        reviewedWords = summary.reviewedWords + reviewDelta.reviewedWords,
+                        masteredWords = summary.masteredWords + reviewDelta.masteredWords,
+                        studyMinutes = summary.studyMinutes + reviewDelta.studyMinutes
+                    )
+                }
 
                 if (currentIndex < words.size - 1) {
                     _currentWordIndex.value = currentIndex + 1
@@ -134,6 +180,23 @@ class LearningViewModel : ViewModel() {
                 _isEvaluating.value = false
             }
         }
+    }
+
+    private suspend fun resolveSetId(requestedSetId: String?): String {
+        val trimmedSetId = requestedSetId.orEmpty().trim()
+        val sets = setRepo.getMySets()
+        _availableSets.value = sets
+
+        val selected = when {
+            trimmedSetId.isNotBlank() -> trimmedSetId
+            _selectedSetId.value.isNotBlank() && sets.any { it.setId == _selectedSetId.value } -> {
+                _selectedSetId.value
+            }
+            else -> sets.firstOrNull()?.setId.orEmpty()
+        }
+
+        _selectedSetId.value = selected
+        return selected
     }
 
     private suspend fun ensureProgressForSet(setId: String) {

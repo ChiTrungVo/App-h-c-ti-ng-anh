@@ -245,15 +245,18 @@ class PracticeViewModel(
         words: List<VocabularyWord>,
         extraWords: List<VocabularyWord> = emptyList()
     ): List<QuizQuestion> {
-        val shuffled = words.shuffled()
-        val allWordsForOptions = words + extraWords
+        val validWords = words.filter { it.word.isNotBlank() && it.meaning.isNotBlank() }
+        val allWordsForOptions = (validWords + extraWords)
+            .filter { it.word.isNotBlank() && it.meaning.isNotBlank() }
+            .distinctBy { it.wordId }
 
-        return shuffled.map { word ->
+        return validWords.shuffled().map { word ->
             val wrongOptions = allWordsForOptions
                 .filter { it.wordId != word.wordId }
+                .map { it.meaning }
+                .distinct()
                 .shuffled()
                 .take(3)
-                .map { it.meaning }
 
             val options = (wrongOptions + word.meaning).shuffled()
 

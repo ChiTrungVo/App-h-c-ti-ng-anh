@@ -10,7 +10,7 @@ object VocabularyWordMatcher {
 
     /**
      * Một từ có khớp với [query] không.
-     * So khớp (không phân biệt hoa thường) trên: word, meaning, definition, example, pronunciation.
+     * So khớp (không phân biệt hoa thường) trên các trường nội dung của từ.
      * Query rỗng/whitespace coi như khớp tất cả.
      */
     fun matches(word: VocabularyWord, query: String): Boolean {
@@ -20,7 +20,10 @@ object VocabularyWordMatcher {
             word.meaning.contains(q, ignoreCase = true) ||
             word.definition.contains(q, ignoreCase = true) ||
             word.example.contains(q, ignoreCase = true) ||
-            word.pronunciation.contains(q, ignoreCase = true)
+            word.pronunciation.contains(q, ignoreCase = true) ||
+            word.collocations.any { it.contains(q, ignoreCase = true) } ||
+            word.relatedWords.any { it.contains(q, ignoreCase = true) } ||
+            word.note.contains(q, ignoreCase = true)
     }
 
     /** Lọc danh sách từ theo [query]; query rỗng trả về nguyên danh sách. */

@@ -34,17 +34,22 @@ import com.example.mobile_project.ui.theme.Mobile_projectTheme
 @Composable
 fun FlashcardSessionScreen(
     setId: String = "",
-    onFinish: () -> Unit,
+    onFinish: (String) -> Unit,
     learningViewModel: LearningViewModel = viewModel()
 ) {
     val words by learningViewModel.sessionWords.collectAsState()
     val currentWordIndex by learningViewModel.currentWordIndex.collectAsState()
+    val selectedSetId by learningViewModel.selectedSetId.collectAsState()
+    val sessionSummary by learningViewModel.sessionSummary.collectAsState()
     val isLoading by learningViewModel.isLoading.collectAsState()
     val isEvaluating by learningViewModel.isEvaluating.collectAsState()
     val errorMessage by learningViewModel.errorMessage.collectAsState()
     var showBack by remember { mutableStateOf(false) }
+    var didFinish by remember { mutableStateOf(false) }
+    val activeSetId = sessionSummary.setId.ifBlank { selectedSetId }
 
     LaunchedEffect(setId) {
+        didFinish = false
         learningViewModel.startFlashcardSession(setId)
     }
 
@@ -53,8 +58,9 @@ fun FlashcardSessionScreen(
     }
 
     LaunchedEffect(currentWordIndex, words.size, isLoading) {
-        if (!isLoading && words.isNotEmpty() && currentWordIndex >= words.size) {
-            onFinish()
+        if (!didFinish && !isLoading && words.isNotEmpty() && currentWordIndex >= words.size) {
+            didFinish = true
+            onFinish(activeSetId)
         }
     }
 
@@ -90,7 +96,7 @@ fun FlashcardSessionScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(Modifier.height(28.dp))
-            PrimaryButton("Quay lại", onClick = onFinish)
+            PrimaryButton("Quay lại", onClick = { onFinish(activeSetId) })
             return@Column
         }
 

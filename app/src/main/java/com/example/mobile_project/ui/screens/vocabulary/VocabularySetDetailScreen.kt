@@ -1,5 +1,10 @@
 package com.example.mobile_project.ui.screens.vocabulary
 
+import android.content.Context
+import android.net.Uri
+import android.provider.OpenableColumns
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -26,13 +31,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mobile_project.R
+import com.example.mobile_project.feature.vocabulary.viewmodel.VocabularyExportFormat
 import com.example.mobile_project.feature.vocabulary.viewmodel.VocabularySetDetailViewModel
 import com.example.mobile_project.ui.components.EmptyStateView
 import com.example.mobile_project.ui.components.PrimaryButton
@@ -52,6 +61,41 @@ fun VocabularySetDetailScreen(
     viewModel: VocabularySetDetailViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    var pendingExportBytes by remember { mutableStateOf<ByteArray?>(null) }
+
+    val importLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        runCatching {
+            val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+                ?: error("Không thể đọc file đã chọn.")
+            viewModel.importFile(
+                fileName = uri.displayName(context),
+                mimeType = context.contentResolver.getType(uri),
+                bytes = bytes
+            )
+        }.onFailure { error ->
+            viewModel.showExportError(error.localizedMessage ?: "Không thể đọc file đã chọn.")
+        }
+    }
+
+    val csvExportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("text/csv")
+    ) { uri ->
+        writePendingExport(context, uri, pendingExportBytes, viewModel)
+        pendingExportBytes = null
+    }
+
+    val xlsxExportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument(
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+    ) { uri ->
+        writePendingExport(context, uri, pendingExportBytes, viewModel)
+        pendingExportBytes = null
+    }
 
     // Tải dữ liệu khi mở màn hình
     LaunchedEffect(setId) {
@@ -198,6 +242,64 @@ fun VocabularySetDetailScreen(
                 SecondaryButton("Sửa bộ từ", onClick = onEditSet, modifier = Modifier.weight(1f))
             }
             Spacer(Modifier.height(10.dp))
+            SecondaryButton(
+                text = if (uiState.isImporting) "Đang import..." else "Import CSV/Excel",
+                onClick = {
+                    importLauncher.launch(
+                        arrayOf(
+                            "text/csv",
+                            "text/comma-separated-values",
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            "application/octet-stream"
+                        )
+                    )
+                },
+                enabled = !uiState.isImporting
+            )
+            Spacer(Modifier.height(10.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                SecondaryButton(
+                    text = "Export CSV",
+                    onClick = {
+                        val exportFile = viewModel.buildExportFile(VocabularyExportFormat.Csv)
+                        pendingExportBytes = exportFile.bytes
+                        csvExportLauncher.launch(exportFile.fileName)
+                    },
+                    enabled = uiState.words.isNotEmpty(),
+                    modifier = Modifier.weight(1f)
+                )
+                SecondaryButton(
+                    text = "Export Excel",
+                    onClick = {
+                        val exportFile = viewModel.buildExportFile(VocabularyExportFormat.Xlsx)
+                        pendingExportBytes = exportFile.bytes
+                        xlsxExportLauncher.launch(exportFile.fileName)
+                    },
+                    enabled = uiState.words.isNotEmpty(),
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            if (uiState.isImporting) {
+                Spacer(Modifier.height(10.dp))
+                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+            }
+            uiState.importExportMessage?.let { message ->
+                Spacer(Modifier.height(10.dp))
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+            uiState.errorMessage?.let { message ->
+                Spacer(Modifier.height(10.dp))
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+            Spacer(Modifier.height(10.dp))
             SecondaryButton("Xóa bộ từ", onClick = { confirmDeleteSet = true })
             Spacer(Modifier.height(10.dp))
             PrimaryButton(
@@ -275,4 +377,33 @@ private fun VocabularySetDetailScreenPreview() {
             onDeleteSet = {}
         )
     }
+}
+
+private fun writePendingExport(
+    context: Context,
+    uri: Uri?,
+    bytes: ByteArray?,
+    viewModel: VocabularySetDetailViewModel
+) {
+    if (uri == null || bytes == null) return
+
+    runCatching {
+        context.contentResolver.openOutputStream(uri)?.use { output ->
+            output.write(bytes)
+        } ?: error("Không thể ghi file export.")
+    }.onSuccess {
+        viewModel.showExportSuccess()
+    }.onFailure { error ->
+        viewModel.showExportError(error.localizedMessage ?: "Không thể ghi file export.")
+    }
+}
+
+private fun Uri.displayName(context: Context): String? {
+    context.contentResolver.query(this, null, null, null, null)?.use { cursor ->
+        val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+        if (nameIndex >= 0 && cursor.moveToFirst()) {
+            return cursor.getString(nameIndex)
+        }
+    }
+    return lastPathSegment
 }

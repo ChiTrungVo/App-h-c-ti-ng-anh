@@ -116,6 +116,7 @@ class WordFormTest {
             word = "hello", pronunciation = "/həˈloʊ/",
             meaning = "xin chào", definition = "a greeting",
             example = "Hello!", collocations = listOf("say hello", "hello world"),
+            relatedWords = listOf("hi", "greeting"),
             note = "common", imageUrl = "https://example.com/img.png"
         )
         val form = WordForm.fromWord(word)
@@ -136,6 +137,7 @@ class WordFormTest {
             wordId = "w1", setId = "s1", userId = "u1",
             word = "test", pronunciation = "", meaning = "",
             definition = "", example = "", collocations = emptyList(),
+            relatedWords = emptyList(),
             note = "", imageUrl = null
         )
         val form = WordForm.fromWord(word)
@@ -148,6 +150,7 @@ class WordFormTest {
             wordId = "w1", setId = "s1", userId = "u1",
             word = "test", pronunciation = "", meaning = "",
             definition = "", example = "", collocations = emptyList(),
+            relatedWords = emptyList(),
             note = "", imageUrl = null
         )
         val form = WordForm.fromWord(word)

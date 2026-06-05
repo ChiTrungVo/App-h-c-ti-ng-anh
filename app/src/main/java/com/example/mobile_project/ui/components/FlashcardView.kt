@@ -62,10 +62,11 @@ fun FlashcardView(
         ) {
             if (isBackVisible) {
                 Text(word.meaning, style = MaterialTheme.typography.headlineLarge, textAlign = TextAlign.Center)
-                Spacer(Modifier.height(12.dp))
-                Text(word.definition, style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center)
-                Spacer(Modifier.height(12.dp))
-                Text(word.example, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
+                FlashcardDetailText(word.definition)
+                FlashcardDetailText(word.example)
+                FlashcardDetailText(word.collocations.joinToString(", "), "Cụm từ")
+                FlashcardDetailText(word.relatedWords.joinToString(", "), "Từ liên quan")
+                FlashcardDetailText(word.note, "Ghi chú")
             } else {
                 Text(word.word, style = MaterialTheme.typography.displayLarge, textAlign = TextAlign.Center)
                 Spacer(Modifier.height(12.dp))
@@ -74,6 +75,19 @@ fun FlashcardView(
         }
     }
 }
+
+@Composable
+private fun FlashcardDetailText(value: String, label: String? = null) {
+    if (value.isBlank()) return
+    Spacer(Modifier.height(10.dp))
+    Text(
+        text = label?.let { "$it: $value" } ?: value,
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        textAlign = TextAlign.Center
+    )
+}
+
 //data class VocabularyWord(
 //    val wordId: String,
 //    val setId: String,
@@ -101,6 +115,7 @@ fun FlashcardViewPreview() {
             definition = "A greeting or expression of goodwill.",
             example = "She said hello to everyone in the room.",
             collocations = listOf("say hello", "greet with hello"),
+            relatedWords = listOf("hi", "greeting"),
             note = "Commonly used as a greeting.",
             imageUrl = null
         ),

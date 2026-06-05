@@ -49,7 +49,11 @@ fun WordCard(
                 Text(word.pronunciation, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
             }
             Text(word.meaning, style = MaterialTheme.typography.bodyLarge)
-            Text(word.example, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            WordDetailText(label = "Định nghĩa", value = word.definition)
+            WordDetailText(label = "Ví dụ", value = word.example)
+            WordDetailText(label = "Cụm từ", value = word.collocations.joinToString(", "))
+            WordDetailText(label = "Từ liên quan", value = word.relatedWords.joinToString(", "))
+            WordDetailText(label = "Ghi chú", value = word.note)
         }
     }
 
@@ -75,6 +79,17 @@ fun WordCard(
             content()
         }
     }
+}
+
+@Composable
+private fun WordDetailText(label: String, value: String) {
+    if (value.isBlank()) return
+    Spacer(Modifier.height(4.dp))
+    Text(
+        "$label: $value",
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
 }
 
 //data class VocabularyWord(
@@ -105,6 +120,7 @@ fun WordCardPreview() {
             definition = "Eloquent is an adjective that describes someone who can express themselves clearly and effectively, often in a way that is moving or persuasive.",
             example = "She gave an eloquent speech that moved the audience to tears.",
             collocations = listOf("eloquent speaker", "eloquent writing"),
+            relatedWords = listOf("expressive", "articulate"),
             note = "Often used to describe speeches, writing, or people who are skilled at communication.",
             imageUrl = null
         )

@@ -39,12 +39,18 @@ data class WordForm(
     val meaning: String = "",
     val definition: String = "",
     val example: String = "",
-    val collocations: String = "", // Chuỗi cách nh�u bằng dấu phẩy
+    val collocations: String = "", // Chuỗi cách nhau bằng dấu phẩy
+    val relatedWords: String = "",
     val note: String = "",
     val imageUrl: String = ""
 ) {
     val collocationList: List<String>
         get() = collocations.split(",")
+            .map { it.trim() }
+            .filter { it.isNotBlank() }
+
+    val relatedWordList: List<String>
+        get() = relatedWords.split(",")
             .map { it.trim() }
             .filter { it.isNotBlank() }
 
@@ -57,6 +63,7 @@ data class WordForm(
                 definition = w.definition,
                 example = w.example,
                 collocations = w.collocations.joinToString(", "),
+                relatedWords = w.relatedWords.joinToString(", "),
                 note = w.note,
                 imageUrl = w.imageUrl.orEmpty()
             )

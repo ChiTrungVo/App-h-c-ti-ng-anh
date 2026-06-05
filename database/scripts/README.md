@@ -73,6 +73,32 @@ Lệnh cũ vẫn còn dùng được:
 npm run setup
 ```
 
+### 5. Tạo dữ liệu demo để test app
+
+Sau khi migration xong, chạy:
+
+```bash
+npm run seed
+```
+
+Script sẽ tạo dữ liệu demo idempotent, chạy lại sẽ cập nhật dữ liệu cũ thay vì nhân đôi:
+
+- 1 tài khoản test đã xác minh email.
+- 1 hồ sơ người dùng.
+- 2 bộ từ vựng.
+- 6 từ vựng.
+- Tiến độ SRS cho từng từ.
+- 1 kế hoạch học demo.
+- Thống kê học tập hôm nay.
+- 1 lượt quiz và các câu trả lời mẫu.
+
+Tài khoản đăng nhập app:
+
+```text
+Email: demo@minlish.test
+Password: Minlish@123
+```
+
 ## Các collection được tạo
 
 1. **user_profiles** - Hồ sơ người dùng

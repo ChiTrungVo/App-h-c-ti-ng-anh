@@ -18,6 +18,7 @@ class VocabularyWordMatcherTest {
         word = "hello", pronunciation = "/həˈloʊ/",
         meaning = "xin chào", definition = "used as a greeting",
         example = "Hello, how are you?", collocations = listOf("say hello"),
+        relatedWords = listOf("hi", "greeting"),
         note = "", imageUrl = null
     )
     private val cat = VocabularyWord(
@@ -25,6 +26,7 @@ class VocabularyWordMatcherTest {
         word = "cat", pronunciation = "/kæt/",
         meaning = "con mèo", definition = "a small domesticated carnivorous mammal",
         example = "The cat is sleeping.", collocations = listOf("black cat"),
+        relatedWords = listOf("kitten", "pet"),
         note = "", imageUrl = null
     )
     private val apple = VocabularyWord(
@@ -32,6 +34,7 @@ class VocabularyWordMatcherTest {
         word = "apple", pronunciation = "/ˈæp.əl/",
         meaning = "quả táo", definition = "a round fruit with red or green skin",
         example = "I eat an apple every day.", collocations = listOf("apple pie"),
+        relatedWords = listOf("fruit", "orchard"),
         note = "fruit", imageUrl = null
     )
     private val allWords = listOf(hello, cat, apple)
@@ -90,10 +93,7 @@ class VocabularyWordMatcherTest {
     }
 
     @Test
-    fun `matches on note field only should be false`() {
-        // "fruit" xuất hiện trong note của apple, nhưng note KHÔNG nằm trong scope matcher.
-        // Tuy nhiên "fruit" cũng có trong definition → phải dùng từ chỉ có trong note.
-        // Tạo word mà "onlyInNote" chỉ có ở note, không ở field nào khác.
+    fun `matches note field`() {
         val word = VocabularyWord(
             wordId = "w99", setId = "s1", userId = "u1",
             word = "unique",
@@ -102,11 +102,21 @@ class VocabularyWordMatcherTest {
             definition = "being the only one of its kind",
             example = "a unique opportunity",
             collocations = emptyList(),
+            relatedWords = emptyList(),
             note = "onlyInNote",
             imageUrl = null
         )
-        // "onlyInNote" appears only in note — matcher should NOT find it
-        assertFalse(VocabularyWordMatcher.matches(word, "onlyInNote"))
+        assertTrue(VocabularyWordMatcher.matches(word, "onlyInNote"))
+    }
+
+    @Test
+    fun `matches collocations field`() {
+        assertTrue(VocabularyWordMatcher.matches(cat, "black cat"))
+    }
+
+    @Test
+    fun `matches relatedWords field`() {
+        assertTrue(VocabularyWordMatcher.matches(hello, "greeting"))
     }
 
     // ── filter ────────────────────────────────────────────────────

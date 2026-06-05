@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "setup": "node setup-database.js",
-    "migrate": "node migrate.js"
+    "migrate": "node migrate.js",
+    "seed": "node seed-demo-data.js"
   },
   "dependencies": {
     "node-appwrite": "^13.0.0",

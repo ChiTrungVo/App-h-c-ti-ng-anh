@@ -136,6 +136,7 @@ class AppwriteVocabularyWordRepository {
         definition: String,
         example: String,
         collocations: List<String>,
+        relatedWords: List<String>,
         note: String,
         imageUrl: String? = null,
         isSetPublic: Boolean = false
@@ -157,6 +158,7 @@ class AppwriteVocabularyWordRepository {
                 "definition" to definition.trim(),
                 "example" to example.trim(),
                 "collocations" to collocations.map { it.trim() }.filter { it.isNotBlank() },
+                "relatedWords" to relatedWords.map { it.trim() }.filter { it.isNotBlank() },
                 "note" to note.trim(),
                 "imageUrl" to imageUrl,
                 "createdAt" to now,
@@ -165,6 +167,40 @@ class AppwriteVocabularyWordRepository {
             permissions = ownerOnlyPermissions(user.id)
         )
         return document.toVocabularyWord()
+    }
+
+    suspend fun createWords(
+        setId: String,
+        words: List<VocabularyFileWord>
+    ): List<VocabularyWord> {
+        if (words.isEmpty()) return emptyList()
+
+        val user = account.get()
+        return words.map { importedWord ->
+            val now = nowIso()
+            val document = databases.createDocument(
+                databaseId = databaseId,
+                collectionId = COLLECTION_ID,
+                documentId = ID.unique(),
+                data = mapOf(
+                    "setId" to setId,
+                    "userId" to user.id,
+                    "word" to importedWord.word.trim(),
+                    "pronunciation" to importedWord.pronunciation.trim(),
+                    "meaning" to importedWord.meaning.trim(),
+                    "definition" to importedWord.definition.trim(),
+                    "example" to importedWord.example.trim(),
+                    "collocations" to importedWord.collocations.map { it.trim() }.filter { it.isNotBlank() },
+                    "relatedWords" to importedWord.relatedWords.map { it.trim() }.filter { it.isNotBlank() },
+                    "note" to importedWord.note.trim(),
+                    "imageFileId" to null,
+                    "createdAt" to now,
+                    "updatedAt" to now
+                ),
+                permissions = ownerOnlyPermissions(user.id)
+            )
+            document.toVocabularyWord()
+        }
     }
 
     /**
@@ -179,6 +215,7 @@ class AppwriteVocabularyWordRepository {
         definition: String,
         example: String,
         collocations: List<String>,
+        relatedWords: List<String>,
         note: String,
         imageUrl: String?,
         isSetPublic: Boolean = false
@@ -197,6 +234,7 @@ class AppwriteVocabularyWordRepository {
                 "definition" to definition.trim(),
                 "example" to example.trim(),
                 "collocations" to collocations.map { it.trim() }.filter { it.isNotBlank() },
+                "relatedWords" to relatedWords.map { it.trim() }.filter { it.isNotBlank() },
                 "note" to note.trim(),
                 "imageUrl" to imageUrl,
                 "updatedAt" to nowIso()
@@ -317,6 +355,8 @@ private fun Document<Map<String, Any>>.toVocabularyWord(): VocabularyWord {
         definition = d["definition"] as? String ?: "",
         example = d["example"] as? String ?: "",
         collocations = (d["collocations"] as? List<*>)?.mapNotNull { it as? String }
+            ?: emptyList(),
+        relatedWords = (d["relatedWords"] as? List<*>)?.mapNotNull { it as? String }
             ?: emptyList(),
         note = d["note"] as? String ?: "",
         imageUrl = (d["imageUrl"] as? String)?.takeIf { it.isNotBlank() }

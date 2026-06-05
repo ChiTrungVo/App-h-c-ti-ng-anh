@@ -49,6 +49,7 @@ import com.example.mobile_project.ui.screens.vocabulary.EditWordScreen
 import com.example.mobile_project.ui.screens.vocabulary.VocabularySetDetailScreen
 import com.example.mobile_project.ui.screens.vocabulary.VocabularySetListScreen
 import com.example.mobile_project.ui.screens.common.NoInternetScreen
+import com.example.mobile_project.feature.learning.viewmodel.LearningViewModel
 import com.example.mobile_project.feature.practice.viewmodel.PracticeViewModel
 import com.example.mobile_project.feature.progress.viewmodel.ProgressViewModel
 import android.app.Application
@@ -84,6 +85,7 @@ object AppRoutes {
     fun editVocabularySet(setId: String = "new") = "$EditVocabularySet/$setId"
     fun editWord(setId: String, wordId: String = "new") = "$EditWord/$setId/$wordId"
     fun flashcard(setId: String) = "$Flashcard/$setId"
+    fun sessionResult(setId: String) = "$SessionResult/$setId"
     fun resetPassword(userId: String, secret: String) =
         "$ResetPassword?userId=${Uri.encode(userId)}&secret=${Uri.encode(secret)}"
     fun quiz(setId: String) = "$Quiz/$setId"
@@ -123,6 +125,7 @@ fun AppNavGraph(
     val currentRoute = backStackEntry?.destination?.route
     val currentRootRoute = currentRoute.toBottomRootRoute()
     val lifecycleOwner = LocalLifecycleOwner.current
+    val learningViewModel: LearningViewModel = viewModel()
     val practiceViewModel: PracticeViewModel = viewModel()
     val progressViewModel: ProgressViewModel = viewModel()
     val homeViewModel: HomeViewModel = viewModel()
@@ -361,12 +364,22 @@ fun AppNavGraph(
             }
             composable(AppRoutes.Learning) {
                 DailyLearningPlanScreen(
-                    onFlashcard = { navController.navigate(AppRoutes.Flashcard) },
-                    onQuiz = { navController.navigate(AppRoutes.Quiz) }
+                    onFlashcard = { setId -> navController.navigate(AppRoutes.flashcard(setId)) },
+                    onQuiz = { setId -> navController.navigate(AppRoutes.quiz(setId)) },
+                    learningViewModel = learningViewModel
                 )
             }
             composable(AppRoutes.Flashcard) {
-                FlashcardSessionScreen(onFinish = { navController.navigate(AppRoutes.SessionResult) })
+                FlashcardSessionScreen(
+                    onFinish = { finishedSetId ->
+                        if (finishedSetId.isNotBlank()) {
+                            navController.navigate(AppRoutes.sessionResult(finishedSetId))
+                        } else {
+                            navController.popBackStack()
+                        }
+                    },
+                    learningViewModel = learningViewModel
+                )
             }
             composable(
                 route = "${AppRoutes.Flashcard}/{setId}",
@@ -375,13 +388,27 @@ fun AppNavGraph(
                 val setId = backStackEntry.arguments?.getString("setId").orEmpty()
                 FlashcardSessionScreen(
                     setId = setId,
-                    onFinish = { navController.navigate(AppRoutes.SessionResult) }
+                    onFinish = { finishedSetId ->
+                        navController.navigate(AppRoutes.sessionResult(finishedSetId.ifBlank { setId }))
+                    },
+                    learningViewModel = learningViewModel
+                )
+            }
+            composable(
+                route = "${AppRoutes.SessionResult}/{setId}",
+                arguments = listOf(navArgument("setId") { type = NavType.StringType })
+            ) {
+                SessionResultScreen(
+                    onContinue = { navController.navigate(AppRoutes.Home) },
+                    onReview = { setId -> navController.navigate(AppRoutes.flashcard(setId)) },
+                    learningViewModel = learningViewModel
                 )
             }
             composable(AppRoutes.SessionResult) {
                 SessionResultScreen(
                     onContinue = { navController.navigate(AppRoutes.Home) },
-                    onReview = { navController.navigate(AppRoutes.Flashcard) }
+                    onReview = { setId -> navController.navigate(AppRoutes.flashcard(setId)) },
+                    learningViewModel = learningViewModel
                 )
             }
             composable(AppRoutes.Practice) {
@@ -559,6 +586,7 @@ private fun String?.toBottomRootRoute(): String? = when (this) {
     AppRoutes.Flashcard,
     "${AppRoutes.Flashcard}/{setId}",
     AppRoutes.SessionResult,
+    "${AppRoutes.SessionResult}/{setId}",
     AppRoutes.Quiz,
     "${AppRoutes.Quiz}/{setId}",
     AppRoutes.QuizResult -> AppRoutes.Practice

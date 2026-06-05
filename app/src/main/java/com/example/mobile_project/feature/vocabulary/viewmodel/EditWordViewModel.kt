@@ -175,6 +175,9 @@ class EditWordViewModel(
                         example = f.example.ifBlank { details.example },
                         collocations = f.collocations.ifBlank {
                             details.collocations.joinToString(", ")
+                        },
+                        relatedWords = f.relatedWords.ifBlank {
+                            details.collocations.joinToString(", ")
                         }
                     )
                 )
@@ -208,6 +211,10 @@ class EditWordViewModel(
 
     fun onCollocationsChanged(value: String) {
         _uiState.update { it.copy(form = it.form.copy(collocations = value)) }
+    }
+
+    fun onRelatedWordsChanged(value: String) {
+        _uiState.update { it.copy(form = it.form.copy(relatedWords = value)) }
     }
 
     fun onNoteChanged(value: String) {
@@ -254,6 +261,7 @@ class EditWordViewModel(
                         definition = form.definition,
                         example = form.example,
                         collocations = form.collocationList,
+                        relatedWords = form.relatedWordList,
                         note = form.note,
                         imageUrl = form.imageUrl.takeIf { it.isNotBlank() }
 //                        isSetPublic = state.isSetPublic
@@ -268,6 +276,7 @@ class EditWordViewModel(
                         definition = form.definition,
                         example = form.example,
                         collocations = form.collocationList,
+                        relatedWords = form.relatedWordList,
                         note = form.note,
                         imageUrl = form.imageUrl.takeIf { it.isNotBlank() }
 //                        isSetPublic = state.isSetPublic

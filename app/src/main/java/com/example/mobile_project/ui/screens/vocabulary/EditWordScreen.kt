@@ -195,6 +195,14 @@ fun EditWordScreen(
 
         Spacer(Modifier.height(12.dp))
         OutlinedTextField(
+            value = uiState.form.relatedWords,
+            onValueChange = { viewModel.onRelatedWordsChanged(it) },
+            label = { Text("Từ liên quan (cách nhau bằng dấu phẩy)") },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(Modifier.height(12.dp))
+        OutlinedTextField(
             value = uiState.form.note,
             onValueChange = { viewModel.onNoteChanged(it) },
             label = { Text("Ghi chú") },

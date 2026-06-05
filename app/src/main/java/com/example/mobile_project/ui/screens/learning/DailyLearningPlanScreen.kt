@@ -15,17 +15,22 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mobile_project.R
-import com.example.mobile_project.data.sample.SampleData
+import com.example.mobile_project.feature.learning.viewmodel.LearningViewModel
 import com.example.mobile_project.ui.components.PrimaryButton
 import com.example.mobile_project.ui.components.StatCard
 import com.example.mobile_project.ui.components.WhaleMascot
@@ -33,39 +38,94 @@ import com.example.mobile_project.ui.theme.Mobile_projectTheme
 
 @Composable
 fun DailyLearningPlanScreen(
-    onFlashcard: () -> Unit,
-    onQuiz: () -> Unit
+    onFlashcard: (String) -> Unit,
+    onQuiz: (String) -> Unit,
+    learningViewModel: LearningViewModel = viewModel()
 ) {
-    val stats = SampleData.daily_learning_stats
+    val stats by learningViewModel.dailyStats.collectAsState()
+    val dueWordsCount by learningViewModel.dueWordsCount.collectAsState()
+    val newWordsCount by learningViewModel.newWordsCount.collectAsState()
+    val availableSets by learningViewModel.availableSets.collectAsState()
+    val selectedSetId by learningViewModel.selectedSetId.collectAsState()
+    val isLoading by learningViewModel.isLoading.collectAsState()
+    val errorMessage by learningViewModel.errorMessage.collectAsState()
+    val selectedSet = availableSets.firstOrNull { it.setId == selectedSetId }
+
+    LaunchedEffect(Unit) {
+        learningViewModel.loadDailyPlan()
+    }
+
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).verticalScroll(rememberScrollState()).padding(20.dp)) {
         Spacer(Modifier.height(28.dp))
         Row(horizontalArrangement = Arrangement.SpaceBetween) {
             Column(Modifier.weight(1f)) {
                 Text("Kế hoạch hôm nay", style = MaterialTheme.typography.headlineLarge)
-                Text("Học gọn trong 20 phút với nhịp ôn phù hợp.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    selectedSet?.let { "Bộ từ: ${it.title}" }
+                        ?: "Chọn hoặc tạo một bộ từ để bắt đầu học.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
             WhaleMascot(size = 76.dp)
         }
         Spacer(Modifier.height(22.dp))
+
+        if (isLoading) {
+            CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+            Spacer(Modifier.height(22.dp))
+        }
+
+        errorMessage?.let { message ->
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.error
+            )
+            Spacer(Modifier.height(12.dp))
+        }
+
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            StatCard("Từ mới", "10", R.drawable.ic_book, Modifier.weight(1f))
-            StatCard("Đến hạn ôn", stats.wordsReviewed.toString(), R.drawable.ic_flashcard, Modifier.weight(1f))
+            StatCard("Từ mới", newWordsCount.toString(), R.drawable.ic_book, Modifier.weight(1f))
+            StatCard("Đến hạn ôn", dueWordsCount.toString(), R.drawable.ic_flashcard, Modifier.weight(1f))
         }
         Spacer(Modifier.height(12.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            StatCard("Thời gian học", "${stats.studyMinutes}p", R.drawable.ic_clock, Modifier.weight(1f))
-            StatCard("Đã ghi nhớ", stats.wordsMastered.toString(), R.drawable.ic_check_circle, Modifier.weight(1f))
+            StatCard("Thời gian học", "${stats?.studyMinutes ?: 0}p", R.drawable.ic_clock, Modifier.weight(1f))
+            StatCard("Đã ghi nhớ", (stats?.wordsMastered ?: 0).toString(), R.drawable.ic_check_circle, Modifier.weight(1f))
         }
         Spacer(Modifier.height(22.dp))
         Text("Từ cần ôn", style = MaterialTheme.typography.titleLarge)
         Spacer(Modifier.height(10.dp))
-        LearningEntryCard("Flashcard", "Ôn 18 từ đến hạn bằng thẻ lật.", R.drawable.ic_flashcard, onFlashcard)
+        LearningEntryCard(
+            "Flashcard",
+            "Học $newWordsCount từ mới và ôn $dueWordsCount từ đến hạn bằng thẻ lật.",
+            R.drawable.ic_flashcard,
+            enabled = selectedSetId.isNotBlank(),
+            onClick = { onFlashcard(selectedSetId) }
+        )
         Spacer(Modifier.height(12.dp))
-        LearningEntryCard("Quiz nhanh", "Kiểm tra lại các từ vừa học trong 5 phút.", R.drawable.ic_quiz, onQuiz)
+        LearningEntryCard(
+            "Quiz nhanh",
+            "Kiểm tra lại bộ từ đang học trong 5 phút.",
+            R.drawable.ic_quiz,
+            enabled = selectedSetId.isNotBlank(),
+            onClick = { onQuiz(selectedSetId) }
+        )
         Spacer(Modifier.height(12.dp))
-        LearningEntryCard("Luyện tập", "Khung giao diện cho trắc nghiệm, điền từ, nghe và ghép cặp.", R.drawable.ic_practice, onQuiz)
+        LearningEntryCard(
+            "Luyện tập",
+            "Làm bài trắc nghiệm với bộ từ đang chọn.",
+            R.drawable.ic_practice,
+            enabled = selectedSetId.isNotBlank(),
+            onClick = { onQuiz(selectedSetId) }
+        )
         Spacer(Modifier.height(24.dp))
-        PrimaryButton("Bắt đầu học", onClick = onFlashcard)
+        PrimaryButton(
+            "Bắt đầu học",
+            onClick = { onFlashcard(selectedSetId) },
+            enabled = selectedSetId.isNotBlank() && !isLoading
+        )
         Spacer(Modifier.height(132.dp))
     }
 }
@@ -75,10 +135,11 @@ private fun LearningEntryCard(
     title: String,
     description: String,
     iconRes: Int,
+    enabled: Boolean = true,
     onClick: () -> Unit
 ) {
     Card(
-        onClick = onClick,
+        onClick = { if (enabled) onClick() },
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),

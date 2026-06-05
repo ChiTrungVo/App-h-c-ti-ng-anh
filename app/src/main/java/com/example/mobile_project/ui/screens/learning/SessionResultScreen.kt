@@ -13,12 +13,15 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mobile_project.R
-import com.example.mobile_project.data.sample.SampleData
+import com.example.mobile_project.feature.learning.viewmodel.LearningViewModel
 import com.example.mobile_project.ui.components.CelebrationSprinkles
 import com.example.mobile_project.ui.components.MimiMood
 import com.example.mobile_project.ui.components.PrimaryButton
@@ -30,9 +33,10 @@ import com.example.mobile_project.ui.theme.Mobile_projectTheme
 @Composable
 fun SessionResultScreen(
     onContinue: () -> Unit,
-    onReview: () -> Unit
+    onReview: (String) -> Unit,
+    learningViewModel: LearningViewModel = viewModel()
 ) {
-    val stats = SampleData.daily_learning_stats
+    val summary by learningViewModel.sessionSummary.collectAsState()
     Column(
         modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).verticalScroll(rememberScrollState()).padding(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -45,18 +49,22 @@ fun SessionResultScreen(
         Text("Bạn đã giữ nhịp học rất tốt hôm nay.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(24.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            StatCard("Từ đã học", stats.wordsLearned.toString(), R.drawable.ic_book, Modifier.weight(1f))
-            StatCard("Từ đã ôn", stats.wordsReviewed.toString(), R.drawable.ic_flashcard, Modifier.weight(1f))
+            StatCard("Từ đã học", summary.newWords.toString(), R.drawable.ic_book, Modifier.weight(1f))
+            StatCard("Từ đã ôn", summary.reviewedWords.toString(), R.drawable.ic_flashcard, Modifier.weight(1f))
         }
         Spacer(Modifier.height(12.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            StatCard("Từ đã ghi nhớ", stats.wordsMastered.toString(), R.drawable.ic_check_circle, Modifier.weight(1f))
-            StatCard("Phút học", stats.studyMinutes.toString(), R.drawable.ic_clock, Modifier.weight(1f))
+            StatCard("Từ đã ghi nhớ", summary.masteredWords.toString(), R.drawable.ic_check_circle, Modifier.weight(1f))
+            StatCard("Phút học", summary.studyMinutes.toString(), R.drawable.ic_clock, Modifier.weight(1f))
         }
         Spacer(Modifier.height(24.dp))
         PrimaryButton("Tiếp tục", onClick = onContinue)
         Spacer(Modifier.height(12.dp))
-        SecondaryButton("Ôn lại", onClick = onReview)
+        SecondaryButton(
+            "Ôn lại",
+            onClick = { onReview(summary.setId) },
+            enabled = summary.setId.isNotBlank()
+        )
         Spacer(Modifier.height(132.dp))
     }
 }

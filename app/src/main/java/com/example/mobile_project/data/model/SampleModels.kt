@@ -35,6 +35,7 @@ data class VocabularyWord(
     val definition: String,
     val example: String,
     val collocations: List<String>,
+    val relatedWords: List<String>,
     val note: String,
     val imageUrl: String?
 )

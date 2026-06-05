@@ -67,6 +67,7 @@ object VocabularyDemoStore {
         definition: String,
         example: String,
         collocations: List<String>,
+        relatedWords: List<String>,
         note: String,
         imageUrl: String?
     ): String {
@@ -87,6 +88,7 @@ object VocabularyDemoStore {
             definition = definition.trim(),
             example = example.trim(),
             collocations = collocations,
+            relatedWords = relatedWords,
             note = note.trim(),
             imageUrl = imageUrl?.trim()?.ifBlank { null }
         )

@@ -6,11 +6,14 @@ import com.example.mobile_project.data.model.VocabularySet
 import com.example.mobile_project.data.model.VocabularyWord
 import com.example.mobile_project.feature.vocabulary.data.AppwriteVocabularySetRepository
 import com.example.mobile_project.feature.vocabulary.data.AppwriteVocabularyWordRepository
+import com.example.mobile_project.feature.vocabulary.data.VocabularyImportExportCodec
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.nio.charset.StandardCharsets
+import java.util.Locale
 
 /**
  * UI state cho màn hình chi tiết bộ từ vựng.
@@ -22,9 +25,21 @@ data class VocabularySetDetailUiState(
     val searchQuery: String = "",
     val isLoading: Boolean = true,
     val isDeleting: Boolean = false,
+    val isImporting: Boolean = false,
     val errorMessage: String? = null,
+    val importExportMessage: String? = null,
     val deleteSuccess: Boolean = false
 )
+
+data class VocabularyExportFile(
+    val fileName: String,
+    val bytes: ByteArray
+)
+
+enum class VocabularyExportFormat {
+    Csv,
+    Xlsx
+}
 
 /**
  * ViewModel cho VocabularySetDetailScreen.
@@ -53,34 +68,7 @@ class VocabularySetDetailViewModel(
         currentSetId = setId
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-
-            // Tải song song bộ từ và danh sách từ
-            val setResult = runCatching { setRepository.getSet(setId) }
-            val wordsResult = runCatching { wordRepository.getWordsInSet(setId) }
-
-            val set = setResult.getOrNull()
-            val words = wordsResult.getOrNull() ?: emptyList()
-
-            if (set == null && setResult.isFailure) {
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        errorMessage = setResult.exceptionOrNull()?.localizedMessage
-                            ?: "Không tìm thấy bộ từ."
-                    )
-                }
-                return@launch
-            }
-
-            _uiState.update {
-                it.copy(
-                    set = set,
-                    words = words,
-                    filteredWords = words,
-                    isLoading = false,
-                    errorMessage = null
-                )
-            }
+            refreshSet(setId)
         }
     }
 
@@ -153,11 +141,184 @@ class VocabularySetDetailViewModel(
         }
     }
 
+    fun importFile(fileName: String?, mimeType: String?, bytes: ByteArray) {
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    isImporting = true,
+                    errorMessage = null,
+                    importExportMessage = null
+                )
+            }
+
+            runCatching {
+                val parseResult = when {
+                    isCsvFile(fileName, mimeType) -> {
+                        VocabularyImportExportCodec.parseCsv(bytes.toString(StandardCharsets.UTF_8))
+                    }
+
+                    isXlsxFile(fileName, mimeType) -> {
+                        VocabularyImportExportCodec.parseXlsx(bytes)
+                    }
+
+                    else -> error("Chỉ hỗ trợ file CSV hoặc Excel .xlsx.")
+                }
+
+                if (parseResult.words.isEmpty()) {
+                    ImportSummary(imported = 0, skipped = parseResult.skippedRows)
+                } else {
+                    wordRepository.createWords(currentSetId, parseResult.words)
+                    val wordCount = wordRepository.countWordsInSet(currentSetId)
+                    setRepository.updateWordCount(currentSetId, wordCount)
+                    refreshSet(currentSetId, showLoading = false)
+                    ImportSummary(
+                        imported = parseResult.words.size,
+                        skipped = parseResult.skippedRows
+                    )
+                }
+            }
+                .onSuccess { summary ->
+                    val message = if (summary.imported == 0) {
+                        "Không có dòng hợp lệ để import. File cần có cột word và meaning."
+                    } else {
+                        buildString {
+                            append("Đã import ${summary.imported} từ.")
+                            if (summary.skipped > 0) append(" Bỏ qua ${summary.skipped} dòng thiếu word/meaning.")
+                        }
+                    }
+                    _uiState.update {
+                        it.copy(
+                            isImporting = false,
+                            importExportMessage = message
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    _uiState.update {
+                        it.copy(
+                            isImporting = false,
+                            errorMessage = error.localizedMessage ?: "Không thể import file."
+                        )
+                    }
+                }
+        }
+    }
+
+    fun buildExportFile(format: VocabularyExportFormat): VocabularyExportFile {
+        val state = uiState.value
+        val baseName = state.set?.title.orEmpty()
+            .ifBlank { "minlish-vocabulary" }
+            .toSafeFileName()
+        return when (format) {
+            VocabularyExportFormat.Csv -> VocabularyExportFile(
+                fileName = "$baseName.csv",
+                bytes = ("\uFEFF" + VocabularyImportExportCodec.toCsv(state.words))
+                    .toByteArray(StandardCharsets.UTF_8)
+            )
+
+            VocabularyExportFormat.Xlsx -> VocabularyExportFile(
+                fileName = "$baseName.xlsx",
+                bytes = VocabularyImportExportCodec.toXlsx(state.words)
+            )
+        }
+    }
+
+    fun showExportSuccess() {
+        _uiState.update {
+            it.copy(importExportMessage = "Đã export bộ từ thành công.", errorMessage = null)
+        }
+    }
+
+    fun showExportError(message: String) {
+        _uiState.update {
+            it.copy(errorMessage = message, importExportMessage = null)
+        }
+    }
+
     fun clearError() {
         _uiState.update { it.copy(errorMessage = null) }
+    }
+
+    fun clearImportExportMessage() {
+        _uiState.update { it.copy(importExportMessage = null) }
     }
 
     fun clearDeleteSuccess() {
         _uiState.update { it.copy(deleteSuccess = false) }
     }
+
+    private suspend fun refreshSet(setId: String, showLoading: Boolean = true) {
+        if (showLoading) {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+        }
+
+        val setResult = runCatching { setRepository.getSet(setId) }
+        val wordsResult = runCatching { wordRepository.getWordsInSet(setId) }
+
+        val set = setResult.getOrNull()
+        val words = wordsResult.getOrNull() ?: emptyList()
+
+        if (set == null && setResult.isFailure) {
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    errorMessage = setResult.exceptionOrNull()?.localizedMessage
+                        ?: "Không tìm thấy bộ từ."
+                )
+            }
+            return
+        }
+
+        _uiState.update {
+            val filteredWords = if (it.searchQuery.isBlank()) {
+                words
+            } else {
+                words.filterByQuery(it.searchQuery)
+            }
+            it.copy(
+                set = set,
+                words = words,
+                filteredWords = filteredWords,
+                isLoading = false,
+                errorMessage = null
+            )
+        }
+    }
+
+    private fun List<VocabularyWord>.filterByQuery(query: String): List<VocabularyWord> {
+        return filter { word ->
+            word.word.contains(query, ignoreCase = true) ||
+                word.meaning.contains(query, ignoreCase = true) ||
+                word.definition.contains(query, ignoreCase = true) ||
+                word.example.contains(query, ignoreCase = true) ||
+                word.pronunciation.contains(query, ignoreCase = true)
+        }
+    }
+
+    private fun isCsvFile(fileName: String?, mimeType: String?): Boolean {
+        val lowerName = fileName.orEmpty().lowercase(Locale.US)
+        val lowerMime = mimeType.orEmpty().lowercase(Locale.US)
+        return lowerName.endsWith(".csv") ||
+            lowerMime == "text/csv" ||
+            lowerMime == "text/comma-separated-values"
+    }
+
+    private fun isXlsxFile(fileName: String?, mimeType: String?): Boolean {
+        val lowerName = fileName.orEmpty().lowercase(Locale.US)
+        val lowerMime = mimeType.orEmpty().lowercase(Locale.US)
+        return lowerName.endsWith(".xlsx") ||
+            lowerMime == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    }
+
+    private fun String.toSafeFileName(): String {
+        return lowercase(Locale.US)
+            .replace(Regex("[^a-z0-9\\-_]+"), "-")
+            .trim('-')
+            .ifBlank { "minlish-vocabulary" }
+    }
+
+    private data class ImportSummary(
+        val imported: Int,
+        val skipped: Int
+    )
 }

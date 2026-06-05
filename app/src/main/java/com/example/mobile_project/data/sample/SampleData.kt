@@ -70,6 +70,7 @@ object SampleData {
             definition = "An act of travelling from one place to another.",
             example = "The journey across the coast was peaceful.",
             collocations = listOf("long journey", "safe journey"),
+            relatedWords = listOf("trip", "travel"),
             note = "Thường dùng trong văn kể chuyện.",
             imageUrl = null
         ),
@@ -83,6 +84,7 @@ object SampleData {
             definition = "A continuous movement of water or air.",
             example = "The ocean current carried the boat away.",
             collocations = listOf("strong current", "ocean current"),
+            relatedWords = listOf("flow", "stream"),
             note = "Cũng có nghĩa là hiện tại.",
             imageUrl = null
         ),
@@ -96,6 +98,7 @@ object SampleData {
             definition = "An occasion when people come together to discuss something.",
             example = "We have a team meeting every Monday.",
             collocations = listOf("team meeting", "weekly meeting"),
+            relatedWords = listOf("discussion", "conference"),
             note = "Dùng nhiều trong môi trường công việc.",
             imageUrl = null
         )

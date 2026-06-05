@@ -17,12 +17,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -215,28 +211,6 @@ fun VocabularySetDetailScreen(
                 style = MaterialTheme.typography.labelLarge
             )
             Spacer(Modifier.height(12.dp))
-            Card(
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-            ) {
-                Column(Modifier.padding(16.dp)) {
-                    Text("Tiến độ bộ từ", style = MaterialTheme.typography.titleMedium)
-                    Spacer(Modifier.height(10.dp))
-                    LinearProgressIndicator(
-                        progress = { set.progress },
-                        modifier = Modifier.fillMaxWidth().height(10.dp),
-                        color = MaterialTheme.colorScheme.primary,
-                        trackColor = MaterialTheme.colorScheme.primaryContainer
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        "${(set.progress * 100).toInt()}% đã hoàn thành",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-            Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 SecondaryButton("Thêm từ", onClick = onAddWord, modifier = Modifier.weight(1f))
                 SecondaryButton("Sửa bộ từ", onClick = onEditSet, modifier = Modifier.weight(1f))

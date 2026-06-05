@@ -14,13 +14,11 @@ import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -50,16 +48,6 @@ fun VocabularySetCard(
             Spacer(Modifier.height(6.dp))
             Text(vocabularySet.description, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(12.dp))
-            LinearProgressIndicator(
-                progress = { vocabularySet.progress },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(10.dp)
-                    .clip(RoundedCornerShape(99.dp)),
-                color = MaterialTheme.colorScheme.primary,
-                trackColor = MinLishPrimaryContainer.copy(alpha = 0.34f)
-            )
-            Spacer(Modifier.height(12.dp))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 vocabularySet.tags.forEach { tag ->
                     AssistChip(
@@ -86,7 +74,6 @@ fun VocabularySetCard(
 //    val tags: List<String>,
 //    val wordCount: Int,
 //    val isPublic: Boolean,
-//    val progress: Float,
 //    val status: String
 //)
 @Preview
@@ -101,7 +88,6 @@ fun VocabularySetCardPreview() {
             tags = listOf("Cơ bản", "Tiếng Anh", "Học tập"),
             wordCount = 50,
             isPublic = true,
-            progress = 0.6f,
             status = "Đang học"
         ),
         onClick = {}

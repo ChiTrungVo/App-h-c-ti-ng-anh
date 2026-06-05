@@ -33,30 +33,23 @@ class HomeViewModel(
     fun loadHomeData() {
         viewModelScope.launch {
             try {
-                // Kiểm tra reset streak trước
-                dailyStatsRepository.checkAndResetStreakIfNeeded()
-
-                // Sau đó load data bình thường
                 val todayStats = dailyStatsRepository.getTodayStats()
-                val quizResults = progressRepository.getQuizResults()
+                val streak = dailyStatsRepository.calculateStreak()
 
-                val avgAccuracy = if (quizResults.isEmpty()) 0
-                else quizResults.values
-                    .map { (correct, total) ->
-                        if (total == 0) 0 else correct * 100 / total
-                    }
-                    .average().toInt()
+                val avgAccuracy = if (todayStats.totalQuestions == 0) 0
+                else todayStats.correctAnswers * 100 / todayStats.totalQuestions
 
                 _uiState.update {
                     it.copy(
-                        streakDays = todayStats.streakDays,
-                        totalWordsLearned = todayStats.learnedWords,
+                        streakDays = streak,
+                        totalWordsLearned = todayStats.wordsLearned,
                         studiedMinutesToday = todayStats.studyMinutes,
                         quizAccuracy = avgAccuracy,
                         isLoading = false
                     )
                 }
             } catch (e: Exception) {
+                android.util.Log.e("HomeVM", "Failed to load home data: ${e.message}", e)
                 _uiState.update { it.copy(isLoading = false) }
             }
         }

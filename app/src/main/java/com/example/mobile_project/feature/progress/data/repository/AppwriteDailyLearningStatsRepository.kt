@@ -12,10 +12,6 @@ import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 
-/**
- * Repository thao tác với collection "daily_learning_stats" trên Appwrite.
- * Theo dõi số từ đã học, đã ôn, mastered và thời gian học trong ngày.
- */
 class AppwriteDailyLearningStatsRepository {
 
     private val databases get() = AppwriteClientProvider.databases
@@ -33,13 +29,10 @@ class AppwriteDailyLearningStatsRepository {
         }
     }
 
-    /**
-     * Lấy thống kê của ngày hôm nay. Nếu chưa có thì tạo mới.
-     */
     suspend fun getTodayStats(): DailyLearningStats {
         val user = account.get()
         val today = todayDateString()
-        
+
         val result = databases.listDocuments(
             databaseId = databaseId,
             collectionId = COLLECTION_ID,
@@ -57,9 +50,6 @@ class AppwriteDailyLearningStatsRepository {
         }
     }
 
-    /**
-     * Cập nhật số liệu học tập.
-     */
     suspend fun incrementStats(
         learnedDelta: Int = 0,
         reviewedDelta: Int = 0,
@@ -67,33 +57,35 @@ class AppwriteDailyLearningStatsRepository {
         minutesDelta: Int = 0
     ): DailyLearningStats {
         val current = getTodayStats()
-        
+
         val document = databases.updateDocument(
             databaseId = databaseId,
             collectionId = COLLECTION_ID,
             documentId = current.id,
             data = mapOf(
-                "learnedWords" to current.learnedWords + learnedDelta,
-                "reviewedWords" to current.reviewedWords + reviewedDelta,
-                "masteredWords" to current.masteredWords + masteredDelta,
-                "studyMinutes" to current.studyMinutes + minutesDelta
+                "wordsLearned"  to current.wordsLearned + learnedDelta,
+                "wordsReviewed" to current.wordsReviewed + reviewedDelta,
+                "wordsMastered" to current.wordsMastered + masteredDelta,
+                "studyMinutes"  to current.studyMinutes + minutesDelta
             )
         )
         return document.toDailyLearningStats()
     }
-    
+
     suspend fun updateStats(stats: DailyLearningStats, docId: String): DailyLearningStats {
         val document = databases.updateDocument(
             databaseId = databaseId,
             collectionId = COLLECTION_ID,
             documentId = docId,
             data = mapOf(
-                "learnedWords" to stats.learnedWords,
-                "reviewedWords" to stats.reviewedWords,
-                "masteredWords" to stats.masteredWords,
-                "studyMinutes" to stats.studyMinutes,
-                "quizAccuracy" to stats.quizAccuracy,
-                "streakDays" to stats.streakDays
+                "wordsLearned"   to stats.wordsLearned,
+                "wordsReviewed"  to stats.wordsReviewed,
+                "wordsMastered"  to stats.wordsMastered,
+                "studyMinutes"   to stats.studyMinutes,
+                "quizCount"      to stats.quizCount,
+                "correctAnswers" to stats.correctAnswers,
+                "totalQuestions" to stats.totalQuestions,
+                "avgScore"       to stats.avgScore
             )
         )
         return document.toDailyLearningStats()
@@ -105,14 +97,16 @@ class AppwriteDailyLearningStatsRepository {
             collectionId = COLLECTION_ID,
             documentId = ID.unique(),
             data = mapOf(
-                "userId" to userId,
-                "date" to date,
-                "learnedWords" to 0,
-                "reviewedWords" to 0,
-                "masteredWords" to 0,
-                "studyMinutes" to 0,
-                "quizAccuracy" to 0,
-                "streakDays" to 0
+                "userId"         to userId,
+                "date"           to date,
+                "wordsLearned"   to 0,
+                "wordsReviewed"  to 0,
+                "wordsMastered"  to 0,
+                "quizCount"      to 0,
+                "correctAnswers" to 0,
+                "totalQuestions" to 0,
+                "avgScore"       to 0.0,
+                "studyMinutes"   to 0
             ),
             permissions = listOf(
                 Permission.read(Role.user(userId)),
@@ -123,56 +117,68 @@ class AppwriteDailyLearningStatsRepository {
         return document.toDailyLearningStats()
     }
 
-    private fun todayDateString(): String = DATE_FORMATTER.get()!!.format(Date())
-
-    private fun Document<Map<String, Any>>.toDailyLearningStats(): DailyLearningStats {
-        val d = data
-        return DailyLearningStats(
-            id = id,
-            userId = d["userId"] as? String ?: "",
-            date = d["date"] as? String ?: "",
-            learnedWords = (d["learnedWords"] as? Number)?.toInt() ?: 0,
-            reviewedWords = (d["reviewedWords"] as? Number)?.toInt() ?: 0,
-            masteredWords = (d["masteredWords"] as? Number)?.toInt() ?: 0,
-            studyMinutes = (d["studyMinutes"] as? Number)?.toInt() ?: 0,
-            quizAccuracy = (d["quizAccuracy"] as? Number)?.toInt() ?: 0,
-            streakDays = (d["streakDays"] as? Number)?.toInt() ?: 0
-        )
-    }
-    suspend fun checkAndResetStreakIfNeeded() {
+    suspend fun calculateStreak(): Int {
         val user = account.get()
         val today = todayDateString()
-        val yesterday = yesterdayDateString()
+        val yesterday = previousDay(today)
 
-        // Tìm document gần nhất không phải hôm nay
-        val lastResult = databases.listDocuments(
+        val result = databases.listDocuments(
             databaseId = databaseId,
             collectionId = COLLECTION_ID,
             queries = listOf(
                 Query.equal("userId", user.id),
-                Query.notEqual("date", today),
                 Query.orderDesc("date"),
-                Query.limit(1)
+                Query.limit(30)
             )
         )
 
-        if (lastResult.documents.isEmpty()) return
+        val dates = result.documents
+            .mapNotNull { it.data["date"] as? String }
+            .toSortedSet(reverseOrder())
 
-        val lastDate = lastResult.documents.first().data["date"] as? String ?: return
+        if (dates.isEmpty()) return 0
 
-        // Nếu ngày cuối cùng học không phải hôm qua → reset streak về 0
-        if (lastDate != yesterday) {
-            val todayStats = getTodayStats()
-            updateStats(
-                stats = todayStats.copy(streakDays = 0),
-                docId = todayStats.id
-            )
+        val mostRecent = dates.first()
+        if (mostRecent != today && mostRecent != yesterday) return 0
+
+        var streak = 0
+        var checking = mostRecent
+        for (date in dates) {
+            if (date == checking) {
+                streak++
+                checking = previousDay(checking)
+            } else {
+                break
+            }
         }
+        return streak
     }
 
-    private fun yesterdayDateString(): String {
+    private fun todayDateString(): String = DATE_FORMATTER.get()!!.format(Date())
+
+    private fun previousDay(dateStr: String): String {
         val cal = java.util.Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+        cal.time = DATE_FORMATTER.get()!!.parse(dateStr)!!
         cal.add(java.util.Calendar.DATE, -1)
         return DATE_FORMATTER.get()!!.format(cal.time)
+    }
+
+    private fun Document<Map<String, Any>>.toDailyLearningStats(): DailyLearningStats {
+        val d = data
+        return DailyLearningStats(
+            id             = id,
+            userId         = d["userId"] as? String ?: "",
+            date           = d["date"] as? String ?: "",
+            wordsLearned   = (d["wordsLearned"] as? Number)?.toInt() ?: 0,
+            wordsReviewed  = (d["wordsReviewed"] as? Number)?.toInt() ?: 0,
+            wordsMastered  = (d["wordsMastered"] as? Number)?.toInt() ?: 0,
+            quizCount      = (d["quizCount"] as? Number)?.toInt() ?: 0,
+            correctAnswers = (d["correctAnswers"] as? Number)?.toInt() ?: 0,
+            totalQuestions = (d["totalQuestions"] as? Number)?.toInt() ?: 0,
+            avgScore       = (d["avgScore"] as? Number)?.toDouble() ?: 0.0,
+            studyMinutes   = (d["studyMinutes"] as? Number)?.toInt() ?: 0,
+            createdAt      = d["createdAt"] as? String ?: "",
+            updatedAt      = d["updatedAt"] as? String ?: ""
+        )
     }
 }

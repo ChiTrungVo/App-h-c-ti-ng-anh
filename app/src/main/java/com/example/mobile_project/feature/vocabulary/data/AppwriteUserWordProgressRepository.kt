@@ -219,11 +219,16 @@ class AppwriteUserWordProgressRepository {
         quality: Int
     ): UserWordProgress {
         val user = account.get()
-        val existing = databases.getDocument(
+
+        // Thay getDocument bằng listDocuments
+        val existing = databases.listDocuments(
             databaseId = databaseId,
             collectionId = COLLECTION_ID,
-            documentId = progressId
-        ).toUserWordProgress()
+            queries = listOf(
+                Query.equal("\$id", progressId),
+                Query.limit(1)
+            )
+        ).documents.firstOrNull()?.toUserWordProgress() ?: throw Exception("Progress not found")
 
         val sm2 = calculateSM2(existing, quality)
         val now = nowIso()

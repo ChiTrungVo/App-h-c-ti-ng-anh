@@ -43,13 +43,7 @@ fun QuizResultScreen(
     val mood = if (state.scorePercent >= 80) MimiMood.Celebrate else MimiMood.NeedCare
     val durationMinutes = state.durationSeconds / 60
     val durationSecs = state.durationSeconds % 60
-    val navigateToQuiz by practiceViewModel.navigateToQuiz.collectAsState()
-    LaunchedEffect(navigateToQuiz) {
-        if (navigateToQuiz) {
-            practiceViewModel.onNavigatedToQuiz()
-            onRetry()
-        }
-    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -129,7 +123,7 @@ fun QuizResultScreen(
 
         // Nếu có câu sai, cho phép xem lại
         if (state.correctCount < state.totalQuestions) {
-            PrimaryButton("Làm lại bài quiz", onClick = { practiceViewModel.retry() })
+            PrimaryButton("Làm lại bài quiz", onClick = onRetry)
             Spacer(Modifier.height(12.dp))
         }
 

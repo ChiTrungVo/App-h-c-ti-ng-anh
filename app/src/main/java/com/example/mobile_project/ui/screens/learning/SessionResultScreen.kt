@@ -45,12 +45,12 @@ fun SessionResultScreen(
         Text("Bạn đã giữ nhịp học rất tốt hôm nay.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(24.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            StatCard("Từ đã học", stats.learnedWords.toString(), R.drawable.ic_book, Modifier.weight(1f))
-            StatCard("Từ đã ôn", stats.reviewedWords.toString(), R.drawable.ic_flashcard, Modifier.weight(1f))
+            StatCard("Từ đã học", stats.wordsLearned.toString(), R.drawable.ic_book, Modifier.weight(1f))
+            StatCard("Từ đã ôn", stats.wordsReviewed.toString(), R.drawable.ic_flashcard, Modifier.weight(1f))
         }
         Spacer(Modifier.height(12.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            StatCard("Từ đã ghi nhớ", stats.masteredWords.toString(), R.drawable.ic_check_circle, Modifier.weight(1f))
+            StatCard("Từ đã ghi nhớ", stats.wordsMastered.toString(), R.drawable.ic_check_circle, Modifier.weight(1f))
             StatCard("Phút học", stats.studyMinutes.toString(), R.drawable.ic_clock, Modifier.weight(1f))
         }
         Spacer(Modifier.height(24.dp))

@@ -67,13 +67,17 @@ class AppwriteVocabularyWordRepository {
      */
     suspend fun getWord(wordId: String): VocabularyWord? {
         return try {
-            databases.getDocument(
+            val result = databases.listDocuments(
                 databaseId = databaseId,
                 collectionId = COLLECTION_ID,
-                documentId = wordId
-            ).toVocabularyWord()
-        } catch (error: AppwriteException) {
-            if (error.code == 404) null else throw error
+                queries = listOf(
+                    Query.equal("\$id", wordId),
+                    Query.limit(1)
+                )
+            )
+            result.documents.firstOrNull()?.toVocabularyWord()
+        } catch (error: Exception) {
+            null
         }
     }
 

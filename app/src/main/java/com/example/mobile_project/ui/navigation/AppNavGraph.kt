@@ -399,9 +399,7 @@ fun AppNavGraph(
             }
             composable(AppRoutes.QuizResult) {
                 QuizResultScreen(
-                    onReviewWrong = {
-                        navController.popBackStack()
-                    },
+                    onReviewWrong = { navController.popBackStack() },
                     onBackToVocabulary = {
                         navController.navigate(AppRoutes.Vocabulary) {
                             popUpTo(AppRoutes.Practice) { inclusive = false }
@@ -409,12 +407,19 @@ fun AppNavGraph(
                     },
                     practiceViewModel = practiceViewModel,
                     onRetry = {
-                        navController.navigate(AppRoutes.Quiz) {
-                            popUpTo(AppRoutes.QuizResult) { inclusive = true }
+                        // Lấy setId từ practiceViewModel để navigate đúng
+                        val setId = practiceViewModel.uiState.value.setId
+                        if (setId.isNotBlank()) {
+                            navController.navigate(AppRoutes.quiz(setId)) {
+                                popUpTo(AppRoutes.QuizResult) { inclusive = true }
+                            }
+                        } else {
+                            navController.navigate(AppRoutes.Quiz) {
+                                popUpTo(AppRoutes.QuizResult) { inclusive = true }
+                            }
                         }
                     }
                 )
-
             }
             composable(AppRoutes.Progress) {
                 LaunchedEffect(Unit) { progressViewModel.loadProgress() }

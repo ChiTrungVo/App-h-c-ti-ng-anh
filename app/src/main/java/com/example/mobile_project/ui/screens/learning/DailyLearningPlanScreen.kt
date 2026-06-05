@@ -49,12 +49,12 @@ fun DailyLearningPlanScreen(
         Spacer(Modifier.height(22.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             StatCard("Từ mới", "10", R.drawable.ic_book, Modifier.weight(1f))
-            StatCard("Đến hạn ôn", stats.reviewedWords.toString(), R.drawable.ic_flashcard, Modifier.weight(1f))
+            StatCard("Đến hạn ôn", stats.wordsReviewed.toString(), R.drawable.ic_flashcard, Modifier.weight(1f))
         }
         Spacer(Modifier.height(12.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             StatCard("Thời gian học", "${stats.studyMinutes}p", R.drawable.ic_clock, Modifier.weight(1f))
-            StatCard("Đã ghi nhớ", stats.masteredWords.toString(), R.drawable.ic_check_circle, Modifier.weight(1f))
+            StatCard("Đã ghi nhớ", stats.wordsMastered.toString(), R.drawable.ic_check_circle, Modifier.weight(1f))
         }
         Spacer(Modifier.height(22.dp))
         Text("Từ cần ôn", style = MaterialTheme.typography.titleLarge)

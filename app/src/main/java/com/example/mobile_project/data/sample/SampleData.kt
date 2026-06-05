@@ -109,12 +109,14 @@ object SampleData {
     val daily_learning_stats = DailyLearningStats(
         userId = user.userId,
         date = "2026-05-31",
-        learnedWords = 12,
-        reviewedWords = 18,
-        masteredWords = 7,
+        wordsLearned = 12,
+        wordsReviewed = 18,
+        wordsMastered = 7,
         studyMinutes = 22,
-        quizAccuracy = 86,
-        streakDays = 9
+        quizCount = 1,
+        correctAnswers = 6,
+        totalQuestions = 7,
+        avgScore = 86.0
     )
 
     val quiz_attempts = QuizAttempt(

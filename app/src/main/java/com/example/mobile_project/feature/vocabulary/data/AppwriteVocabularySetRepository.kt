@@ -66,13 +66,17 @@ class AppwriteVocabularySetRepository {
      */
     suspend fun getSet(setId: String): VocabularySet? {
         return try {
-            databases.getDocument(
+            val result = databases.listDocuments(
                 databaseId = databaseId,
                 collectionId = COLLECTION_ID,
-                documentId = setId
-            ).toVocabularySet()
-        } catch (error: AppwriteException) {
-            if (error.code == 404) null else throw error
+                queries = listOf(
+                    Query.equal("\$id", setId),
+                    Query.limit(1)
+                )
+            )
+            result.documents.firstOrNull()?.toVocabularySet()
+        } catch (error: Exception) {
+            null
         }
     }
 
@@ -239,11 +243,14 @@ class AppwriteVocabularySetRepository {
     // Sao chép bộ từ của người khác về tài khoản mình
     suspend fun forkSet(setId: String) {
         val user = account.get()
-        val original = databases.getDocument(
+        val original = databases.listDocuments(
             databaseId = databaseId,
             collectionId = COLLECTION_ID,
-            documentId = setId
-        ).toVocabularySet()
+            queries = listOf(
+                Query.equal("\$id", setId),
+                Query.limit(1)
+            )
+        ).documents.firstOrNull()?.toVocabularySet() ?: return
 
         databases.createDocument(
             databaseId = databaseId,

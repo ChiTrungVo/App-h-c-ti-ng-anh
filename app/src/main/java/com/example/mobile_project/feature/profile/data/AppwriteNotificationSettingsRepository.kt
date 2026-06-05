@@ -2,6 +2,7 @@ package com.example.mobile_project.feature.profile.data
 
 import com.example.mobile_project.core.appwrite.AppwriteClientProvider
 import io.appwrite.Permission
+import io.appwrite.Query
 import io.appwrite.Role
 import io.appwrite.exceptions.AppwriteException
 import io.appwrite.models.Document
@@ -57,13 +58,17 @@ class AppwriteNotificationSettingsRepository {
 
     private suspend fun getSettingsOrNull(userId: String): NotificationSettings? {
         return try {
-            databases.getDocument(
+            val result = databases.listDocuments(
                 databaseId = databaseId,
                 collectionId = NOTIFICATION_SETTINGS,
-                documentId = userId
-            ).toNotificationSettings()
-        } catch (error: AppwriteException) {
-            if (error.code == 404) null else throw error
+                queries = listOf(
+                    Query.equal("\$id", userId),
+                    Query.limit(1)
+                )
+            )
+            result.documents.firstOrNull()?.toNotificationSettings()
+        } catch (error: Exception) {
+            null
         }
     }
 

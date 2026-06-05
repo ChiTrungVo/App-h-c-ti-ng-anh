@@ -58,14 +58,18 @@ data class UserWordProgress(
 
 data class DailyLearningStats(
     val id: String = "",
-    val userId: String,
-    val date: String,
-    val learnedWords: Int,
-    val reviewedWords: Int,
-    val masteredWords: Int,
-    val studyMinutes: Int,
-    val quizAccuracy: Int,
-    val streakDays: Int
+    val userId: String = "",
+    val date: String = "",
+    val wordsLearned: Int = 0,
+    val wordsReviewed: Int = 0,
+    val wordsMastered: Int = 0,
+    val quizCount: Int = 0,
+    val correctAnswers: Int = 0,
+    val totalQuestions: Int = 0,
+    val avgScore: Double = 0.0,
+    val studyMinutes: Int = 0,
+    val createdAt: String = "",
+    val updatedAt: String = ""
 )
 
 data class QuizAttempt(

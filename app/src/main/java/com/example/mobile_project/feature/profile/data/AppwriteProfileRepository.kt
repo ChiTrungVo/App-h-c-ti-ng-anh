@@ -11,6 +11,7 @@ import com.example.mobile_project.core.appwrite.AppwriteClientProvider
 import com.example.mobile_project.feature.auth.data.MinLishAuthUser
 import io.appwrite.ID
 import io.appwrite.Permission
+import io.appwrite.Query
 import io.appwrite.Role
 import io.appwrite.exceptions.AppwriteException
 import io.appwrite.models.Document
@@ -158,13 +159,17 @@ class AppwriteProfileRepository {
 
     private suspend fun getProfileOrNull(userId: String): UserProfile? {
         return try {
-            databases.getDocument(
+            val result = databases.listDocuments(
                 databaseId = databaseId,
                 collectionId = USER_PROFILES,
-                documentId = userId
-            ).toUserProfile()
-        } catch (error: AppwriteException) {
-            if (error.code == 404) null else throw error
+                queries = listOf(
+                    Query.equal("\$id", userId),
+                    Query.limit(1)
+                )
+            )
+            result.documents.firstOrNull()?.toUserProfile()
+        } catch (error: Exception) {
+            null
         }
     }
 

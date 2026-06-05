@@ -41,6 +41,12 @@ class LearningViewModel : ViewModel() {
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    private val _isEvaluating = MutableStateFlow(false)
+    val isEvaluating: StateFlow<Boolean> = _isEvaluating.asStateFlow()
+
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+
     fun loadDailyPlan(setId: String) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -61,20 +67,31 @@ class LearningViewModel : ViewModel() {
     fun startFlashcardSession(setId: String) {
         viewModelScope.launch {
             _isLoading.value = true
+            _errorMessage.value = null
+            _sessionWords.value = emptyList()
+            _sessionProgress.value = emptyList()
+            _currentWordIndex.value = 0
             try {
+                if (setId.isBlank()) {
+                    _errorMessage.value = "Chua chon bo tu de hoc flashcard."
+                    return@launch
+                }
+
+                ensureProgressForSet(setId)
+
                 val dueProgress = progressRepo.getDueWords(setId)
                 val newProgress = progressRepo.getNewWords(setId, limit = 5)
-                val allProgress = dueProgress + newProgress
-                
-                _sessionProgress.value = allProgress
-                
-                val words = allProgress.mapNotNull { progress ->
-                    wordRepo.getWord(progress.wordId)
+                val allProgress = (dueProgress + newProgress).distinctBy { it.wordId }
+
+                val sessionItems = allProgress.mapNotNull { progress ->
+                    wordRepo.getWord(progress.wordId)?.let { word -> progress to word }
                 }
-                
-                _sessionWords.value = words
+
+                _sessionProgress.value = sessionItems.map { it.first }
+                _sessionWords.value = sessionItems.map { it.second }
                 _currentWordIndex.value = 0
             } catch (e: Exception) {
+                _errorMessage.value = e.localizedMessage ?: "Khong the tai phien hoc flashcard."
                 e.printStackTrace()
             } finally {
                 _isLoading.value = false
@@ -86,15 +103,19 @@ class LearningViewModel : ViewModel() {
      * @param quality 0-5 (0=Again, 1=Hard, 3=Good, 5=Easy)
      */
     fun evaluateWord(quality: Int) {
+        if (_isEvaluating.value) return
+
         val currentIndex = _currentWordIndex.value
         val words = _sessionWords.value
         val progressList = _sessionProgress.value
-        
-        if (currentIndex >= words.size) return
+
+        if (currentIndex >= words.size || currentIndex >= progressList.size) return
 
         val currentProgress = progressList[currentIndex]
+        _isEvaluating.value = true
 
         viewModelScope.launch {
+            _errorMessage.value = null
             try {
                 // 1. Update SRS progress
                 progressRepo.updateProgressAfterReview(currentProgress.id, quality)
@@ -118,7 +139,22 @@ class LearningViewModel : ViewModel() {
                     _currentWordIndex.value = words.size
                 }
             } catch (e: Exception) {
+                _errorMessage.value = e.localizedMessage ?: "Khong the cap nhat tien do SRS."
                 e.printStackTrace()
+            } finally {
+                _isEvaluating.value = false
+            }
+        }
+    }
+
+    private suspend fun ensureProgressForSet(setId: String) {
+        val words = wordRepo.getWordsInSet(setId)
+        val existingProgress = progressRepo.getProgressForSet(setId)
+        val existingWordIds = existingProgress.map { it.wordId }.toSet()
+
+        words.forEach { word ->
+            if (word.wordId !in existingWordIds) {
+                progressRepo.createProgress(setId = setId, wordId = word.wordId)
             }
         }
     }

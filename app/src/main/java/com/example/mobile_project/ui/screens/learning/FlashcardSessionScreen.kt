@@ -9,19 +9,23 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.unit.dp
-import com.example.mobile_project.data.sample.VocabularyDemoStore
+import com.example.mobile_project.feature.learning.viewmodel.LearningViewModel
 import com.example.mobile_project.ui.components.FlashcardView
 import com.example.mobile_project.ui.components.PrimaryButton
 import com.example.mobile_project.ui.components.SecondaryButton
@@ -30,20 +34,28 @@ import com.example.mobile_project.ui.theme.Mobile_projectTheme
 @Composable
 fun FlashcardSessionScreen(
     setId: String = "",
-    onFinish: () -> Unit
+    onFinish: () -> Unit,
+    learningViewModel: LearningViewModel = viewModel()
 ) {
-    val words = remember(setId, VocabularyDemoStore.vocabularies.size) {
-        if (setId.isBlank()) {
-            VocabularyDemoStore.vocabularies.toList()
-        } else {
-            VocabularyDemoStore.wordsForSet(setId)
-        }
-    }
-    var currentWordIndex by remember(setId, words.size) { mutableStateOf(0) }
+    val words by learningViewModel.sessionWords.collectAsState()
+    val currentWordIndex by learningViewModel.currentWordIndex.collectAsState()
+    val isLoading by learningViewModel.isLoading.collectAsState()
+    val isEvaluating by learningViewModel.isEvaluating.collectAsState()
+    val errorMessage by learningViewModel.errorMessage.collectAsState()
     var showBack by remember { mutableStateOf(false) }
 
-    LaunchedEffect(setId, currentWordIndex) {
+    LaunchedEffect(setId) {
+        learningViewModel.startFlashcardSession(setId)
+    }
+
+    LaunchedEffect(currentWordIndex) {
         showBack = false
+    }
+
+    LaunchedEffect(currentWordIndex, words.size, isLoading) {
+        if (!isLoading && words.isNotEmpty() && currentWordIndex >= words.size) {
+            onFinish()
+        }
     }
 
     Column(
@@ -55,9 +67,25 @@ fun FlashcardSessionScreen(
         Spacer(Modifier.height(28.dp))
         Text("Flashcard", style = MaterialTheme.typography.headlineLarge)
 
-        if (words.isEmpty()) {
+        if (isLoading) {
+            Spacer(Modifier.height(48.dp))
+            CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+            return@Column
+        }
+
+        errorMessage?.let { message ->
+            Spacer(Modifier.height(16.dp))
             Text(
-                "Chua co tu nao de hoc.",
+                message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        if (words.isEmpty()) {
+            Spacer(Modifier.height(16.dp))
+            Text(
+                "Chua co tu nao den han on hoac tu moi de hoc.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -66,16 +94,15 @@ fun FlashcardSessionScreen(
             return@Column
         }
 
+        if (currentWordIndex >= words.size) {
+            Spacer(Modifier.height(48.dp))
+            CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+            return@Column
+        }
+
         val word = words[currentWordIndex]
         val progress = (currentWordIndex + 1).toFloat() / words.size.toFloat()
-        fun evaluateCurrentWord() {
-            if (currentWordIndex < words.lastIndex) {
-                currentWordIndex += 1
-                showBack = false
-            } else {
-                onFinish()
-            }
-        }
+        fun evaluateCurrentWord(quality: Int) = learningViewModel.evaluateWord(quality)
 
         Text(
             "${currentWordIndex + 1}/${words.size} tu",
@@ -99,13 +126,13 @@ fun FlashcardSessionScreen(
             PrimaryButton("Lat the", onClick = { showBack = true })
         } else {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                SecondaryButton("Lai", onClick = { evaluateCurrentWord() }, modifier = Modifier.weight(1f))
-                SecondaryButton("Kho", onClick = { evaluateCurrentWord() }, modifier = Modifier.weight(1f))
+                SecondaryButton("Lai", onClick = { evaluateCurrentWord(0) }, modifier = Modifier.weight(1f), enabled = !isEvaluating)
+                SecondaryButton("Kho", onClick = { evaluateCurrentWord(1) }, modifier = Modifier.weight(1f), enabled = !isEvaluating)
             }
             Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                SecondaryButton("On", onClick = { evaluateCurrentWord() }, modifier = Modifier.weight(1f))
-                PrimaryButton("De", onClick = { evaluateCurrentWord() }, modifier = Modifier.weight(1f))
+                SecondaryButton("On", onClick = { evaluateCurrentWord(3) }, modifier = Modifier.weight(1f), enabled = !isEvaluating)
+                PrimaryButton("De", onClick = { evaluateCurrentWord(5) }, modifier = Modifier.weight(1f), enabled = !isEvaluating)
             }
         }
     }

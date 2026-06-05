@@ -135,4 +135,34 @@ class VocabularySetListViewModel(
             matchesSearch && matchesTag
         }
     }
+    fun onTabSelected(tab: VocabularyTab) {
+        _uiState.update { it.copy(selectedTab = tab) }
+        if (tab == VocabularyTab.Discover) loadPublicSets()
+    }
+
+    private fun loadPublicSets() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingPublic = true) }
+            try {
+                val sets = repository.getPublicSets()
+                _uiState.update { it.copy(isLoadingPublic = false, publicSets = sets) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoadingPublic = false) }
+            }
+        }
+    }
+
+    fun forkSet(setId: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(forkLoadingSetId = setId) }
+            try {
+                repository.forkSet(setId)
+                loadSets()
+            } catch (e: Exception) {
+                // handle error nếu cần
+            } finally {
+                _uiState.update { it.copy(forkLoadingSetId = null) }
+            }
+        }
+    }
 }

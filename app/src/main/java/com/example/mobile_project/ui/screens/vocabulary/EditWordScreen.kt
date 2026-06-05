@@ -13,6 +13,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -205,6 +208,20 @@ fun EditWordScreen(
             label = { Text("URL hình ảnh (tùy chọn)") },
             modifier = Modifier.fillMaxWidth()
         )
+
+        // Preview ảnh ngay khi có URL để người dùng kiểm tra link
+        if (uiState.form.imageUrl.isNotBlank()) {
+            Spacer(Modifier.height(12.dp))
+            AsyncImage(
+                model = uiState.form.imageUrl,
+                contentDescription = "Xem trước hình ảnh",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(180.dp)
+                    .clip(RoundedCornerShape(16.dp))
+            )
+        }
 
         uiState.errorMessage?.let { msg ->
             Spacer(Modifier.height(12.dp))

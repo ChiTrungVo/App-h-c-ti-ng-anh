@@ -83,6 +83,7 @@ object AppRoutes {
     fun vocabularyDetail(setId: String) = "$VocabularyDetail/$setId"
     fun editVocabularySet(setId: String = "new") = "$EditVocabularySet/$setId"
     fun editWord(setId: String, wordId: String = "new") = "$EditWord/$setId/$wordId"
+    fun flashcard(setId: String) = "$Flashcard/$setId"
     fun resetPassword(userId: String, secret: String) =
         "$ResetPassword?userId=${Uri.encode(userId)}&secret=${Uri.encode(secret)}"
     fun quiz(setId: String) = "$Quiz/$setId"
@@ -327,7 +328,7 @@ fun AppNavGraph(
                     onAddWord = { navController.navigate(AppRoutes.editWord(setId)) },
                     onEditWord = { wordId -> navController.navigate(AppRoutes.editWord(setId, wordId)) },
                     onEditSet = { navController.navigate(AppRoutes.editVocabularySet(setId)) },
-                    onStartLearning = { navController.navigate(AppRoutes.Flashcard) },
+                    onStartLearning = { navController.navigate(AppRoutes.flashcard(setId)) },
                     onQuiz = { navController.navigate(AppRoutes.quiz(setId)) },
                     onDeleteSet = { navController.popBackStack(AppRoutes.Vocabulary, false) }
                 )
@@ -366,6 +367,16 @@ fun AppNavGraph(
             }
             composable(AppRoutes.Flashcard) {
                 FlashcardSessionScreen(onFinish = { navController.navigate(AppRoutes.SessionResult) })
+            }
+            composable(
+                route = "${AppRoutes.Flashcard}/{setId}",
+                arguments = listOf(navArgument("setId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val setId = backStackEntry.arguments?.getString("setId").orEmpty()
+                FlashcardSessionScreen(
+                    setId = setId,
+                    onFinish = { navController.navigate(AppRoutes.SessionResult) }
+                )
             }
             composable(AppRoutes.SessionResult) {
                 SessionResultScreen(
@@ -546,6 +557,7 @@ private fun String?.toBottomRootRoute(): String? = when (this) {
 
     AppRoutes.Practice,
     AppRoutes.Flashcard,
+    "${AppRoutes.Flashcard}/{setId}",
     AppRoutes.SessionResult,
     AppRoutes.Quiz,
     "${AppRoutes.Quiz}/{setId}",

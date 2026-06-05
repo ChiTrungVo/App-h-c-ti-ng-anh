@@ -5,7 +5,9 @@ import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mobile_project.data.model.QuizQuestion
+import com.example.mobile_project.data.model.VocabularySet
 import com.example.mobile_project.data.model.VocabularyWord
+import com.example.mobile_project.data.sample.VocabularyDemoStore
 import com.example.mobile_project.feature.progress.data.repository.AppwriteDailyLearningStatsRepository
 import com.example.mobile_project.feature.progress.data.repository.AppwriteProgressRepository
 import com.example.mobile_project.feature.vocabulary.data.AppwriteVocabularySetRepository
@@ -52,36 +54,23 @@ class PracticeViewModel(
 
     fun startQuiz(setId: String) {
         viewModelScope.launch {
+            val resolvedSetId = resolvePracticeSetId(setId)
             _uiState.value = PracticeUiState(
-                setId = setId,
+                setId = resolvedSetId,
                 isReady = false,
                 isFinished = false,
                 questions = emptyList()
             )
             try {
-                val words = wordRepository.getWordsInSet(setId)
-                val setTitle = try {
-                    setRepository.getMySets()
-                        .firstOrNull { it.setId == setId }?.title
-                        ?: setRepository.getPublicSets()
-                            .firstOrNull { it.setId == setId }?.title
-                        ?: ""
-                } catch (e: Exception) { "" }
+                val words = loadWordsForPractice(resolvedSetId)
+                val setTitle = loadSetTitle(resolvedSetId)
 
                 if (words.isEmpty()) {
                     _uiState.update { it.copy(isFinished = true, isReady = true, setTitle = setTitle) }
                     return@launch
                 }
 
-                val extraWords = if (words.size < 4) {
-                    val allSets = setRepository.getPublicSets()
-                    val otherSetIds = allSets.map { it.setId }.filter { it != setId }
-                    otherSetIds
-                        .flatMap { wordRepository.getWordsInSet(it) }
-                        .filter { extra -> words.none { it.wordId == extra.wordId } }
-                        .shuffled()
-                        .take(4 - words.size + 3)
-                } else emptyList()
+                val extraWords = loadExtraWordsForOptions(resolvedSetId, words)
 
                 val questions = buildQuestions(words, extraWords)
                 _uiState.update {
@@ -97,6 +86,74 @@ class PracticeViewModel(
             }
         }
     }
+
+    private suspend fun resolvePracticeSetId(setId: String): String {
+        if (setId.isNotBlank()) return setId
+
+        return VocabularyDemoStore.vocabularySets.firstOrNull { it.wordCount > 0 }?.setId
+            ?: VocabularyDemoStore.vocabularySets.firstOrNull()?.setId
+            ?: runCatching {
+                (setRepository.getMySets() + setRepository.getPublicSets())
+                    .firstOrNull { it.wordCount > 0 }
+                    ?.setId
+            }.getOrNull()
+            ?: ""
+    }
+
+    private suspend fun loadWordsForPractice(setId: String): List<VocabularyWord> {
+        if (setId.isBlank()) return VocabularyDemoStore.vocabularies
+
+        val remoteWords = runCatching {
+            wordRepository.getWordsInSet(setId)
+        }.getOrDefault(emptyList())
+
+        return remoteWords.ifEmpty {
+            VocabularyDemoStore.wordsForSet(setId)
+        }
+    }
+
+    private suspend fun loadSetTitle(setId: String): String {
+        if (setId.isBlank()) return ""
+
+        val remoteTitle = runCatching {
+            setRepository.getSet(setId)?.title
+                ?: findSetInLists(setId, setRepository.getMySets(), setRepository.getPublicSets())?.title
+        }.getOrNull()
+
+        return remoteTitle
+            ?: VocabularyDemoStore.getSet(setId)?.title
+            ?: ""
+    }
+
+    private suspend fun loadExtraWordsForOptions(
+        setId: String,
+        words: List<VocabularyWord>
+    ): List<VocabularyWord> {
+        if (words.size >= 4) return emptyList()
+
+        val remoteExtraWords = runCatching {
+            (setRepository.getMySets() + setRepository.getPublicSets())
+                .map { it.setId }
+                .filter { it != setId }
+                .flatMap { wordRepository.getWordsInSet(it) }
+        }.getOrDefault(emptyList())
+
+        val sampleExtraWords = VocabularyDemoStore.vocabularies
+            .filter { it.setId != setId }
+
+        return (remoteExtraWords + sampleExtraWords)
+            .filter { extra -> words.none { it.wordId == extra.wordId } }
+            .distinctBy { it.wordId }
+            .shuffled()
+            .take(4 - words.size + 3)
+    }
+
+    private fun findSetInLists(
+        setId: String,
+        vararg sets: List<VocabularySet>
+    ): VocabularySet? = sets.asSequence()
+        .flatMap { it.asSequence() }
+        .firstOrNull { it.setId == setId }
 
     fun retry() {
         val currentSetId = _uiState.value.setId

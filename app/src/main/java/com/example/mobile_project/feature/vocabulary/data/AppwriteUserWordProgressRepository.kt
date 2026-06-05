@@ -347,7 +347,7 @@ class AppwriteUserWordProgressRepository {
             newIntervalDays = 1
             newStatus = "LEARNING"
         } else {
-            newRepetitionCount = current.boxLevel + 1
+            newRepetitionCount = current.repetitions + 1
             newIntervalDays = when (newRepetitionCount) {
                 1 -> 1
                 2 -> 6

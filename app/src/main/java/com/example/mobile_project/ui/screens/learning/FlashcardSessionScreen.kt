@@ -23,8 +23,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.mobile_project.feature.learning.viewmodel.LearningViewModel
 import com.example.mobile_project.ui.components.FlashcardView
 import com.example.mobile_project.ui.components.PrimaryButton
@@ -85,12 +85,12 @@ fun FlashcardSessionScreen(
         if (words.isEmpty()) {
             Spacer(Modifier.height(16.dp))
             Text(
-                "Chua co tu nao den han on hoac tu moi de hoc.",
+                "Chưa có từ nào đến hạn ôn hoặc từ mới để học.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(Modifier.height(28.dp))
-            PrimaryButton("Quay lai", onClick = onFinish)
+            PrimaryButton("Quay lại", onClick = onFinish)
             return@Column
         }
 
@@ -105,7 +105,7 @@ fun FlashcardSessionScreen(
         fun evaluateCurrentWord(quality: Int) = learningViewModel.evaluateWord(quality)
 
         Text(
-            "${currentWordIndex + 1}/${words.size} tu",
+            "${currentWordIndex + 1}/${words.size} từ",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -123,16 +123,16 @@ fun FlashcardSessionScreen(
         Spacer(Modifier.height(22.dp))
 
         if (!showBack) {
-            PrimaryButton("Lat the", onClick = { showBack = true })
+            PrimaryButton("Lật thẻ", onClick = { showBack = true })
         } else {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                SecondaryButton("Lai", onClick = { evaluateCurrentWord(0) }, modifier = Modifier.weight(1f), enabled = !isEvaluating)
-                SecondaryButton("Kho", onClick = { evaluateCurrentWord(1) }, modifier = Modifier.weight(1f), enabled = !isEvaluating)
+                SecondaryButton("Lại", onClick = { evaluateCurrentWord(0) }, modifier = Modifier.weight(1f), enabled = !isEvaluating)
+                SecondaryButton("Khó", onClick = { evaluateCurrentWord(1) }, modifier = Modifier.weight(1f), enabled = !isEvaluating)
             }
             Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                SecondaryButton("On", onClick = { evaluateCurrentWord(3) }, modifier = Modifier.weight(1f), enabled = !isEvaluating)
-                PrimaryButton("De", onClick = { evaluateCurrentWord(5) }, modifier = Modifier.weight(1f), enabled = !isEvaluating)
+                SecondaryButton("Ổn", onClick = { evaluateCurrentWord(3) }, modifier = Modifier.weight(1f), enabled = !isEvaluating)
+                PrimaryButton("Dễ", onClick = { evaluateCurrentWord(5) }, modifier = Modifier.weight(1f), enabled = !isEvaluating)
             }
         }
     }

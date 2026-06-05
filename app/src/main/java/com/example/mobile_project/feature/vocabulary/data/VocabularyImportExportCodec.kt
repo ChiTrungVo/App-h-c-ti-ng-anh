@@ -264,10 +264,16 @@ object VocabularyImportExportCodec {
     private fun xmlDocument(bytes: ByteArray) =
         DocumentBuilderFactory.newInstance().apply {
             isNamespaceAware = true
-            setFeature("http://apache.org/xml/features/disallow-doctype-decl", true)
-            setFeature("http://xml.org/sax/features/external-general-entities", false)
-            setFeature("http://xml.org/sax/features/external-parameter-entities", false)
+            isExpandEntityReferences = false
+            setFeatureIfSupported("http://javax.xml.XMLConstants/feature/secure-processing", true)
+            setFeatureIfSupported("http://apache.org/xml/features/disallow-doctype-decl", true)
+            setFeatureIfSupported("http://xml.org/sax/features/external-general-entities", false)
+            setFeatureIfSupported("http://xml.org/sax/features/external-parameter-entities", false)
         }.newDocumentBuilder().parse(ByteArrayInputStream(bytes))
+
+    private fun DocumentBuilderFactory.setFeatureIfSupported(feature: String, value: Boolean) {
+        runCatching { setFeature(feature, value) }
+    }
 
     private fun Element.elementsByLocalName(localName: String): List<Element> {
         val result = mutableListOf<Element>()
@@ -352,6 +358,7 @@ object VocabularyImportExportCodec {
                         word.definition,
                         word.example,
                         word.collocations.joinToString("; "),
+                        word.relatedWords.joinToString("; "),
                         word.note
                     )
                 )

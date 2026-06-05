@@ -6,7 +6,8 @@
   "scripts": {
     "setup": "node setup-database.js",
     "migrate": "node migrate.js",
-    "seed": "node seed-demo-data.js"
+    "seed": "node seed-demo-data.js",
+    "seed:user": "node seed-user-test-data.js"
   },
   "dependencies": {
     "node-appwrite": "^13.0.0",

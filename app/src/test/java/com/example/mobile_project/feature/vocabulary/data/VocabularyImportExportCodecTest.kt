@@ -53,7 +53,9 @@ class VocabularyImportExportCodecTest {
                     word = "ocean",
                     meaning = "đại dương",
                     definition = "large body of salt water",
-                    collocations = listOf("deep ocean", "open ocean")
+                    collocations = listOf("deep ocean", "open ocean"),
+                    relatedWords = listOf("sea", "marine"),
+                    note = "test note"
                 )
             )
         )
@@ -64,6 +66,8 @@ class VocabularyImportExportCodecTest {
         assertEquals("ocean", result.words.single().word)
         assertEquals("đại dương", result.words.single().meaning)
         assertEquals(listOf("deep ocean", "open ocean"), result.words.single().collocations)
+        assertEquals(listOf("sea", "marine"), result.words.single().relatedWords)
+        assertEquals("test note", result.words.single().note)
     }
 
     private fun word(

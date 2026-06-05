@@ -137,7 +137,8 @@ class AppwriteVocabularyWordRepository {
         example: String,
         collocations: List<String>,
         note: String,
-        imageFileId: String? = null
+        imageUrl: String? = null,
+        isSetPublic: Boolean = false
     ): VocabularyWord {
         val user = account.get()
         val now = nowIso()
@@ -157,7 +158,7 @@ class AppwriteVocabularyWordRepository {
                 "example" to example.trim(),
                 "collocations" to collocations.map { it.trim() }.filter { it.isNotBlank() },
                 "note" to note.trim(),
-                "imageFileId" to imageFileId,
+                "imageUrl" to imageUrl,
                 "createdAt" to now,
                 "updatedAt" to now
             ),
@@ -179,7 +180,8 @@ class AppwriteVocabularyWordRepository {
         example: String,
         collocations: List<String>,
         note: String,
-        imageFileId: String?
+        imageUrl: String?,
+        isSetPublic: Boolean = false
     ): VocabularyWord {
         val user = account.get()
         val document = databases.updateDocument(
@@ -196,7 +198,7 @@ class AppwriteVocabularyWordRepository {
                 "example" to example.trim(),
                 "collocations" to collocations.map { it.trim() }.filter { it.isNotBlank() },
                 "note" to note.trim(),
-                "imageFileId" to imageFileId,
+                "imageUrl" to imageUrl,
                 "updatedAt" to nowIso()
             ),
             permissions = ownerOnlyPermissions(user.id)
@@ -317,8 +319,10 @@ private fun Document<Map<String, Any>>.toVocabularyWord(): VocabularyWord {
         collocations = (d["collocations"] as? List<*>)?.mapNotNull { it as? String }
             ?: emptyList(),
         note = d["note"] as? String ?: "",
-        imageUrl = d["imageFileId"]?.let { fileId ->
-            "${BuildConfig.APPWRITE_ENDPOINT}/storage/buckets/${BuildConfig.APPWRITE_MEDIA_BUCKET_ID}/files/$fileId/view?project=${BuildConfig.APPWRITE_PROJECT_ID}"
-        }
+        imageUrl = (d["imageUrl"] as? String)?.takeIf { it.isNotBlank() }
+            // Fallback: dữ liệu cũ chỉ lưu fileId trong imageFileId → dựng lại URL view.
+            ?: (d["imageFileId"] as? String)?.takeIf { it.isNotBlank() }?.let { fileId ->
+                "${BuildConfig.APPWRITE_ENDPOINT}/storage/buckets/${BuildConfig.APPWRITE_MEDIA_BUCKET_ID}/files/$fileId/view?project=${BuildConfig.APPWRITE_PROJECT_ID}"
+            }
     )
 }

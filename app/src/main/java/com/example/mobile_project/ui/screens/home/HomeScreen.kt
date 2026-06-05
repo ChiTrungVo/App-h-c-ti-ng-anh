@@ -85,7 +85,10 @@ fun HomeScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(Modifier.height(10.dp))
-            HomeHero(displayName = displayName)
+            HomeHero(
+                displayName = displayName,
+                onProfileClick = onProfileClick
+            )
             Spacer(Modifier.height(20.dp))
             DailyGoalSticker(
                 dailyTargetMinutes = dailyTargetMinutes,
@@ -152,12 +155,12 @@ fun HomeScreen(
                     modifier = Modifier.weight(1f)
                 )
                 QuickActionCard(
-                    title = "Flashcard",
-                    icon = R.drawable.ic_flashcard,
+                    title = "Thêm bộ",
+                    icon = R.drawable.ic_add,
                     containerColor = MinLishSurface,
                     shadowColor = MinLishPrimary.copy(alpha = 0.16f),
                     iconTint = MinLishPrimary,
-                    onClick = onStartLearning,
+                    onClick = onAddSet,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -167,7 +170,10 @@ fun HomeScreen(
 }
 
 @Composable
-private fun HomeHero(displayName: String) {
+private fun HomeHero(
+    displayName: String,
+    onProfileClick: () -> Unit
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.Bottom
@@ -187,11 +193,29 @@ private fun HomeHero(displayName: String) {
             shadowElevation = 2.dp
         ) {
             Column(Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
-                Text(
-                    text = "Chào bạn, $displayName",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MinLishTextPrimary
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "Chào bạn, $displayName",
+                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MinLishTextPrimary
+                    )
+                    Surface(
+                        onClick = onProfileClick,
+                        modifier = Modifier.size(38.dp),
+                        shape = CircleShape,
+                        color = MinLishPrimaryContainer.copy(alpha = 0.82f)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Image(
+                                painter = painterResource(R.drawable.ic_profile),
+                                contentDescription = "Cá nhân",
+                                modifier = Modifier.size(20.dp),
+                                colorFilter = ColorFilter.tint(MinLishPrimary)
+                            )
+                        }
+                    }
+                }
                 Spacer(Modifier.height(4.dp))
                 Text(
                     text = "Sẵn sàng lặn xuống đại dương từ vựng hôm nay chưa?",

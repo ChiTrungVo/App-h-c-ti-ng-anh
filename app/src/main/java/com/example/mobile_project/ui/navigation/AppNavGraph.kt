@@ -545,7 +545,7 @@ fun AppNavGraph(
                 currentRoute = currentRootRoute,
                 onItemClick = { item ->
                     navController.navigate(item.route) {
-                        popUpTo(navController.graph.findStartDestination().id) {
+                        popUpTo(AppRoutes.Home) {
                             saveState = true
                         }
                         launchSingleTop = true

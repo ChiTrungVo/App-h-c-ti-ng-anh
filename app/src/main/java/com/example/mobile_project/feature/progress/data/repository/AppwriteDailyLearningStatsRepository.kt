@@ -139,4 +139,40 @@ class AppwriteDailyLearningStatsRepository {
             streakDays = (d["streakDays"] as? Number)?.toInt() ?: 0
         )
     }
+    suspend fun checkAndResetStreakIfNeeded() {
+        val user = account.get()
+        val today = todayDateString()
+        val yesterday = yesterdayDateString()
+
+        // Tìm document gần nhất không phải hôm nay
+        val lastResult = databases.listDocuments(
+            databaseId = databaseId,
+            collectionId = COLLECTION_ID,
+            queries = listOf(
+                Query.equal("userId", user.id),
+                Query.notEqual("date", today),
+                Query.orderDesc("date"),
+                Query.limit(1)
+            )
+        )
+
+        if (lastResult.documents.isEmpty()) return
+
+        val lastDate = lastResult.documents.first().data["date"] as? String ?: return
+
+        // Nếu ngày cuối cùng học không phải hôm qua → reset streak về 0
+        if (lastDate != yesterday) {
+            val todayStats = getTodayStats()
+            updateStats(
+                stats = todayStats.copy(streakDays = 0),
+                docId = todayStats.id
+            )
+        }
+    }
+
+    private fun yesterdayDateString(): String {
+        val cal = java.util.Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+        cal.add(java.util.Calendar.DATE, -1)
+        return DATE_FORMATTER.get()!!.format(cal.time)
+    }
 }

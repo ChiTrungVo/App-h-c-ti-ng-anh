@@ -53,6 +53,8 @@ import com.example.mobile_project.feature.practice.viewmodel.PracticeViewModel
 import com.example.mobile_project.feature.progress.viewmodel.ProgressViewModel
 import android.app.Application
 import androidx.lifecycle.ViewModelProvider
+import com.example.mobile_project.feature.home.viewmodel.HomeViewModel
+
 object AppRoutes {
     const val Splash = "splash"
     const val Login = "login"
@@ -122,6 +124,7 @@ fun AppNavGraph(
     val lifecycleOwner = LocalLifecycleOwner.current
     val practiceViewModel: PracticeViewModel = viewModel()
     val progressViewModel: ProgressViewModel = viewModel()
+    val homeViewModel: HomeViewModel = viewModel()
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
@@ -288,20 +291,24 @@ fun AppNavGraph(
                 )
             }
             composable(AppRoutes.Home) {
+                val homeState by homeViewModel.uiState.collectAsState()
+
+                LaunchedEffect(Unit) { homeViewModel.loadHomeData() }
+
                 val profile = profileState.profile
                 HomeScreen(
                     displayName = profile?.displayName ?: authState.user?.displayName ?: "Người học MinLish",
                     dailyTargetMinutes = profile?.dailyTargetMinutes ?: 15,
-                    studiedMinutesToday = 0,
-                    totalWordsLearned = 0,
-                    streakDays = 0,
-                    quizAccuracy = 0,
+                    studiedMinutesToday = homeState.studiedMinutesToday, // ← thật
+                    totalWordsLearned = homeState.totalWordsLearned,     // ← thật
+                    streakDays = homeState.streakDays,                   // ← thật
+                    quizAccuracy = homeState.quizAccuracy,               // ← thật
                     onStartLearning = { navController.navigate(AppRoutes.Learning) },
                     onProfileClick = { navController.navigate(AppRoutes.Profile) },
                     onAddSet = { navController.navigate(AppRoutes.editVocabularySet()) },
                     onQuiz = { navController.navigate(AppRoutes.Practice) },
                     onProgress = { navController.navigate(AppRoutes.Progress) },
-                    onVocabulary={navController.navigate(AppRoutes.Vocabulary)}
+                    onVocabulary = { navController.navigate(AppRoutes.Vocabulary) }
                 )
             }
             composable(AppRoutes.Vocabulary) {

@@ -57,6 +57,7 @@ data class UserWordProgress(
 )
 
 data class DailyLearningStats(
+    val id: String = "",
     val userId: String,
     val date: String,
     val learnedWords: Int,

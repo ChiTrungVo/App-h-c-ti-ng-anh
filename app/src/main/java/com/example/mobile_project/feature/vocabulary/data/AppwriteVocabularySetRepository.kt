@@ -223,6 +223,46 @@ class AppwriteVocabularySetRepository {
 
     private fun nowIso(): String =
         Companion.ISO_FORMATTER.get()!!.format(Date())
+    // Lấy tất cả bộ từ public của cộng đồng
+    suspend fun getPublicSets(): List<VocabularySet> {
+        val result = databases.listDocuments(
+            databaseId = databaseId,
+            collectionId = COLLECTION_ID,
+            queries = listOf(
+                Query.equal("isPublic", true),
+                Query.limit(50)
+            )
+        )
+        return result.documents.map { it.toVocabularySet() }
+    }
+
+    // Sao chép bộ từ của người khác về tài khoản mình
+    suspend fun forkSet(setId: String) {
+        val user = account.get()
+        val original = databases.getDocument(
+            databaseId = databaseId,
+            collectionId = COLLECTION_ID,
+            documentId = setId
+        ).toVocabularySet()
+
+        databases.createDocument(
+            databaseId = databaseId,
+            collectionId = COLLECTION_ID,
+            documentId = ID.unique(),
+            data = mapOf(
+                "userId" to user.id,
+                "title" to "${original.title} (copy)",
+                "description" to original.description,
+                "tags" to original.tags,
+                "isPublic" to false
+            ),
+            permissions = listOf(
+                Permission.read(Role.user(user.id)),
+                Permission.update(Role.user(user.id)),
+                Permission.delete(Role.user(user.id))
+            )
+        )
+    }
 }
 
 // ------------------------------------------------------------------ //

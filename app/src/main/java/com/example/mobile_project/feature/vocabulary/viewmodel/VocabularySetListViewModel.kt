@@ -18,9 +18,13 @@ data class VocabularySetListUiState(
     val filteredSets: List<VocabularySet> = emptyList(),
     val allTags: List<String> = listOf("Tất cả"),
     val selectedTag: String = "Tất cả",
+    val selectedTab: VocabularyTab = VocabularyTab.Mine,
     val searchQuery: String = "",
     val isLoading: Boolean = true,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val isLoadingPublic: Boolean = false,
+    val publicSets: List<VocabularySet> = emptyList(),
+    val forkLoadingSetId: String? = null
 )
 
 /**
@@ -118,6 +122,36 @@ class VocabularySetListViewModel(
                 set.tags.any { it.contains(query, ignoreCase = true) }
             val matchesTag = tag == "Tất cả" || tag in set.tags
             matchesSearch && matchesTag
+        }
+    }
+    fun onTabSelected(tab: VocabularyTab) {
+        _uiState.update { it.copy(selectedTab = tab) }
+        if (tab == VocabularyTab.Discover) loadPublicSets()
+    }
+
+    private fun loadPublicSets() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingPublic = true) }
+            try {
+                val sets = repository.getPublicSets()
+                _uiState.update { it.copy(isLoadingPublic = false, publicSets = sets) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoadingPublic = false) }
+            }
+        }
+    }
+
+    fun forkSet(setId: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(forkLoadingSetId = setId) }
+            try {
+                repository.forkSet(setId)
+                loadSets()
+            } catch (e: Exception) {
+                // handle error nếu cần
+            } finally {
+                _uiState.update { it.copy(forkLoadingSetId = null) }
+            }
         }
     }
 }

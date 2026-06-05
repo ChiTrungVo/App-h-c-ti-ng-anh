@@ -378,6 +378,7 @@ fun AppNavGraph(
                             navController.popBackStack()
                         }
                     },
+                    onExit = { navController.popBackStack() },
                     learningViewModel = learningViewModel
                 )
             }
@@ -391,6 +392,7 @@ fun AppNavGraph(
                     onFinish = { finishedSetId ->
                         navController.navigate(AppRoutes.sessionResult(finishedSetId.ifBlank { setId }))
                     },
+                    onExit = { navController.popBackStack() },
                     learningViewModel = learningViewModel
                 )
             }

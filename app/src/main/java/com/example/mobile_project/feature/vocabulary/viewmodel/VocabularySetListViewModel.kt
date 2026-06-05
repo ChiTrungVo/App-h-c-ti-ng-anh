@@ -178,6 +178,7 @@ class VocabularySetListViewModel(
                 definition = word.definition,
                 example = word.example,
                 collocations = word.collocations,
+                relatedWords = word.relatedWords,
                 note = word.note,
                 imageUrl = word.imageUrl, // Copy luôn URL ảnh (nếu có)
                 isSetPublic = false

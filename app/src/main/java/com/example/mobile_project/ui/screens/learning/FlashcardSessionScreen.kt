@@ -35,6 +35,7 @@ import com.example.mobile_project.ui.theme.Mobile_projectTheme
 fun FlashcardSessionScreen(
     setId: String = "",
     onFinish: (String) -> Unit,
+    onExit: () -> Unit,
     learningViewModel: LearningViewModel = viewModel()
 ) {
     val words by learningViewModel.sessionWords.collectAsState()
@@ -96,7 +97,7 @@ fun FlashcardSessionScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(Modifier.height(28.dp))
-            PrimaryButton("Quay lại", onClick = { onFinish(activeSetId) })
+            PrimaryButton("Quay lại", onClick = onExit)
             return@Column
         }
 
@@ -148,6 +149,6 @@ fun FlashcardSessionScreen(
 @Composable
 private fun FlashcardSessionScreenPreview() {
     Mobile_projectTheme {
-        FlashcardSessionScreen(onFinish = {})
+        FlashcardSessionScreen(onFinish = {}, onExit = {})
     }
 }

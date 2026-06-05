@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mobile_project.data.model.VocabularySet
 import com.example.mobile_project.feature.vocabulary.data.AppwriteVocabularySetRepository
+import com.example.mobile_project.feature.vocabulary.data.AppwriteVocabularyWordRepository
+import com.example.mobile_project.feature.vocabulary.data.AppwriteUserWordProgressRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,7 +27,9 @@ data class VocabularySetListUiState(
 )
 
 class VocabularySetListViewModel(
-    private val repository: AppwriteVocabularySetRepository = AppwriteVocabularySetRepository()
+    private val repository: AppwriteVocabularySetRepository = AppwriteVocabularySetRepository(),
+    private val wordRepository: AppwriteVocabularyWordRepository = AppwriteVocabularyWordRepository(),
+    private val progressRepository: AppwriteUserWordProgressRepository = AppwriteUserWordProgressRepository()
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(VocabularySetListUiState())
@@ -188,37 +192,6 @@ class VocabularySetListViewModel(
 
     fun clearError() {
         _uiState.update { it.copy(errorMessage = null) }
-    }
-
-    fun forkSet(setId: String) {
-        viewModelScope.launch {
-            _uiState.update { it.copy(forkLoadingSetId = setId) }
-            try {
-                repository.forkSet(setId)
-                loadSets()
-            } catch (e: Exception) {
-                _uiState.update { it.copy(errorMessage = e.localizedMessage ?: "Không thể sao chép bộ từ.") }
-            } finally {
-                _uiState.update { it.copy(forkLoadingSetId = null) }
-            }
-        }
-    }
-
-    private fun loadPublicSets() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoadingPublic = true) }
-            try {
-                val sets = repository.getPublicSets()
-                _uiState.update { it.copy(isLoadingPublic = false, publicSets = sets) }
-            } catch (e: Exception) {
-                _uiState.update {
-                    it.copy(
-                        isLoadingPublic = false,
-                        errorMessage = e.localizedMessage ?: "Không thể tải bộ từ công khai."
-                    )
-                }
-            }
-        }
     }
 
     private fun applyFilter(

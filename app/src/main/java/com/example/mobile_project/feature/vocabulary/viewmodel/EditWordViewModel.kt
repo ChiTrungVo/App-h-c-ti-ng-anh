@@ -255,8 +255,8 @@ class EditWordViewModel(
                         example = form.example,
                         collocations = form.collocationList,
                         note = form.note,
-                        imageUrl = form.imageUrl.takeIf { it.isNotBlank() },
-                        isSetPublic = state.isSetPublic
+                        imageUrl = form.imageUrl.takeIf { it.isNotBlank() }
+//                        isSetPublic = state.isSetPublic
                     )
                 } else {
                     // Tạo từ mới
@@ -269,8 +269,8 @@ class EditWordViewModel(
                         example = form.example,
                         collocations = form.collocationList,
                         note = form.note,
-                        imageUrl = form.imageUrl.takeIf { it.isNotBlank() },
-                        isSetPublic = state.isSetPublic
+                        imageUrl = form.imageUrl.takeIf { it.isNotBlank() }
+//                        isSetPublic = state.isSetPublic
                     )
 
                     // Tạo bản ghi progress cho từ mới sử dụng ID thật của từ vừa tạo

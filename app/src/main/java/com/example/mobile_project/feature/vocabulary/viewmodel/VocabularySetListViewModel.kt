@@ -40,8 +40,7 @@ class VocabularySetListViewModel(
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             runCatching { repository.getMySets() }
                 .onSuccess { sets ->
-                    val allTags = listOf("Tất cả") +
-                        sets.flatMap { it.tags }.distinct().sorted()
+                    val allTags = listOf("Tất cả") + sets.flatMap { it.tags }.distinct().sorted()
                     _uiState.update { state ->
                         state.copy(
                             sets = sets,
@@ -133,36 +132,6 @@ class VocabularySetListViewModel(
                 set.tags.any { it.contains(query, ignoreCase = true) }
             val matchesTag = tag == "Tất cả" || tag in set.tags
             matchesSearch && matchesTag
-        }
-    }
-    fun onTabSelected(tab: VocabularyTab) {
-        _uiState.update { it.copy(selectedTab = tab) }
-        if (tab == VocabularyTab.Discover) loadPublicSets()
-    }
-
-    private fun loadPublicSets() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoadingPublic = true) }
-            try {
-                val sets = repository.getPublicSets()
-                _uiState.update { it.copy(isLoadingPublic = false, publicSets = sets) }
-            } catch (e: Exception) {
-                _uiState.update { it.copy(isLoadingPublic = false) }
-            }
-        }
-    }
-
-    fun forkSet(setId: String) {
-        viewModelScope.launch {
-            _uiState.update { it.copy(forkLoadingSetId = setId) }
-            try {
-                repository.forkSet(setId)
-                loadSets()
-            } catch (e: Exception) {
-                // handle error nếu cần
-            } finally {
-                _uiState.update { it.copy(forkLoadingSetId = null) }
-            }
         }
     }
 }

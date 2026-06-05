@@ -88,6 +88,7 @@ fun VocabularySetCardPreview() {
             tags = listOf("Cơ bản", "Tiếng Anh", "Học tập"),
             wordCount = 50,
             isPublic = true,
+            progress = 0.4f,
             status = "Đang học"
         ),
         onClick = {}

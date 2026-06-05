@@ -255,7 +255,7 @@ fun VocabularySetDetailScreen(
             }
             if (uiState.isImporting) {
                 Spacer(Modifier.height(10.dp))
-                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+//                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
             }
             uiState.importExportMessage?.let { message ->
                 Spacer(Modifier.height(10.dp))

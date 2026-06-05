@@ -546,10 +546,9 @@ fun AppNavGraph(
                 onItemClick = { item ->
                     navController.navigate(item.route) {
                         popUpTo(AppRoutes.Home) {
-                            saveState = true
+                            inclusive = false
                         }
                         launchSingleTop = true
-                        restoreState = true
                     }
                 },
                 modifier = Modifier.align(Alignment.BottomCenter)

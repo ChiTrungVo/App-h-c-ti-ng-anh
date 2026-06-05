@@ -407,22 +407,7 @@ fun AppNavGraph(
                         }
                     }
                 )
-                // Ghi kết quả vào ProgressViewModel khi đến màn này
-                LaunchedEffect(Unit) {
-                    val state = practiceViewModel.uiState.value
-                    val setId = state.questions.firstOrNull()?.wordId
-                        ?.let { wordId ->
-                            com.example.mobile_project.data.sample.VocabularyDemoStore
-                                .vocabularies.firstOrNull { it.wordId == wordId }?.setId
-                        }
-                    if (setId != null) {
-                        progressViewModel.recordQuizResult(
-                            setId = setId,
-                            correctCount = state.correctCount,
-                            totalCount = state.totalQuestions
-                        )
-                    }
-                }
+
             }
             composable(AppRoutes.Progress) {
                 LaunchedEffect(Unit) { progressViewModel.loadProgress() }

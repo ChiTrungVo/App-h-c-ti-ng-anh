@@ -300,7 +300,8 @@ fun AppNavGraph(
                     onProfileClick = { navController.navigate(AppRoutes.Profile) },
                     onAddSet = { navController.navigate(AppRoutes.editVocabularySet()) },
                     onQuiz = { navController.navigate(AppRoutes.Practice) },
-                    onProgress = { navController.navigate(AppRoutes.Progress) }
+                    onProgress = { navController.navigate(AppRoutes.Progress) },
+                    onVocabulary={navController.navigate(AppRoutes.Vocabulary)}
                 )
             }
             composable(AppRoutes.Vocabulary) {

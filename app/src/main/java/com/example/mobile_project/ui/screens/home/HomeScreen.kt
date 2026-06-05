@@ -72,6 +72,7 @@ fun HomeScreen(
     onStartLearning: () -> Unit,
     onProfileClick: () -> Unit,
     onAddSet: () -> Unit,
+    onVocabulary: () -> Unit,
     onQuiz: () -> Unit,
     onProgress: () -> Unit
 ) {
@@ -126,7 +127,7 @@ fun HomeScreen(
                     containerColor = MinLishPrimaryContainer.copy(alpha = 0.72f),
                     shadowColor = MinLishPrimary.copy(alpha = 0.18f),
                     iconTint = MinLishPrimary,
-                    onClick = onAddSet,
+                    onClick = onVocabulary,
                     modifier = Modifier.weight(1f)
                 )
                 QuickActionCard(
@@ -545,6 +546,7 @@ private fun HomeScreenPreview() {
             onStartLearning = {},
             onProfileClick = {},
             onAddSet = {},
+            onVocabulary = {},
             onQuiz = {},
             onProgress = {}
         )

@@ -105,7 +105,7 @@ class NotificationSettingsViewModel(
             else -> null
         }
     }
-
+    
     companion object {
         val TIME_REGEX = Regex("^([01]\\d|2[0-3]):[0-5]\\d$")
         fun factory(application: Application): ViewModelProvider.Factory =

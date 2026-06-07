@@ -91,7 +91,7 @@ fun NotificationSettingsScreen(
                     "Giờ nhắc học (HH:mm)",
                     R.drawable.ic_clock,
                     enabled = form.isEnabled && !state.isSaving,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii)
                 )
                 Spacer(Modifier.height(16.dp))
                 Text("Ngày nhắc", style = MaterialTheme.typography.titleMedium)
